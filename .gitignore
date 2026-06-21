@@ -31,3 +31,8 @@ venv/
 .env
 .env.*
 !.env.example
+
+
+# Added by cargo
+
+/target

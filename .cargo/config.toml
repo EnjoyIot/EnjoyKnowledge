@@ -1,0 +1,8 @@
+[build]
+# 默认使用 mold 链接器（更快）
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+[target.x86_64-unknown-linux-gnu]
+# Linux 下使用 mold 链接器
+# linker = "clang"
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]

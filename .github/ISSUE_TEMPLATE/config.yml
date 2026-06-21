@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 设计文档
+    url: https://github.com/enjoyflow/enjoyflow/tree/main/docs
+    about: 查看设计文档了解 EnjoyFlow 的架构和接口规范
