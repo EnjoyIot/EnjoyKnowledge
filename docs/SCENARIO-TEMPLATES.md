@@ -3,13 +3,13 @@
 **版本**: v0.1-draft
 **日期**: 2026-06-20
 **状态**: 草案
-**配套**: [D6-SNAPSHOT-SPEC.md](D6-SNAPSHOT-SPEC.md) / [POSITIONING.md](POSITIONING.md) v5
+**配套**: [CONTEXTFLOW-SPEC.md](CONTEXTFLOW-SPEC.md)（原名 D6-SNAPSHOT-SPEC.md）/ [POSITIONING.md](POSITIONING.md) v5
 
 ---
 
 ## 1. 目的
 
-本文档定义 EnjoyFlow **场景模板**的完整规范——5 个 MVP 预设 + 5 个扩展预设的可变流程、维度集和默认 prompt。
+本文档定义 EnjoyFlow **场景模板**的完整规范——8 个 MVP 预设 + 5 个扩展预设的可变流程、维度集和默认 prompt。
 
 **场景模板**——把"开发者做某类任务时的最佳实践"形式化为可复用的模板，让 AI 工具自动选择适合当前任务的预设。
 
@@ -71,11 +71,11 @@ prompts:
   output_format: |
     <输出格式说明>
 
-# 5. 钩子集成（可选）—— 在状态转换时触发享受 Flow 钩子
+# 5. 钩子集成（可选）—— 在状态转换时触发EnjoyFlow 钩子
 hooks:
   on_state_enter:
     - state: <状态名>
-      hook: <享受 Flow 钩子名>
+      hook: <EnjoyFlow 钩子名>
 ---
 ```
 
@@ -137,7 +137,7 @@ states:
     entry_actions:
       - 加载 A1 架构
       - 加载 A3 API 契约
-      - 加载 D6 任务快照
+      - 加载 ContextFlow 快照
     exit_actions:
       - 生成 SPEC-XXX.md
       - 添加追溯链 [REQ-XXX → SPEC-XXX]
@@ -266,7 +266,7 @@ prompts:
 | C1 | gotchas | 已知踩坑 |
 | C3 | decisions | 历史决策 |
 | D1 | task_progress | 任务状态 |
-| D6 | task_snapshot | 任务快照 |
+| D6 | task_snapshot | ContextFlow 快照 |
 
 #### 状态机详解（6 个状态）
 
@@ -860,6 +860,499 @@ context_gathering → options_analysis → decision_making → adr_documentation
 
 ---
 
+### 3.6 release_deployment（部署发布）
+
+#### 完整定义
+
+```yaml
+# core/scenarios/release_deployment.yaml
+---
+name: release_deployment
+description: 版本发布与部署（覆盖发布前检查/灰度/回滚）
+version: 0.1.0
+
+# 维度集
+dimensions:
+  - A1_architecture       # 确认部署目标架构
+  - A11_environment       # 环境配置（目标环境）
+  - A12_release           # 发布流程规范
+  - C8_deployment         # 部署操作清单 + 回滚步骤
+  - D1_task_progress      # 发布任务进度
+  - D7_failure_modes      # 历史发布失败模式
+
+# 状态机
+states:
+  - name: pre_release_check
+    description: 发布前检查
+    entry_actions:
+      - 加载 A12 发布流程
+      - 加载 C8 部署清单
+    exit_actions:
+      - 发布检查报告（所有 checklist 项打勾）
+      - 确认回滚方案可用
+    auto_transitions:
+      - to: staging_deploy
+        when: 所有检查项通过
+
+  - name: staging_deploy
+    description: 预发布环境部署
+    entry_actions:
+      - 加载 A11 staging 环境配置
+    exit_actions:
+      - staging 部署完成
+      - 冒烟测试通过
+    manual_transitions:
+      - to: pre_release_check
+        when: 冒烟失败，需修复后重新检查
+
+  - name: production_canary
+    description: 生产灰度（10% → 50% → 100%）
+    entry_actions:
+      - 加载 A11 prod 环境配置
+      - 加载 D7 历史发布失败模式
+    exit_actions:
+      - 灰度比例记录
+      - 每阶段健康检查通过
+    branches:
+      - name: instant_rollback
+        when: 健康检查失败或指标异常
+        goto: rollback
+
+  - name: production_verification
+    description: 生产环境验证
+    entry_actions:
+      - 监控核心指标 15 分钟
+    exit_actions:
+      - 发布验证报告
+      - 标记发布成功
+
+  - name: rollback
+    description: 回滚（失败时）
+    entry_actions:
+      - 加载 C8 回滚步骤
+    exit_actions:
+      - 回滚到上一稳定版本
+      - 故障报告
+      - 写入 D7 failure_modes
+
+  - name: release_archive
+    description: 发布归档
+    entry_actions:
+      - 加载 A12 release 记录模板
+    exit_actions:
+      - 更新 RELEASE.md 版本记录
+      - D1 任务进度标记 DONE
+
+# 分支条件
+branches:
+  - name: hotfix_release
+    when: 紧急修复发布（跳过 staging）
+    states_override: [pre_release_check, production_canary, production_verification, release_archive]
+    skip_steps:
+      - 跳过 staging_deploy
+
+  - name: db_migration_release
+    when: 涉及数据库迁移
+    add_steps:
+      - 迁移前强制备份
+      - 迁移后数据校验
+      - 回滚方案必须包含迁移回滚
+
+# 默认 prompt
+prompts:
+  opening: |
+    你在进行版本发布部署。
+    版本号: {version}
+    发布类型: {release_type}  # major / minor / patch / hotfix
+
+    第一步：调用 enjoyflow_context 加载发布流程 + 部署清单
+    第二步：进入 pre_release_check 状态
+
+  per_state:
+    - state: pre_release_check
+      prompt: |
+        你在"发布前检查"阶段。
+        按 C8 部署清单逐项确认：
+        1. □ 所有特性已合并且通过验证
+        2. □ 数据库迁移脚本已准备（如涉及）
+        3. □ 回滚方案已确认可用
+        4. □ 通知相关方（运维/业务）
+        5. □ 监控告警就绪
+        任何一项未通过则停止发布。
+
+    - state: production_canary
+      prompt: |
+        你在"生产灰度"阶段。
+        灰度比例：10% → 50% → 100%
+        每阶段后检查：
+        - 错误率是否上升
+        - 延迟是否增加
+        - 业务指标是否正常
+        任一异常立即触发 rollback。
+
+    - state: rollback
+      prompt: |
+        ⚠️ 执行回滚 ⚠️
+        按 C8 回滚步骤：
+        1. revert 到上一稳定版本 tag
+        2. 重新部署
+        3. 验证服务恢复
+        4. 记录故障到 D7 failure_modes
+  output_format: |
+    每个状态输出：
+    - 状态：<状态名>
+    - 灰度比例：<百分比>
+    - 健康检查：<通过/失败>
+    - 下一步：<下一状态或回滚>
+---
+
+#### 维度集详解（6 个维度）
+
+| # | 维度 | 用途 |
+|---|---|---|
+| A1 | architecture | 确认部署目标 |
+| A11 | environment | 目标环境配置 |
+| A12 | release | 发布流程规范 |
+| C8 | deployment | 操作清单 + 回滚 |
+| D1 | task_progress | 发布任务状态 |
+| D7 | failure_modes | 历史发布失败 |
+
+#### 状态机详解（6 个状态）
+
+```
+pre_release_check → staging_deploy → production_canary → production_verification → release_archive
+                                                              ↓ (失败)
+                                                           rollback
+```
+
+#### 适用场景
+
+- 常规版本发布
+- 热修复发布（走 hotfix_release 分支）
+- 涉及数据库迁移的发布（走 db_migration_release 分支）
+
+---
+
+### 3.7 code_review（代码审查）
+
+#### 完整定义
+
+```yaml
+# core/scenarios/code_review.yaml
+---
+name: code_review
+description: PR/代码审查（覆盖规范检查/合规/反模式识别）
+version: 0.1.0
+
+# 维度集
+dimensions:
+  - A1_architecture       # 确认改动符合架构
+  - A2_code_standards     # 代码规范对标
+  - A3_api_contract       # API 契约一致性
+  - C1_gotchas            # 反模式/已知坑识别
+  - C7_review_checklist   # 审查清单
+  - D3_decision_history   # 相关历史决策
+
+# 状态机
+states:
+  - name: context_loading
+    description: 加载审查上下文
+    entry_actions:
+      - 加载 PR 关联的 REQ/SPEC
+      - 加载 A2 代码规范
+      - 加载 C7 审查清单
+    exit_actions:
+      - 审查范围确认（哪些文件/模块）
+
+  - name: automated_check
+    description: 自动化检查
+    entry_actions:
+      - Linter / 类型检查
+      - A3 API 契约一致性校验
+    exit_actions:
+      - 自动化检查报告
+    auto_transitions:
+      - to: human_review
+        when: 自动化检查无阻断错误
+      - to: review_failed
+        when: 自动化检查发现阻断错误
+
+  - name: human_review
+    description: 人工审查（AI 辅助）
+    entry_actions:
+      - 加载 C1 已知踩坑（识别反模式）
+      - 加载 D3 相关历史决策
+    exit_actions:
+      - 审查意见清单
+      - 标注问题级别（blocker/suggestion/nit）
+    manual_transitions:
+      - to: review_approved
+        when: 无 blocker
+      - to: review_failed
+        when: 存在 blocker
+
+  - name: review_approved
+    description: 审查通过
+    exit_actions:
+      - 标记 PR approved
+      - 如有新模式 → 写入 C2
+
+  - name: review_failed
+    description: 审查未通过
+    exit_actions:
+      - 审查意见返回作者
+      - 记录反复出现的反模式到 C1
+
+# 分支条件
+branches:
+  - name: ai_generated_code
+    when: PR 含 @ai-generated 标注
+    add_steps:
+      - 加强幻觉一致性检查
+      - 验证 AC 是否真正满足
+      - 检查是否有"看似正确实则错误"的实现
+
+  - name: security_sensitive
+    when: 涉及鉴权/支付/数据导出
+    add_dimensions:
+      - B4_constraints
+    add_steps:
+      - 安全合规专项检查
+      - 权限边界确认
+
+# 默认 prompt
+prompts:
+  opening: |
+    你在进行代码审查。
+    PR: {pr_id}
+    关联需求: {req_id}
+
+    第一步：调用 enjoyflow_context 加载规范 + 审查清单
+    第二步：进入 context_loading 状态
+
+  per_state:
+    - state: human_review
+      prompt: |
+        你在"人工审查"阶段（AI 辅助）。
+        按 C7 审查清单逐项检查：
+        1. 规范对标：代码是否符合 A2
+        2. 契约对标：API 变更是否符合 A3
+        3. 反模式：是否踩了 C1 已知坑
+        4. 决策一致：是否违背 D3 历史决策
+        5. 测试覆盖：关键路径是否有测试
+        标注每个问题级别：blocker / suggestion / nit
+
+    - state: review_failed
+      prompt: |
+        审查未通过。
+        请整理 blocker 清单返回作者。
+        如果是反复出现的反模式，写入 C1 GOTCHAS。
+  output_format: |
+    审查报告：
+    - PR: <pr_id>
+    - 结论: <approved/failed>
+    - Blockers: <数量及清单>
+    - Suggestions: <数量>
+    - Nits: <数量>
+---
+
+#### 维度集详解（6 个维度）
+
+| # | 维度 | 用途 |
+|---|---|---|
+| A1 | architecture | 改动符合架构 |
+| A2 | code_standards | 规范对标 |
+| A3 | api_contract | 契约一致性 |
+| C1 | gotchas | 反模式识别 |
+| C7 | review_checklist | 审查清单 |
+| D3 | decision_history | 决策一致性 |
+
+#### 状态机详解（5 个状态）
+
+```
+context_loading → automated_check → human_review → review_approved
+                                          ↓ (blocker)
+                                      review_failed
+```
+
+#### 适用场景
+
+- PR 审查
+- 合并前合规检查
+- AI 生成代码的加强审查（走 ai_generated_code 分支）
+
+---
+
+### 3.8 monitoring_response（监控告警响应）
+
+#### 完整定义
+
+```yaml
+# core/scenarios/monitoring_response.yaml
+---
+name: monitoring_response
+description: 监控告警响应（覆盖分级/排查/修复/复盘）
+version: 0.1.0
+
+# 维度集
+dimensions:
+  - A1_architecture       # 定位告警涉及的模块
+  - A11_environment       # 故障环境信息
+  - C1_gotchas            # 已知坑（避免重复踩）
+  - C5_known_issues       # 已知问题（看是否相关）
+  - D1_task_progress      # 响应任务进度
+  - D7_failure_modes      # 历史故障模式
+
+# 状态机
+states:
+  - name: alert_triage
+    description: 告警分级
+    entry_actions:
+      - 加载 D7 历史故障模式
+      - 加载 C5 已知问题
+    exit_actions:
+      - 告警级别判定（P0 紧急 / P1 严重 / P2 一般 / P3 提醒）
+      - 是否为已知问题的判定
+    auto_transitions:
+      - to: immediate_mitigation
+        when: 级别 = P0 或 P1
+      - to: investigation
+        when: 级别 = P2 或 P3
+
+  - name: immediate_mitigation
+    description: 紧急止血
+    entry_actions:
+      - 加载 A11 故障环境配置
+    exit_actions:
+      - 止血措施执行（限流/回滚/重启/扩容）
+      - 服务恢复确认
+    auto_transitions:
+      - to: investigation
+        when: 止血成功
+
+  - name: investigation
+    description: 根因排查
+    entry_actions:
+      - 加载 A1 涉及模块架构
+      - 加载 C1 相关踩坑
+    exit_actions:
+      - 根因定位报告
+    manual_transitions:
+      - to: fix_implementation
+        when: 根因明确且需修复
+
+  - name: fix_implementation
+    description: 修复实现
+    entry_actions:
+      - 加载 A2 代码规范（如有代码改动）
+    exit_actions:
+      - 修复提交
+      - 触发 bug_fix 或 hotfix 场景（如涉及）
+
+  - name: postmortem
+    description: 故障复盘
+    entry_actions:
+      - 通知相关方
+    exit_actions:
+      - 复盘报告（时间线/根因/影响/改进）
+      - 新故障模式写入 D7
+      - 新踩坑写入 C1
+      - D1 任务标记 DONE
+
+# 分支条件
+branches:
+  - name: known_issue
+    when: 告警匹配 C5 已知问题
+    states_override: [alert_triage, known_issue_fix]
+    skip_steps:
+      - 跳过 investigation
+
+  - name: recurring_failure
+    when: D7 有相同故障模式记录
+    add_steps:
+      - 检查上次修复是否未生效
+      - 评估是否需架构级改进
+
+  - name: data_integrity_alert
+    when: 涉及数据一致性/丢失
+    add_steps:
+      - 立即冻结写入
+      - 通知 DBA
+      - 数据校验
+
+# 默认 prompt
+prompts:
+  opening: |
+    ⚠️ 收到监控告警 ⚠️
+    告警: {alert_name}
+    级别: {severity}
+    时间: {timestamp}
+
+    第一步：调用 enjoyflow_context 检查 D7 历史故障 + C5 已知问题
+    第二步：进入 alert_triage 状态
+
+  per_state:
+    - state: alert_triage
+      prompt: |
+        你在"告警分级"阶段。
+        1. 查 D7：是否历史发生过类似故障？
+        2. 查 C5：是否已知问题？
+        3. 评估影响范围（用户数/业务流程）
+        4. 判定级别：P0(全站) / P1(核心功能) / P2(次要) / P3(提醒)
+
+    - state: immediate_mitigation
+      prompt: |
+        ⚠️ 紧急止血 ⚠️
+        优先恢复服务，不追根因：
+        - 限流/熔断
+        - 回滚最近发布
+        - 重扩容
+        - 故障实例隔离
+        止血后进入 investigation 找根因。
+
+    - state: postmortem
+      prompt: |
+        你在"故障复盘"阶段。
+        复盘报告包含：
+        1. 时间线（发现→止血→定位→修复→恢复）
+        2. 根因（直接 + 深层）
+        3. 影响范围（用户/业务/数据）
+        4. 改进措施（短期 + 长期）
+        5. 知识沉淀：新故障 → D7，新踩坑 → C1
+  output_format: |
+    响应报告：
+    - 告警: <alert_name>
+    - 级别: <P0-P3>
+    - 根因: <一句话>
+    - 状态: <已止血/已修复/复盘中>
+---
+
+#### 维度集详解（6 个维度）
+
+| # | 维度 | 用途 |
+|---|---|---|
+| A1 | architecture | 定位故障模块 |
+| A11 | environment | 故障环境信息 |
+| C1 | gotchas | 避免重复踩坑 |
+| C5 | known_issues | 已知问题匹配 |
+| D1 | task_progress | 响应进度 |
+| D7 | failure_modes | 历史故障模式 |
+
+#### 状态机详解（5 个状态）
+
+```
+alert_triage → [P0/P1] immediate_mitigation → investigation → fix_implementation → postmortem
+            → [P2/P3] investigation → ...
+```
+
+#### 适用场景
+
+- 生产环境监控告警响应
+- 用户反馈的线上问题排查
+- 重复故障的根因深挖（走 recurring_failure 分支）
+
+---
+
 ## 4. 扩展场景（v1.0 后）
 
 ### 4.1 cross_stack（跨特性联调）
@@ -928,7 +1421,7 @@ states:
 
 ---
 
-## 6. 场景模板与 D6 工具的集成
+## 6. 场景模板与 ContextFlow 工具的集成
 
 ### 6.1 AI 调用方式
 
@@ -956,29 +1449,30 @@ enjoyflow_context({
 
 ### 6.2 钩子集成
 
-场景模板的每个状态可以挂载享受 Flow 钩子：
+场景模板的每个状态可以挂载EnjoyFlow 钩子：
 
 ```yaml
 hooks:
   on_state_enter:
     - state: implementation
-      hook: pre-implementation   # 触发享受 Flow 钩子
+      hook: pre-implementation   # 触发EnjoyFlow 钩子
     - state: verification
       hook: pre-verification     # 触发独立验证钩子
 ```
 
 ---
 
-## 7. 5 个 MVP 场景对比
+## 7. 8 个 MVP 场景对比
 
-| 维度 | new_feature | bug_fix | refactor | hotfix | architecture_decision |
-|---|---|---|---|---|---|
-| 状态数 | 6 | 5 | 5 | 4 | 5 |
-| 维度数 | 10 | 8 | 8 | 6 | 4 |
-| 分支数 | 3 | 4 | 0 | 3 | 0 |
-| 持续时间 | 长 | 中 | 长 | 极短 | 中 |
-| 适用频率 | 每周 | 每天 | 每月 | 每月 | 每月 |
-| 验证要求 | 独立会话 | 独立会话 | 回归测试 | 生产验证 | 人决策 |
+| 维度 | new_feature | bug_fix | refactor | hotfix | architecture_decision | release_deployment | code_review | monitoring_response |
+|---|---|---|---|---|---|---|---|---|
+| 状态数 | 6 | 5 | 5 | 4 | 5 | 6 | 5 | 5 |
+| 维度数 | 10 | 8 | 8 | 6 | 4 | 6 | 6 | 6 |
+| 分支数 | 3 | 4 | 0 | 3 | 0 | 2 | 2 | 3 |
+| 持续时间 | 长 | 中 | 长 | 极短 | 中 | 中 | 短 | 中-极短 |
+| 适用频率 | 每周 | 每天 | 每月 | 每月 | 每月 | 每周 | 每天 | 每天 |
+| 验证要求 | 独立会话 | 独立会话 | 回归测试 | 生产验证 | 人决策 | 生产验证 | 人工审查 | 复盘报告 |
+| 覆盖流程环节 | 需求→实现→验证 | 实现→验证 | 实现→验证 | 紧急修复 | 决策 | 部署发布 | 代码审查 | 运维监控 |
 
 ---
 
@@ -997,7 +1491,7 @@ hooks:
 
 ## 9. 验证清单
 
-- [ ] 5 个 MVP 场景模板已定义
+- [ ] 8 个 MVP 场景模板已定义
 - [ ] 每个模板有完整维度集 + 状态机 + prompt
 - [ ] 模板支持可继承
 - [ ] 模板支持钩子集成

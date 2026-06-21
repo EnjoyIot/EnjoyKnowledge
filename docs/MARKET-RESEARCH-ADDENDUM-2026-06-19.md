@@ -229,7 +229,7 @@ memory/
 - 覆盖范围跟 EnjoyFlow v3 大幅重合
 - 但 ECC 没做"制品层 + 双向翻译 + 跨项目共享"——这三块是 EnjoyFlow 真正的差异化锚点
 
-**享受 Flow 该不该直接竞争 ECC？**
+**EnjoyFlow 该不该直接竞争 ECC？**
 - 如果是，意味着需要 18 个月从 0 追到 21.8 万 stars —— 不现实
 - 如果不是，应该明确"我们做 ECC 没做的事"，而不是做 ECC 在做的事的子集
 
@@ -252,7 +252,7 @@ memory/
 ### 5.2 含义
 
 - **进 awesome-claude-code (46,866 stars) 是 2026 标准传播路径**
-- 但享受 Flow 需要先**自己做成 plugin 形态**才能被收录（不是文档仓库）
+- 但EnjoyFlow 需要先**自己做成 plugin 形态**才能被收录（不是文档仓库）
 - enjoyflow 当前是"仓库 + 文档"形态，**不在 awesome list 收录范围**
 
 ---

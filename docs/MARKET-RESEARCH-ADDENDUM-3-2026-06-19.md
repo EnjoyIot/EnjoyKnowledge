@@ -31,7 +31,7 @@
 **关键洞察**：
 - OpenAPI 不只是接口规范，还有 **26K stars 的代码生成器**
 - 这是 OpenAPI 能成为 REST API 事实标准的真正原因：**不只定义接口，还能自动生成代码**
-- 享受 Flow v4 如果只做接口规范而不做生成器，**会被边缘化**
+- EnjoyFlow v4 如果只做接口规范而不做生成器，**会被边缘化**
 
 ### 1.2 接口规范成功的双轮模式
 
@@ -52,7 +52,7 @@
 └──────────────────────────────────────────────────┘
 ```
 
-**享受 Flow v4 的策略选项**：
+**EnjoyFlow v4 的策略选项**：
 - **A. 只做规范层**：让第三方写生成器（参照 LSP 模式）
 - **B. 规范 + 自带生成器**：参照 OpenAPI Generator 模式
 - **C. 规范 + 自带生成器 + 适配器生态**：参照 OpenAPI 完整生态
@@ -76,11 +76,11 @@
 - **TechDocs** — "docs like code" 方法
 - **158 个 plugins**（生态规模）
 
-**跟享受 Flow v4 的对位**：
+**跟EnjoyFlow v4 的对位**：
 - Backstage = 企业级"开发者门户"框架
-- 享受 Flow = AI 时代的"项目文档与记忆"接口
+- EnjoyFlow = AI 时代的"项目文档与记忆"接口
 - Backstage 已被 CNCF 收编 = 基础设施级背书
-- **享受 Flow 不应跟 Backstage 竞争，应作为 Backstage 的适配器**
+- **EnjoyFlow 不应跟 Backstage 竞争，应作为 Backstage 的适配器**
 
 ### 2.2 DITA — 企业级技术文档标准（445 stars）
 
@@ -88,9 +88,9 @@
 - 现实使用：航空、汽车、医疗器械、硬件行业的标准
 - AI 时代：**几乎没人包装它**
 
-**享受 Flow v4 的策略选项**：
+**EnjoyFlow v4 的策略选项**：
 - 可以提供 DITA adapter，让传统企业用户的 DITA 文档能被 AI 读
-- 或明确"享受 Flow 不做 DITA 兼容"
+- 或明确"EnjoyFlow 不做 DITA 兼容"
 
 ### 2.3 ADR — 16,145 stars（制品层最成熟标准）
 
@@ -102,8 +102,8 @@
 
 **关键观察**：
 - ADR 是**制品层**的真实成熟标准（16K stars）
-- **享受 Flow v4 的 ArtifactAPI 应该接 ADR，不重新发明轮子**
-- 享受 Flow 自己的 `development/decisions/` 目录可以采用 ADR 规范
+- **EnjoyFlow v4 的 ArtifactAPI 应该接 ADR，不重新发明轮子**
+- EnjoyFlow 自己的 `development/decisions/` 目录可以采用 ADR 规范
 
 ### 2.4 Architecture as Code
 
@@ -116,8 +116,8 @@
 
 **关键观察**：
 - 架构即代码方向**真实存在**但没人做出强势品牌（最高 341 stars）
-- sruja 22 stars 提出 **"Context Engineering and Architecture Intelligence for the AI Era"**——跟享受 Flow v4 直接撞概念
-- **享受 Flow v4 有机会占领"AI 时代的架构即代码"空白**
+- sruja 22 stars 提出 **"Context Engineering and Architecture Intelligence for the AI Era"**——跟EnjoyFlow v4 直接撞概念
+- **EnjoyFlow v4 有机会占领"AI 时代的架构即代码"空白**
 
 ---
 
@@ -130,7 +130,7 @@
 
 **关键观察**：
 - AI 开发规范领域**只有 34 stars**——**真实空白**
-- 享受 Flow v4 的 DocAPI + ArtifactAPI **就是这个位置**
+- EnjoyFlow v4 的 DocAPI + ArtifactAPI **就是这个位置**
 
 ### 3.2 其他 AI spec 相关项目
 
@@ -157,9 +157,9 @@
 
 - TOON 是 2026 年 LLM 数据传输格式的**新爆款**
 - 设计目标：**比 JSON 节省 token + 仍是 schema-aware + 仍可读**
-- **享受 Flow v4 可以考虑用 TOON 作为默认传输格式**（而不是 JSON 或 YAML）
+- **EnjoyFlow v4 可以考虑用 TOON 作为默认传输格式**（而不是 JSON 或 YAML）
 
-### 4.3 享受 Flow 的传输格式选项
+### 4.3 EnjoyFlow 的传输格式选项
 
 | 格式 | 优点 | 缺点 | 推荐 |
 |---|---|---|---|
@@ -183,7 +183,7 @@
 
 ### 5.2 关键观察
 
-**Markdown frontmatter schema 验证是真实空白**——享受 Flow v4 的 DocAPI 可以**定义 frontmatter schema + 验证工具**，填补这块。
+**Markdown frontmatter schema 验证是真实空白**——EnjoyFlow v4 的 DocAPI 可以**定义 frontmatter schema + 验证工具**，填补这块。
 
 ---
 
@@ -200,7 +200,7 @@
 | **AgentOps-AI/agentops** | 5,644 | "Python SDK for AI agent monitoring" |
 | **anthropics/claude-agent-sdk-python** | 7,362 | Claude Agent SDK |
 
-### 6.2 享受 Flow v4 是否需要做 SDK？
+### 6.2 EnjoyFlow v4 是否需要做 SDK？
 
 | 选项 | 内容 | 参照 |
 |---|---|---|
@@ -211,25 +211,25 @@
 
 ---
 
-## 7. 享受 Flow v4 接口规范的参照系全景
+## 7. EnjoyFlow v4 接口规范的参照系全景
 
 ### 7.1 已成熟接口协议（应接不重做）
 
-| 协议 | 状态 | 享受 Flow 对位 |
+| 协议 | 状态 | EnjoyFlow 对位 |
 |---|---|---|
 | **MCP** (Anthropic) | 8K + 87K servers | 接作为 HookAPI 的一部分 |
 | **Agent Skills SKILL.md** (Anthropic) | 152K stars | enjoyflow.yaml 应直接采用 SKILL.md 模式 |
 | **AGENTS.md** | 22K stars | 接作为 AgentAPI 的一种实现 |
 | **DESIGN.md** (Google Labs) | 16K stars | 接作为 ArtifactAPI 的一种实现（YAML frontmatter）|
-| **OpenAPI** | 31K stars + 26K generator | 接口规范的元标准，享受 Flow 借用其方法论 |
+| **OpenAPI** | 31K stars + 26K generator | 接口规范的元标准，EnjoyFlow 借用其方法论 |
 | **LSP** | 13K stars | 借其"接口+实现"成功模式 |
 | **ADR / MADR** | 16K + 2K stars | ArtifactAPI 接 ADR，不重做决策记录 |
 | **TOON** | 24K stars | 评估作为默认传输格式 |
-| **SBOM / SPDX / CycloneDX** | 多家生态 | artifact 安全标准的接口，享受 Flow 可接 |
+| **SBOM / SPDX / CycloneDX** | 多家生态 | artifact 安全标准的接口，EnjoyFlow 可接 |
 
-### 7.2 真实空白（享受 Flow v4 应该占）
+### 7.2 真实空白（EnjoyFlow v4 应该占）
 
-| 空白 | 程度 | 享受 Flow 的机会 |
+| 空白 | 程度 | EnjoyFlow 的机会 |
 |---|---|---|
 | **DocAPI**（项目文档接口规范）| ★★★★★ 真实空白 | 直接定义 |
 | **ArtifactAPI**（项目制品接口规范）| ★★★★★ 真实空白 | 直接定义 |
@@ -237,19 +237,19 @@
 | **AI 时代的"架构即代码"规范** | ★★★★☆ | 占领 sruja 22 stars 的空白 |
 | **AI development specifications** | ★★★★★ 真实空白 | cogeet-io 34 stars 已在 |
 
-### 7.3 已成熟但享受 Flow 应主动接
+### 7.3 已成熟但EnjoyFlow 应主动接
 
-| 项目 | Stars | 享受 Flow 的接法 |
+| 项目 | Stars | EnjoyFlow 的接法 |
 |---|---|---|
 | **backstage/backstage** | 33,655 | DocAPI 适配器 |
-| **OpenAPI Generator** | 26,427 | 享受 Flow 应自带类似工具（or 接） |
+| **OpenAPI Generator** | 26,427 | EnjoyFlow 应自带类似工具（or 接） |
 | **mem0** | 58,941 | MemoryAPI 适配器 |
 | **AppFlowy / AFFiNE** | 72K / 69K | DocAPI 适配器 |
 | **Notion / Confluence / Obsidian** | 已成熟产品 | DocAPI 适配器 |
 
 ---
 
-## 8. 享受 Flow v4 接口规范的设计建议
+## 8. EnjoyFlow v4 接口规范的设计建议
 
 ### 8.1 应该采用的现成模式
 
@@ -267,7 +267,7 @@
 4. **制品层 = ADR / MADR 模式**
    - 16K stars 成熟标准，不重做
 
-### 8.2 享受 Flow 应该填补的空白
+### 8.2 EnjoyFlow 应该填补的空白
 
 1. **DocAPI 正式规范**
    - 项目文档（PRD/Contract/Design Plan）的接口契约

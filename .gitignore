@@ -1,0 +1,33 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OMC state
+.omc/
+
+# Workbuddy state
+.workbuddy/
+
+# Claude Code
+.claude/
+
+# Node (if applicable)
+node_modules/
+
+# Python (if applicable)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example

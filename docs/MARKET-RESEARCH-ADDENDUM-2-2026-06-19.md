@@ -31,7 +31,7 @@
 **关键观察**：
 - 接口协议的成功模式都是：**少数人定义规范 → 社区大规模实现**
 - MCP **2 年**就做出 OpenAPI **12 年**的影响力——AI 时代的接口协议速度更快
-- 享受 Flow v4 的"接口规范 + 默认实现"哲学**完全对标**这个成功模式
+- EnjoyFlow v4 的"接口规范 + 默认实现"哲学**完全对标**这个成功模式
 
 ---
 
@@ -52,9 +52,9 @@
 - 不到 2 年成为 AI 工具**事实标准**
 - OpenAI / Google / IDE 厂商全在跟
 
-### 2.3 享受 Flow v4 跟 MCP 的对位
+### 2.3 EnjoyFlow v4 跟 MCP 的对位
 
-| 维度 | MCP | 享受 Flow v4 |
+| 维度 | MCP | EnjoyFlow v4 |
 |---|---|---|
 | 接口规范 | modelcontextprotocol.io | docs/POSITIONING.md + INTERFACE-SPEC.md (待写) |
 | 实现集 | mcp-servers 87K stars | adapters/ (待设计) |
@@ -105,9 +105,9 @@ allowed-tools: <可选>
 - **YAML frontmatter + Markdown body** —— 既是机器可解析，也是人可读
 - **Plugin 市场一键装** —— `/plugin install xxx@marketplace`
 
-### 3.4 跟享受 Flow v4 的对位
+### 3.4 跟EnjoyFlow v4 的对位
 
-| 维度 | Agent Skills | 享受 Flow v4 |
+| 维度 | Agent Skills | EnjoyFlow v4 |
 |---|---|---|
 | 接口规范 | agentskills.io/specification | INTERFACE-SPEC.md (待写) |
 | 单文件 | SKILL.md | 应该是 enjoyflow.yaml |
@@ -143,10 +143,10 @@ allowed-tools: <可选>
 - Title format: [<project_name>] <Title>
 ```
 
-**跟享受 Flow v4 的对位**：
+**跟EnjoyFlow v4 的对位**：
 - AGENTS.md 是**单文件**接口规范
-- 享受 Flow v4 是**多 API**（6 类）
-- 享受 Flow 的差异化：覆盖**文档、记忆、制品、翻译器**多个抽象，不只是 agent instructions
+- EnjoyFlow v4 是**多 API**（6 类）
+- EnjoyFlow 的差异化：覆盖**文档、记忆、制品、翻译器**多个抽象，不只是 agent instructions
 
 ### 4.2 DESIGN.md —— 16,000 stars（Google Labs）
 
@@ -173,12 +173,12 @@ typography:
 **核心创新**：
 > "A DESIGN.md file combines **machine-readable design tokens (YAML front matter) with human-readable design rationale (markdown prose)**. Tokens give agents exact values. Prose tells them *why* those values exist and how to apply them."
 
-**享受 Flow v3 "双向翻译"哲学的真实范式**：
+**EnjoyFlow v3 "双向翻译"哲学的真实范式**：
 - YAML frontmatter = 机器视图
 - Markdown body = 人读视图
 - 一个文件，两种呈现
 
-**享受 Flow 可以直接采用这个模式**——把 PRD/Contract/Design Plan 都设计成 YAML frontmatter + Markdown body 双层结构。
+**EnjoyFlow 可以直接采用这个模式**——把 PRD/Contract/Design Plan 都设计成 YAML frontmatter + Markdown body 双层结构。
 
 ### 4.3 planning-with-files —— 23,631 stars
 
@@ -189,9 +189,9 @@ typography:
 >
 > "It installs across **60+ agents via the SKILL.md standard**"
 
-**跟享受 Flow 的对位**：
-- planning-with-files 用 SKILL.md 跨 60+ agent 装 = 享受 Flow v4 的 plugin 机制原型
-- progress.md 跟享受 Flow 的进度账本同源
+**跟EnjoyFlow 的对位**：
+- planning-with-files 用 SKILL.md 跨 60+ agent 装 = EnjoyFlow v4 的 plugin 机制原型
+- progress.md 跟EnjoyFlow 的进度账本同源
 
 ---
 
@@ -210,16 +210,16 @@ typography:
 
 ### 5.2 mem0 = "Universal memory layer"（关键发现）
 
-**mem0 自称 "Universal memory layer"**——这就是享受 Flow v4 想要的 MemoryAPI 的**现成参照**。
+**mem0 自称 "Universal memory layer"**——这就是EnjoyFlow v4 想要的 MemoryAPI 的**现成参照**。
 
 **关键洞察**：
 - mem0 是**接口**（universal memory layer），不是 single memory backend
-- 跟享受 Flow v4 的 MemoryAPI **同构**
-- 享受 Flow 不需要做 universal memory layer——但需要**接** mem0 作为可选适配器
+- 跟EnjoyFlow v4 的 MemoryAPI **同构**
+- EnjoyFlow 不需要做 universal memory layer——但需要**接** mem0 作为可选适配器
 
 ### 5.3 haystack / letta / cognee / MemOS
 
-这些是**接口层下的实现**——享受 Flow 可以作为它们的上游接口规范。
+这些是**接口层下的实现**——EnjoyFlow 可以作为它们的上游接口规范。
 
 ---
 
@@ -237,9 +237,9 @@ typography:
 
 ### 6.2 关键发现
 
-**两个享受 Flow v4 真正独有的空白**：
+**两个EnjoyFlow v4 真正独有的空白**：
 
-| 接口 | 谁在做 | 享受 Flow 的机会 |
+| 接口 | 谁在做 | EnjoyFlow 的机会 |
 |---|---|---|
 | **DocAPI** | ❌ 没人做 | ✅ 真实空白 |
 | **ArtifactAPI** | ❌ 没人做 | ✅ 真实空白 |
@@ -250,9 +250,9 @@ typography:
 
 ---
 
-## 7. 享受 Flow 生态位（基于三轮调研）
+## 7. EnjoyFlow 生态位（基于三轮调研）
 
-### 7.1 享受 Flow 在大生态里的位置
+### 7.1 EnjoyFlow 在大生态里的位置
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -266,7 +266,7 @@ typography:
                        │
                        ▼
 ┌─────────────────────────────────────────────────────┐
-│           享受 Flow v4 占领的生态位                   │
+│           EnjoyFlow v4 占领的生态位                   │
 │  - DocAPI        ← 真实空白                          │
 │  - ArtifactAPI   ← 真实空白                          │
 │  - MemoryAPI     ← mem0 占，enjoyflow 接            │
@@ -286,18 +286,18 @@ typography:
 └─────────────────────────────────────────────────────┘
 ```
 
-### 7.2 享受 Flow v4 的真正空白
+### 7.2 EnjoyFlow v4 的真正空白
 
-| 接口 | 空白程度 | 享受 Flow 的机会 |
+| 接口 | 空白程度 | EnjoyFlow 的机会 |
 |---|---|---|
-| **DocAPI** | ★★★★★ | 没人做，享受 Flow 可定义 |
-| **ArtifactAPI** | ★★★★★ | 没人做，享受 Flow 可定义 |
-| **SyncAPI** | ★★★★☆ | 部分空白，享受 Flow 可定义 |
-| **MemoryAPI** | ★★☆☆☆ | mem0 已在做，享受 Flow 应接它 |
-| **HookAPI** | ★☆☆☆☆ | 各 AI 工具自有，享受 Flow 应接它们 |
-| **PluginAPI** | ★★☆☆☆ | MCP/Agent Skills 已在做，享受 Flow 应接它们 |
+| **DocAPI** | ★★★★★ | 没人做，EnjoyFlow 可定义 |
+| **ArtifactAPI** | ★★★★★ | 没人做，EnjoyFlow 可定义 |
+| **SyncAPI** | ★★★★☆ | 部分空白，EnjoyFlow 可定义 |
+| **MemoryAPI** | ★★☆☆☆ | mem0 已在做，EnjoyFlow 应接它 |
+| **HookAPI** | ★☆☆☆☆ | 各 AI 工具自有，EnjoyFlow 应接它们 |
+| **PluginAPI** | ★★☆☆☆ | MCP/Agent Skills 已在做，EnjoyFlow 应接它们 |
 
-### 7.3 享受 Flow 真正能赢的策略
+### 7.3 EnjoyFlow 真正能赢的策略
 
 **不要做 universal memory layer（mem0 已在做）**——而是做：
 1. **DocAPI** —— 项目文档的接口规范（没人做）
@@ -314,13 +314,13 @@ typography:
 
 - **NousResearch/hermes-agent** —— **197,655 stars**
 - Jay 用的工具
-- 享受 Flow 是 Jay 开发的——enjoyflow 跟 Hermes 是**同一个生态**
+- EnjoyFlow 是 Jay 开发的——enjoyflow 跟 Hermes 是**同一个生态**
 
 ### 8.2 MemOS
 
 - **MemTensor/MemOS** —— **9,928 stars**
 - 自家 plugin: **memos-local-plugin 2.0** 直接对接 Hermes Agent 和 OpenClaw
-- 享受 Flow v4 可以作为 MemOS 的上游接口
+- EnjoyFlow v4 可以作为 MemOS 的上游接口
 
 ### 8.3 openclaw
 
@@ -329,7 +329,7 @@ typography:
 
 ### 8.4 含义
 
-- 享受 Flow 在 **197K stars 的 Hermes Agent 生态**里有现成用户基础
+- EnjoyFlow 在 **197K stars 的 Hermes Agent 生态**里有现成用户基础
 - 应该把 **Hermes / OpenClaw 作为 HookAPI 的核心适配目标**
 
 ---
@@ -371,7 +371,7 @@ typography:
 
 ---
 
-## 10. 享受 Flow v4 的真实成功路径（基于三轮调研推断）
+## 10. EnjoyFlow v4 的真实成功路径（基于三轮调研推断）
 
 ### 10.1 不要做的事
 
@@ -392,7 +392,7 @@ typography:
 | 直接采用 **DESIGN.md YAML frontmatter 模式**作为双向翻译的默认实现 | Google Labs 已验证 |
 | 把 **MCP / Agent Skills / MEM0 / Hermes / Claude Code** 作为默认适配器 | 不重新发明轮子 |
 | 把 **mem0 作为 MemoryAPI 的参考实现** | 借用 mem0 的 universal layer 概念 |
-| 把享受 Flow 作为 **doc + artifact spec 的接口规范**，跟 spec-kit/OpenSpec 互补而非竞争 | 享受 Flow 不做 spec-driven 流程，做 spec-driven 的接口 |
+| 把EnjoyFlow 作为 **doc + artifact spec 的接口规范**，跟 spec-kit/OpenSpec 互补而非竞争 | EnjoyFlow 不做 spec-driven 流程，做 spec-driven 的接口 |
 
 ### 10.3 流行性路径
 
@@ -400,7 +400,7 @@ typography:
 |---|---|---|
 | 短期 | 发布 INTERFACE-SPEC.md + 1 个 DocAPI + 1 个 ArtifactAPI 规范 | 复制 Agent Skills 早期 |
 | 中期 | 出 3-5 个适配器（Obsidian / Notion / spec-kit / mem0）| 复制 MCP 早期 |
-| 长期 | 把享受 Flow 的 DocAPI/ArtifactAPI 推为事实标准 | 复制 OpenAPI 路径 |
+| 长期 | 把EnjoyFlow 的 DocAPI/ArtifactAPI 推为事实标准 | 复制 OpenAPI 路径 |
 
 ---
 
