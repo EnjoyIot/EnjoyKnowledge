@@ -44,7 +44,7 @@
 
 ## G
 
-**GOTCHAS (C1)** — 踩坑清单。AI 和开发者发现的陷阱，通过 `enjoyflow record gotcha` 追加。
+**GOTCHAS (C1)** — 踩坑清单。AI 和开发者发现的陷阱，通过 `enjoyflow record gotcha [--task <REQ>]` 追加。有 --task 写入 knowledge-tasks/，无 --task 写入 knowledge-base/。
 
 ---
 
@@ -92,7 +92,7 @@
 
 ## 数字
 
-**.enjoyflow/** — EnjoyFlow 的所有文件所在的隐藏目录。包含 knowledge-base/、lifecycle/、snapshots/、config.yaml。
+**.enjoyflow/** — EnjoyFlow 的所有文件所在的隐藏目录。包含 knowledge-base/（静态基础层）、knowledge-tasks/（动态任务层）、config.yaml。
 
 **三层合约** — 产品合约（A6，做什么）、设计合约（A7，长什么样）、技术合约（A1-A5+A10，怎么建）。团队流程维护，框架只读取和供给。
 
