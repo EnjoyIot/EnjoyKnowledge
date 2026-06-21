@@ -199,7 +199,7 @@ prompts:
     任务 ID: {task_id}
     任务标题: {task_title}
 
-    第一步：阅读 PRD（lifecycle/01-planning/active-sprint/{task_id}.md）
+    第一步：阅读 PRD（knowledge-tasks/{task_id}/prd.md）
     第二步：调用 enjoyflow_context 加载相关知识
     第三步：按状态机逐步推进
 
@@ -226,7 +226,7 @@ prompts:
         - 状态流转
         - 枚举映射
 
-        规约文件：lifecycle/02-design/specs/SPEC-{task_id}.md
+        规约文件：knowledge-tasks/{task_id}/spec.md
 
     - state: implementation
       prompt: |

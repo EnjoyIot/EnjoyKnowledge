@@ -557,10 +557,10 @@ enjoyflow snapshot REQ-001               # 生成/更新 ContextFlow 快照
 
 ## 10. 简化方案（如果 32 类太多）
 
-EnjoyFlow 提供 **MVP 11 项** 简化版：
+EnjoyFlow 提供 **MVP 9 项** 简化版（D1/D6 由 `enjoyflow search` + `enjoyflow record` 命令覆盖，不走独立目录）：
 
 ```
-.enjoyflow/（MVP 11 项，knowledge-base/ + knowledge-tasks/ 结构）
+.enjoyflow/（MVP 9 项，knowledge-base/ + knowledge-tasks/ 结构）
 ├── project/
 │   ├── ARCHITECTURE.md       # A1
 │   ├── CODE-STANDARDS.md     # A2
@@ -577,7 +577,7 @@ EnjoyFlow 提供 **MVP 11 项** 简化版：
 │   └── STRATEGY.md           # C4
 ```
 
-**推荐**：MVP 先 11 项，**ContextFlow 必须有**，其他按需扩展。
+**推荐**：MVP 先 9 项，**ContextFlow 必须有**（通过 search + record 命令），其他按需扩展。
 
 ---
 
