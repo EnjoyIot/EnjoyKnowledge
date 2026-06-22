@@ -1,0 +1,6 @@
+﻿# search-class-filter: 按 class 过滤
+# 预期：只返回 class=gotchas 的文档
+
+$ enjoyknowledge search "导出" --class gotchas
+.enjoyflow/knowledge-base/development/GOTCHAS.md##导出
+[..]t_export_record 无 status 字段[..]

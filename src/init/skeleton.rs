@@ -1,11 +1,11 @@
 /// 目录骨架生成
 use std::path::Path;
 
-/// 生成 .enjoyflow/ 目录骨架
+/// 生成 .enjoyknowledge/ 目录骨架
 ///
 /// 结构：
 /// ```text
-/// .enjoyflow/
+/// .enjoyknowledge/
 /// ├── config.yaml
 /// ├── knowledge-base/
 /// │   ├── project/
@@ -21,7 +21,7 @@ use std::path::Path;
 /// └── .index.json
 /// ```
 pub fn generate(root: &Path) -> anyhow::Result<()> {
-    let ef = root.join(".enjoyflow");
+    let ef = root.join(".enjoyknowledge");
     std::fs::create_dir_all(&ef)?;
 
     // knowledge-base/ 子目录
@@ -45,10 +45,7 @@ pub fn generate(root: &Path) -> anyhow::Result<()> {
 
     // 最小模板文件
     write_if_missing(&kb.join("project/ARCHITECTURE.md"), ARCHITECTURE_TEMPLATE)?;
-    write_if_missing(
-        &kb.join("project/CODE-STANDARDS.md"),
-        CODE_STANDARDS_TEMPLATE,
-    )?;
+    write_if_missing(&kb.join("project/CODE-STANDARDS.md"), CODE_STANDARDS_TEMPLATE)?;
     write_if_missing(&kb.join("development/GOTCHAS.md"), GOTCHAS_TEMPLATE)?;
 
     Ok(())

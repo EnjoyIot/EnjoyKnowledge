@@ -1,8 +1,8 @@
-/// Markdown 文档结构化
-///
-/// search 以 `##` 为段界，返回 `文件路径##段标题` 格式的引用。
-
-/// 解析文档中的 `##` 段标题列表
+//! Markdown 文档结构化
+//!
+/// search 以 ## 为段界，返回 文件路径##段标题 格式的引用。
+/// 解析文档中的 ## 段标题列表
+#[allow(dead_code)]
 pub fn extract_sections(content: &str) -> Vec<String> {
     content
         .lines()
@@ -11,7 +11,9 @@ pub fn extract_sections(content: &str) -> Vec<String> {
         .collect()
 }
 
-/// 提取 `##` 段标题的锚点（用于 search 输出 `文件路径##标题`）
+/// 提取 ## 段标题的锚点（用于 search 输出 文件路径##标题）
+///
+/// `line_num` 是 1-indexed，查找该行及之前的最后一个 ## 标题
 pub fn find_section_at_line(content: &str, line_num: usize) -> Option<String> {
     content
         .lines()

@@ -1,18 +1,18 @@
-// EnjoyFlow CLI — 入口
+// EnjoyKnowledge CLI — 入口
 
 mod cli;
 mod config;
-mod knowledge;
+mod doctor;
 mod format;
 mod init;
-mod doctor;
+mod knowledge;
 mod record;
 
 use clap::Parser;
 use std::path::Path;
 
 #[derive(Parser)]
-#[command(name = "enjoyflow", version, about = "工程团队的人机共享任务上下文层")]
+#[command(name = "enjoyknowledge", version, about = "AI 编程场景的知识纪律层")]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -20,7 +20,7 @@ struct Cli {
 
 #[derive(clap::Subcommand)]
 enum Command {
-    /// 初始化 EnjoyFlow 项目
+    /// 初始化 `EnjoyFlow` 项目
     Init {
         path: Option<String>,
         #[arg(long)]
@@ -91,13 +91,7 @@ fn main() -> anyhow::Result<()> {
     let root = Path::new(".");
 
     match cli.command {
-        Command::Init {
-            path,
-            scan,
-            describe,
-            link,
-            ai,
-        } => {
+        Command::Init { path, scan, describe, link, ai } => {
             cli::init::run(
                 path.as_deref(),
                 scan,
@@ -106,12 +100,7 @@ fn main() -> anyhow::Result<()> {
                 ai.as_deref(),
             )?;
         }
-        Command::Search {
-            query,
-            class,
-            tag,
-            archive,
-        } => {
+        Command::Search { query, class, tag, archive } => {
             cli::search::run(&query, &class, &tag, archive, root)?;
         }
         Command::Record { sub } => match sub {

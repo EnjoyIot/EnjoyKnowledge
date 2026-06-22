@@ -5,6 +5,7 @@
 use std::path::Path;
 
 /// 去重结果
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct DedupResult {
     /// 保留的条目
@@ -14,7 +15,9 @@ pub struct DedupResult {
 }
 
 /// 执行去重
-pub fn deduplicate(_root: &Path, _files: &[String]) -> anyhow::Result<Vec<DedupResult>> {
+#[allow(dead_code)]
+#[allow(clippy::unnecessary_wraps)]
+pub const fn deduplicate(_root: &Path, _files: &[String]) -> anyhow::Result<Vec<DedupResult>> {
     // TODO: L1 tag 交集过滤 + L2 语义比对
     Ok(Vec::new())
 }

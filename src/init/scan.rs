@@ -2,6 +2,7 @@
 use std::path::Path;
 
 /// 扫描结果
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Default)]
 pub struct ScanResult {
     pub tech_stack: Vec<String>,
@@ -12,10 +13,12 @@ pub struct ScanResult {
 }
 
 /// 扫描项目根目录，识别技术栈
+#[allow(clippy::field_reassign_with_default)]
 pub fn scan_project(root: &Path) -> ScanResult {
     let mut result = ScanResult::default();
 
     result.has_package_json = root.join("package.json").exists();
+    #[allow(clippy::field_reassign_with_default)]
     if result.has_package_json {
         result.tech_stack.push("Node.js".into());
         // 尝试检测框架

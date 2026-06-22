@@ -1,48 +1,57 @@
-# EnjoyFlow
+﻿# enjoyknowledge
+未发布，产品讨论和设计阶段，当前代码全是demo.
 
 <p align="center">
-  <strong>工程团队的人机共享任务上下文层</strong>
+  <strong>通用知识资产引擎 + AI 编程知识应用</strong>
 </p>
 
 <p align="center">
-  <a href="https://crates.io/crates/enjoyflow"><img src="https://img.shields.io/crates/v/enjoyflow" alt="Crates.io"></a>
-  <a href="https://docs.rs/enjoyflow"><img src="https://img.shields.io/docsrs/enjoyflow" alt="Docs"></a>
+  <a href="https://crates.io/crates/enjoyknowledge"><img src="https://img.shields.io/crates/v/enjoyknowledge" alt="Crates.io"></a>
+  <a href="https://docs.rs/enjoyknowledge"><img src="https://img.shields.io/docsrs/enjoyknowledge" alt="Docs"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 </p>
 
-EnjoyFlow 是一套 **CLI 工具 + 知识库结构 + 接口规范**，让工程团队的开发者与 AI 编码工具（Cursor / Copilot / Claude Code）共享同一份开发上下文知识。当 AI 写代码时，它知道你的架构、规范、踩坑、业务规则和当前任务进度。
+enjoyknowledge 分为两层：
+
+- **enjoyknowledge Core**：通用知识资产引擎，提供 OKF 兼容格式、`ls`/`grep`/`cat`/`add`/`doctor` 等知识管理原语，不绑定具体领域。
+- **enjoyknowledge for Coding**：基于 Core 的第一个领域应用，面向 AI 编程场景，内置架构、踩坑、模式、业务规则、决策和任务暂存区。
+
+当前 README 介绍的是 **Core + for Coding 默认应用**。后续可以在同一个 Core 上扩展 `for support`、`for research`、`for sales` 等其他应用。
 
 ## 一句话定位
 
-> EnjoyFlow 位于 AI 编码工具和已有知识库之间——**人和 AI 用同一份知识干活。**
+> enjoyknowledge Core 让知识文件可被工程化管理；enjoyknowledge for Coding 让 AI 编程工具和开发者用同一份工程知识干活。
 
 ## 快速开始
 
 ```bash
 # 安装
-cargo install enjoyflow
+cargo install enjoyknowledge
 
 # 在当前项目初始化
-enjoyflow init
+enjoyknowledge init
 
-# 搜索知识
-enjoyflow search "导出" --class gotchas --tag excel
+# 浏览知识库概况
+enjoyknowledge ls
+
+# 结构化搜索
+enjoyknowledge grep "导出" --type Gotcha --tags excel
 
 # 记录踩坑
-enjoyflow record gotcha --tag excel --content "t_export_record 表无 status 字段"
+enjoyknowledge add gotchas/export.md "## t_export_record 无 status 字段"
 
 # 诊断知识库健康度
-enjoyflow doctor
+enjoyknowledge doctor
 ```
 
 ## 核心理念
 
-| 问题 | EnjoyFlow 的答案 |
+| 问题 | enjoyknowledge 的答案 |
 |---|---|
-| AI 不知道项目架构 | `enjoyflow search` 提供架构上下文 |
-| AI 重复踩已知坑 | `enjoyflow record gotcha` 沉淀踩坑，`search` 检索 |
+| AI 不知道项目架构 | AGENTS.md 推送 `ls` 摘要，`cat` 按需读取架构文件 |
+| AI 重复踩已知坑 | `enjoyknowledge add` 沉淀踩坑，`grep` 定位到相关 `##` 段 |
 | 换 AI 工具知识丢失 | 知识在文件系统，工具无关 |
-| 团队知识孤岛 | `knowledge-base/` 进 git，团队共享 |
+| 团队知识孤岛 | `.enjoyknowledge/` 进 git，团队共享 |
 
 ## 架构
 
@@ -50,30 +59,38 @@ enjoyflow doctor
 AI 编码工具 (Cursor/Copilot/Claude Code)
          │
          ▼
-    AGENTS.md  ← "想搜架构 → enjoyflow search ..."
+    AGENTS.md  ← 内嵌 enjoyknowledge ls 摘要
          │
          ▼
-┌─ enjoyflow CLI ────────────────────┐
-│  init │ search │ record │ doctor   │
+┌─ enjoyknowledge Core CLI ───────────────┐
+│  init │ ls │ grep │ cat │ add │ doctor │
 └────────────────────────────────────┘
          │
          ▼
-    .enjoyflow/
-    ├── knowledge-base/   ← 静态基础层
-    ├── knowledge-tasks/  ← 动态任务层
-    ├── config.yaml
-    └── .index.json
+    for Coding 应用结构
+    项目根目录/
+    ├── .enjoyknowledge/
+    │   ├── architecture/
+    │   ├── gotchas/
+    │   ├── patterns/
+    │   ├── business/
+    │   ├── decisions/
+    │   ├── index.md
+    │   └── log.md
+    └── knowledge-tasks/  ← 短期任务工作区，审核后再沉淀
 ```
 
 ## 文档
 
 | 文档 | 内容 |
 |---|---|
-| [SYSTEM-DESIGN.md](docs/SYSTEM-DESIGN.md) | 系统架构、模块划分、数据流 |
+| [DESIGN-V3.md](docs/DESIGN-V3.md) | 系统设计、知识流转、模块架构、CLI 命令参考 |
+| [DESIGN-PHILOSOPHY.md](docs/DESIGN-PHILOSOPHY.md) | 设计哲学：为什么存在、取舍原则 |
 | [INTERFACE-SPEC.md](docs/INTERFACE-SPEC.md) | CLI 合约、输出格式、兼容性级别 |
-| [KNOWLEDGE-ARCHITECTURE.md](docs/KNOWLEDGE-ARCHITECTURE.md) | 32 类知识分类、目录结构 |
 | [POSITIONING.md](docs/POSITIONING.md) | 定位宣言、竞品对比 |
 | [PRODUCT-DESIGN.md](docs/PRODUCT-DESIGN.md) | 用户视角的产品设计 |
+| [SCENARIO-TEMPLATES.md](docs/SCENARIO-TEMPLATES.md) | 场景模板 |
+| [GLOSSARY.md](docs/GLOSSARY.md) | 术语表 |
 
 ## 贡献
 
@@ -81,4 +98,4 @@ AI 编码工具 (Cursor/Copilot/Claude Code)
 
 ## 许可
 
-MIT © EnjoyFlow Team
+MIT © enjoyknowledge Team

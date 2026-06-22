@@ -42,12 +42,12 @@ pub fn generate_tool_files(root: &Path, tool: AiTool) -> anyhow::Result<()> {
         AiTool::Cursor => {
             let dir = root.join(".cursor").join("rules");
             std::fs::create_dir_all(&dir)?;
-            std::fs::write(dir.join("enjoyflow.mdc"), CURSOR_RULES)?;
+            std::fs::write(dir.join("enjoyknowledge.mdc"), CURSOR_RULES)?;
         }
         AiTool::Claude => {
             let dir = root.join(".claude").join("skills");
             std::fs::create_dir_all(&dir)?;
-            std::fs::write(dir.join("enjoyflow.md"), CLAUDE_SKILL)?;
+            std::fs::write(dir.join("enjoyknowledge.md"), CLAUDE_SKILL)?;
         }
         AiTool::Copilot => {
             let dir = root.join(".github");
@@ -59,17 +59,17 @@ pub fn generate_tool_files(root: &Path, tool: AiTool) -> anyhow::Result<()> {
         AiTool::Windsurf => {
             let dir = root.join(".windsurf").join("rules");
             std::fs::create_dir_all(&dir)?;
-            std::fs::write(dir.join("enjoyflow.md"), WINDSULF_RULES)?;
+            std::fs::write(dir.join("enjoyknowledge.md"), WINDSULF_RULES)?;
         }
         AiTool::Cline => {
             let dir = root.join(".clinerules");
             std::fs::create_dir_all(&dir)?;
-            std::fs::write(dir.join("enjoyflow.md"), CLINE_RULES)?;
+            std::fs::write(dir.join("enjoyknowledge.md"), CLINE_RULES)?;
         }
         AiTool::Codex => {
             let dir = root.join(".codex").join("prompts");
             std::fs::create_dir_all(&dir)?;
-            std::fs::write(dir.join("enjoyflow.md"), CODEX_PROMPT)?;
+            std::fs::write(dir.join("enjoyknowledge.md"), CODEX_PROMPT)?;
         }
         AiTool::Gemini => {
             let path = root.join("GEMINI.md");
@@ -83,12 +83,12 @@ pub fn generate_tool_files(root: &Path, tool: AiTool) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// 追加 EnjoyFlow 条目到 .gitignore
+/// 追加 enjoyknowledge 条目到 .gitignore
 pub fn update_gitignore(root: &Path) -> anyhow::Result<()> {
     let path = root.join(".gitignore");
     let existing = std::fs::read_to_string(&path).unwrap_or_default();
-    let entries = "\n# EnjoyFlow\n.enjoyflow/.doctor-cache\n";
-    if !existing.contains(".enjoyflow/.doctor-cache") {
+    let entries = "\n# enjoyknowledge\n.enjoyknowledge/.doctor-cache\n";
+    if !existing.contains(".enjoyknowledge/.doctor-cache") {
         std::fs::write(&path, format!("{existing}{entries}"))?;
     }
     Ok(())
@@ -96,16 +96,16 @@ pub fn update_gitignore(root: &Path) -> anyhow::Result<()> {
 
 const AGENTS_MD_TEMPLATE: &str = r#"# AGENTS.md
 
-本项目使用 [EnjoyFlow](https://enjoyflow.dev) 管理 AI 编程的上下文知识。
+本项目使用 [enjoyknowledge](https://enjoyknowledge.dev) 管理 AI 编程的上下文知识。
 
 ## 可用命令
 
-- `enjoyflow search <query> [--class <class>] [--tag <tag>]` — 搜索知识库
-- `enjoyflow record gotcha --tag <tag> --content "..."` — 记录踩坑
-- `enjoyflow record pattern --tag <tag> --content "..."` — 记录最佳实践
-- `enjoyflow record decision --task <REQ-ID> --content "..."` — 记录架构决策
-- `enjoyflow show <REQ-ID>` — 查看任务状态
-- `enjoyflow doctor` — 诊断知识库健康度
+- `enjoyknowledge search <query> [--class <class>] [--tag <tag>]` — 搜索知识库
+- `enjoyknowledge record gotcha --tag <tag> --content "..."` — 记录踩坑
+- `enjoyknowledge record pattern --tag <tag> --content "..."` — 记录最佳实践
+- `enjoyknowledge record decision --task <REQ-ID> --content "..."` — 记录架构决策
+- `enjoyknowledge show <REQ-ID>` — 查看任务状态
+- `enjoyknowledge doctor` — 诊断知识库健康度
 
 ## 场景建议
 
@@ -123,35 +123,35 @@ const AGENTS_MD_TEMPLATE: &str = r#"# AGENTS.md
 这不是强制预设——AI 根据实际情况自己判断需要搜什么。
 "#;
 
-const CURSOR_RULES: &str = r#"---
+const CURSOR_RULES: &str = r"---
 alwaysApply: true
 ---
-# EnjoyFlow — 上下文知识供给
+# enjoyknowledge — 上下文知识供给
 
-本项目使用 EnjoyFlow 管理 AI 编程的上下文知识。
+本项目使用 enjoyknowledge 管理 AI 编程的上下文知识。
 
 当用户提到任务时，运行对应搜索命令获取上下文。
-"#;
+";
 
-const CLAUDE_SKILL: &str = r#"# EnjoyFlow Skill
+const CLAUDE_SKILL: &str = r"# enjoyknowledge Skill
 
-本项目使用 EnjoyFlow 管理 AI 编程的上下文知识。
+本项目使用 enjoyknowledge 管理 AI 编程的上下文知识。
 
 ## 使用方式
 
 当用户开始编码任务时，按以下规则判断：
 
 1. 识别场景（new_feature / bug_fix / refactor / hotfix / architecture_decision）
-2. 运行 `enjoyflow search <query>` 获取相关上下文
-3. 任务结束后，运行 `enjoyflow record` 记录新发现的坑/模式
-"#;
+2. 运行 `enjoyknowledge search <query>` 获取相关上下文
+3. 任务结束后，运行 `enjoyknowledge record` 记录新发现的坑/模式
+";
 
-const COPILOT_BLOCK: &str = "\n## EnjoyFlow\n\n本项目使用 EnjoyFlow 管理 AI 编程上下文。运行 `enjoyflow search <query>` 获取相关知识。";
+const COPILOT_BLOCK: &str = "\n## enjoyknowledge\n\n本项目使用 enjoyknowledge 管理 AI 编程上下文。运行 `enjoyknowledge search <query>` 获取相关知识。";
 
-const WINDSULF_RULES: &str = "# EnjoyFlow\n本项目使用 EnjoyFlow 管理 AI 编程上下文。运行 `enjoyflow search <query>` 获取相关知识。";
+const WINDSULF_RULES: &str = "# enjoyknowledge\n本项目使用 enjoyknowledge 管理 AI 编程上下文。运行 `enjoyknowledge search <query>` 获取相关知识。";
 
-const CLINE_RULES: &str = "# EnjoyFlow\n本项目使用 EnjoyFlow 管理 AI 编程上下文。运行 `enjoyflow search <query>` 获取相关知识。";
+const CLINE_RULES: &str = "# enjoyknowledge\n本项目使用 enjoyknowledge 管理 AI 编程上下文。运行 `enjoyknowledge search <query>` 获取相关知识。";
 
-const CODEX_PROMPT: &str = "# EnjoyFlow\n本项目使用 EnjoyFlow 管理 AI 编程上下文。运行 `enjoyflow search <query>` 获取相关知识。";
+const CODEX_PROMPT: &str = "# enjoyknowledge\n本项目使用 enjoyknowledge 管理 AI 编程上下文。运行 `enjoyknowledge search <query>` 获取相关知识。";
 
-const GEMINI_BLOCK: &str = "\n## EnjoyFlow\n\n本项目使用 EnjoyFlow 管理 AI 编程上下文。运行 `enjoyflow search <query>` 获取相关知识。";
+const GEMINI_BLOCK: &str = "\n## enjoyknowledge\n\n本项目使用 enjoyknowledge 管理 AI 编程上下文。运行 `enjoyknowledge search <query>` 获取相关知识。";

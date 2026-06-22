@@ -1,7 +1,9 @@
 /// 知识源统一接口
+#[allow(dead_code)] // trait 方法 stub 阶段保留
 use super::types::{SearchQuery, SearchResult};
 
 /// 所有知识源必须实现此 trait
+#[allow(dead_code)]
 pub trait KnowledgeSource {
     /// 按条件搜索，返回匹配结果列表
     fn search(&self, query: &SearchQuery) -> anyhow::Result<Vec<SearchResult>>;

@@ -1,4 +1,4 @@
-//! enjoyflow init — 项目初始化
+//! enjoyknowledge init — 项目初始化
 
 use crate::init::{ai_tools, skeleton};
 use std::path::Path;
@@ -13,11 +13,11 @@ pub fn run(
     let root = Path::new(path.unwrap_or("."));
 
     if let Some(link_path) = link {
-        // --link 模式：只生成 AI 工具文件，不创建 .enjoyflow/
+        // --link 模式：只生成 AI 工具文件，不创建 .enjoyknowledge/
         let tool = ai_tools::AiTool::from_str(ai.unwrap_or("auto"));
         ai_tools::generate_agents_md(root)?;
         ai_tools::generate_tool_files(root, tool)?;
-        println!("✓ 已链接到 {}", link_path);
+        println!("✓ 已链接到 {link_path}");
         return Ok(());
     }
 
@@ -45,6 +45,6 @@ pub fn run(
     ai_tools::generate_tool_files(root, tool)?;
     ai_tools::update_gitignore(root)?;
 
-    println!("✓ EnjoyFlow 已初始化");
+    println!("✓ enjoyknowledge 已初始化");
     Ok(())
 }

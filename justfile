@@ -1,4 +1,4 @@
-# EnjoyFlow 开发任务快捷命令
+﻿# enjoyknowledge 开发任务快捷命令
 # 需要 just: cargo install just
 
 default:

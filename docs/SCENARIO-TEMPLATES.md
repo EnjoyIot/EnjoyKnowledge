@@ -1,28 +1,31 @@
-# EnjoyFlow 场景模板规范 (Scenario Templates)
+﻿# enjoyknowledge 场景模板规范
 
-**版本**: v0.1-draft
-**日期**: 2026-06-20
-**状态**: 草案
-**配套**: [CONTEXTFLOW-SPEC.md](CONTEXTFLOW-SPEC.md)（原名 D6-SNAPSHOT-SPEC.md）/ [POSITIONING.md](POSITIONING.md) v5
+> 定义 enjoyknowledge 场景模板的完整规范——8 个 MVP 预设 + 5 个扩展预设的状态机、分支逻辑和默认 prompt。
+>
+> 场景模板聚焦于**流程编排**：每个任务类型的状态流转、决策关口、分支条件和验证方式。知识拉取由 AI 通过 AGENTS.md 推送摘要自行判断。
+
+> 状态: 探索性规范 | 2026-06
+> 本文档记录场景模板的完整状态机定义——8 个 MVP + 5 个扩展场景。
+> 当前 DESIGN-V3.md 的模板系统是“目录即模板”极简实现，与本文档处于不同抽象层级。
+> 作为远期设计和场景思考的参考保留。
+
 
 ---
 
 ## 1. 目的
 
-本文档定义 EnjoyFlow **场景模板**的完整规范——8 个 MVP 预设 + 5 个扩展预设的可变流程、维度集和默认 prompt。
+本文档定义 enjoyknowledge **场景模板**的完整规范。
 
-**场景模板**——把"开发者做某类任务时的最佳实践"形式化为可复用的模板，让 AI 工具自动选择适合当前任务的预设。
+在 enjoyknowledge 中，场景模板不预定义"需要哪些知识维度"——AI 通过 AGENTS.md 推送摘要感知知识库全貌，自行判断需要深入哪些文件。场景模板聚焦于**流程编排**：每个任务类型的状态流转、决策关口、分支条件和验证方式。
 
-**核心约束**——场景模板的状态机必须配合 [INTERFACE-SPEC.md](INTERFACE-SPEC.md) §9 的 capability 模型：
+**核心约束**——场景模板的状态机保持执行-验证隔离：
 
-| 状态 | 对应 capability | 防 AI 缺陷 |
+| 状态 | AI 角色 | 隔离要求 |
 |---|---|---|
-| requirement_*, spec_* | architecture | #2 目标漂移 + #4 过度自信 |
-| implementation_* | execution | #1 上下文衰减 |
-| verification_* | verification（独立会话） | #3 幻觉一致性 |
-| knowledge_*, archive_* | curation | #5 知识孤岛 |
-
-**执行-验证隔离强制**——verification 状态必须**强制新会话**（§9.2 不变量 inv-002）。
+| requirement_*, spec_* | 合约组装（Define） | 合约由团队流程维护，AI 只读取 |
+| implementation_* | 执行（Build） | 不能修改合约，不能自己验证自己 |
+| verification_* | 验证（Verify） | **强制独立会话**（不同 AI 会话） |
+| knowledge_*, archive_* | 策展（Learn） | L2/L3 归档 = 任务完成条件 |
 
 ---
 
@@ -36,11 +39,12 @@ name: <场景名>
 description: <场景描述>
 version: 0.1.0
 
-# 1. 维度集（必填）—— 该场景需要哪些知识类别
-dimensions:
-  - A1_architecture
-  - A2_code_standards
-  - ...
+# 1. 推荐知识目录 —— 提示 AI 哪些目录可能相关
+#    AI 通过 AGENTS.md 推送摘要自行判断，不强制加载
+hint_dirs:
+  - architecture/
+  - gotchas/
+  - business/
 
 # 2. 状态机（必填）—— 该场景的任务状态流转
 states:
@@ -71,11 +75,11 @@ prompts:
   output_format: |
     <输出格式说明>
 
-# 5. 钩子集成（可选）—— 在状态转换时触发EnjoyFlow 钩子
+# 5. 钩子集成（可选）—— 在状态转换时触发 enjoyknowledge 钩子
 hooks:
   on_state_enter:
     - state: <状态名>
-      hook: <EnjoyFlow 钩子名>
+      hook: <enjoyknowledge 钩子名>
 ---
 ```
 
@@ -112,8 +116,8 @@ states:
   - name: requirement_drafting
     description: 编写 PRD
     entry_actions:
-      - 加载 B1 业务术语
-      - 加载 B2 相关业务规则
+      - 查看 business/ 目录
+      - 查看 business/ 目录
     exit_actions:
       - 生成 PRD v1
       - 自动设置 status=Draft
@@ -135,7 +139,7 @@ states:
   - name: spec_generation
     description: 规约生成
     entry_actions:
-      - 加载 A1 架构
+      - 查看 architecture/ 目录
       - 加载 A3 API 契约
       - 加载 ContextFlow 快照
     exit_actions:
@@ -146,7 +150,7 @@ states:
     description: 代码实现
     entry_actions:
       - 加载 A2 代码规范
-      - 加载 C1 已知踩坑
+      - 查看 gotchas/ 目录
     exit_actions:
       - 自动标注 @ai-generated
       - Git commit 含 REQ-ID
@@ -200,7 +204,7 @@ prompts:
     任务标题: {task_title}
 
     第一步：阅读 PRD（knowledge-tasks/{task_id}/prd.md）
-    第二步：调用 enjoyflow_context 加载相关知识
+    第二步：通过 AGENTS.md 推送摘要 加载相关知识
     第三步：按状态机逐步推进
 
   per_state:
@@ -234,7 +238,7 @@ prompts:
         SPEC 已生成。
         请按 SPEC 实现代码，注意：
         - 严格遵循 A2 代码规范
-        - 检查 C1 已知踩坑，避免重复
+        - 查看 gotchas/ 目录，避免重复
         - 每个 AI 生成的函数头部标注 @ai-generated
 
     - state: verification
@@ -310,7 +314,7 @@ states:
   - name: bug_investigation
     description: Bug 调查
     entry_actions:
-      - 加载 D7 失败模式
+      - 查看 gotchas/ 目录
       - 加载 C5 已知问题
     exit_actions:
       - 记录调查结论
@@ -326,7 +330,7 @@ states:
   - name: fix_implementation
     description: 修复实现
     entry_actions:
-      - 加载 C1 踩坑
+      - 查看 gotchas/ 目录
     exit_actions:
       - 提交修复代码
       - Git commit 含 "fix(BUG-XXX):"
@@ -385,7 +389,7 @@ prompts:
     Bug ID: {bug_id}
     Bug 描述: {bug_description}
 
-    第一步：调用 enjoyflow_context 检查 D7 失败模式
+    第一步：通过 AGENTS.md 推送摘要 检查 D7 失败模式
     第二步：检查 C5 已知问题
     第三步：进入 bug_investigation 状态
 
@@ -480,7 +484,7 @@ states:
   - name: impact_analysis
     description: 影响范围分析
     entry_actions:
-      - 加载 A1 架构
+      - 查看 architecture/ 目录
       - 加载 A3 API 契约
     exit_actions:
       - 影响模块清单
@@ -490,7 +494,7 @@ states:
   - name: refactor_design
     description: 重构设计
     entry_actions:
-      - 加载 C2 现有模式
+      - 查看 patterns/ 目录
     exit_actions:
       - 重构方案文档
       - 渐进式迁移计划
@@ -499,7 +503,7 @@ states:
     description: 重构实施（按模块）
     entry_actions:
       - 加载 A2 规范
-      - 加载 C1 踩坑
+      - 查看 gotchas/ 目录
     exit_actions:
       - 按模块分批提交
       - 保持向后兼容
@@ -527,7 +531,7 @@ prompts:
     重构 ID: {refactor_id}
     重构范围: {scope}
 
-    第一步：调用 enjoyflow_context 加载架构 + 决策
+    第一步：通过 AGENTS.md 推送摘要 加载架构 + 决策
     第二步：进入 impact_analysis 状态
 
   per_state:
@@ -607,7 +611,7 @@ states:
   - name: emergency_diagnosis
     description: 紧急诊断（5 分钟内）
     entry_actions:
-      - 加载 D7 失败模式
+      - 查看 gotchas/ 目录
       - 加载 C5 已知问题
     exit_actions:
       - 紧急修复点定位
@@ -615,7 +619,7 @@ states:
   - name: minimal_fix
     description: 最小修复
     entry_actions:
-      - 加载 A1 架构
+      - 查看 architecture/ 目录
     exit_actions:
       - 最小改动修复
       - 立即部署（绕过常规流程）
@@ -752,7 +756,7 @@ states:
     description: 收集上下文
     entry_actions:
       - 加载 A1 当前架构
-      - 加载 C3 历史决策
+      - 查看 decisions/ 目录
     exit_actions:
       - 决策背景文档
 
@@ -965,7 +969,7 @@ prompts:
     版本号: {version}
     发布类型: {release_type}  # major / minor / patch / hotfix
 
-    第一步：调用 enjoyflow_context 加载发布流程 + 部署清单
+    第一步：通过 AGENTS.md 推送摘要 加载发布流程 + 部署清单
     第二步：进入 pre_release_check 状态
 
   per_state:
@@ -1080,7 +1084,7 @@ states:
   - name: human_review
     description: 人工审查（AI 辅助）
     entry_actions:
-      - 加载 C1 已知踩坑（识别反模式）
+      - 查看 gotchas/ 目录（识别反模式）
       - 加载 D3 相关历史决策
     exit_actions:
       - 审查意见清单
@@ -1127,7 +1131,7 @@ prompts:
     PR: {pr_id}
     关联需求: {req_id}
 
-    第一步：调用 enjoyflow_context 加载规范 + 审查清单
+    第一步：通过 AGENTS.md 推送摘要 加载规范 + 审查清单
     第二步：进入 context_loading 状态
 
   per_state:
@@ -1288,7 +1292,7 @@ prompts:
     级别: {severity}
     时间: {timestamp}
 
-    第一步：调用 enjoyflow_context 检查 D7 历史故障 + C5 已知问题
+    第一步：通过 AGENTS.md 推送摘要 检查 D7 历史故障 + C5 已知问题
     第二步：进入 alert_triage 状态
 
   per_state:
@@ -1396,14 +1400,14 @@ alert_triage → [P0/P1] immediate_mitigation → investigation → fix_implemen
 
 ```
 core/scenarios/            # 内置（最低优先级）
-~/.enjoyflow/scenarios/    # 用户级（中等）
-.enjoyflow/scenarios/      # 项目级（最高优先级）
+~/.enjoyknowledge/scenarios/    # 用户级（中等）
+.enjoyknowledge/scenarios/      # 项目级（最高优先级）
 ```
 
 ### 5.2 用户自定义场景
 
 ```yaml
-# .enjoyflow/scenarios/compliance_audit.yaml
+# .enjoyknowledge/scenarios/compliance_audit.yaml
 ---
 name: compliance_audit
 description: 合规审计场景
@@ -1421,44 +1425,35 @@ states:
 
 ---
 
-## 6. 场景模板与 ContextFlow 工具的集成
+## 6. 场景模板与 enjoyknowledge 命令的集成
 
-### 6.1 AI 调用方式
+### 6.1 执行流
 
-```typescript
-// 普通用户：直接用预设名
-enjoyflow_context({
-  task_id: "REQ-001",
-  preset: "new_feature"
-})
+场景模板中 AI 启动时自动加载 AGENTS.md（推送通道），感知知识库全貌，然后按场景模板的状态机逐步推进任务：
 
-// 高级用户：覆盖维度
-enjoyflow_context({
-  task_id: "REQ-001",
-  dimensions: ["A3", "A4", "C1"]  // 忽略 new_feature 的默认维度
-})
-
-// 高级用户：覆盖 prompt
-enjoyflow_context({
-  task_id: "REQ-001",
-  preset: "new_feature",
-  prompt_override: |
-    你在第 2 阶段（规约生成），请直接输出 SPEC。
-})
+```
+1. [AI 启动，AGENTS.md 自动加载]              ← 推送通道，已感知知识库
+2. [判断场景类型: bug_fix / new_feature / ...]
+3. [按场景模板状态机进入第一个状态]
+4. enjoyknowledge cat gotchas/export.md              ← 拉取通道，深入查看
+5. [执行状态任务]
+6. enjoyknowledge add gotchas/export.md "## 新坑"    ← 回写知识
 ```
 
 ### 6.2 钩子集成
 
-场景模板的每个状态可以挂载EnjoyFlow 钩子：
+场景模板的每个状态可以挂载 enjoyknowledge 钩子：
 
 ```yaml
 hooks:
   on_state_enter:
     - state: implementation
-      hook: pre-implementation   # 触发EnjoyFlow 钩子
+      hook: pre-implementation
     - state: verification
-      hook: pre-verification     # 触发独立验证钩子
+      hook: pre-verification     # 触发独立验证
 ```
+
+### 6.3 钩子集成（续）
 
 ---
 
@@ -1467,12 +1462,14 @@ hooks:
 | 维度 | new_feature | bug_fix | refactor | hotfix | architecture_decision | release_deployment | code_review | monitoring_response |
 |---|---|---|---|---|---|---|---|---|
 | 状态数 | 6 | 5 | 5 | 4 | 5 | 6 | 5 | 5 |
-| 维度数 | 10 | 8 | 8 | 6 | 4 | 6 | 6 | 6 |
+| 推荐知识目录 | architecture/ business/ gotchas/ patterns/ decisions/ tasks/ | architecture/ gotchas/ | architecture/ patterns/ decisions/ | architecture/ gotchas/ | architecture/ decisions/ | architecture/ | architecture/ gotchas/ decisions/ | architecture/ gotchas/ |
 | 分支数 | 3 | 4 | 0 | 3 | 0 | 2 | 2 | 3 |
 | 持续时间 | 长 | 中 | 长 | 极短 | 中 | 中 | 短 | 中-极短 |
 | 适用频率 | 每周 | 每天 | 每月 | 每月 | 每月 | 每周 | 每天 | 每天 |
 | 验证要求 | 独立会话 | 独立会话 | 回归测试 | 生产验证 | 人决策 | 生产验证 | 人工审查 | 复盘报告 |
 | 覆盖流程环节 | 需求→实现→验证 | 实现→验证 | 实现→验证 | 紧急修复 | 决策 | 部署发布 | 代码审查 | 运维监控 |
+
+注：AI 通过 AGENTS.md 推送摘要自行判断知识需求，上表中的"推荐知识目录"仅作提示，不强制加载。
 
 ---
 
@@ -1480,24 +1477,22 @@ hooks:
 
 | 原则 | 体现 |
 |---|---|
-| **状态机而非阶段** | 场景模板用状态机定义，比 v1 阶段更灵活 |
+| **状态机而非阶段** | 场景模板用状态机定义，比固定阶段更灵活 |
 | **可变分支** | 同场景下按特征走不同子流程 |
 | **人在决策点** | architecture_decision 必须有人介入 |
 | **独立验证** | bug_fix / new_feature 强制独立会话验证 |
-| **知识沉淀** | 每个场景最后都有 knowledge 阶段 |
+| **知识沉淀** | 每个场景最后都有 knowledge 阶段（`enjoyknowledge add` 回写） |
 | **可继承** | 用户场景可 extends 内置场景 |
+| **推送优先** | AI 启动时通过 AGENTS.md 感知知识库，不预设维度集 |
 
 ---
 
 ## 9. 验证清单
 
 - [ ] 8 个 MVP 场景模板已定义
-- [ ] 每个模板有完整维度集 + 状态机 + prompt
+- [ ] 每个模板有完整状态机 + prompt
 - [ ] 模板支持可继承
 - [ ] 模板支持钩子集成
 - [ ] 模板支持项目级覆盖
 - [ ] 模板有分支条件（按任务特征走不同流程）
-
----
-
-*文档版本: v0.1-draft | 最后更新: 2026-06-20*
+- [ ] 推送通道取代预设维度集

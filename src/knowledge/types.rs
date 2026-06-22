@@ -1,5 +1,4 @@
 /// 搜索查询与结果类型
-
 /// 搜索条件
 #[derive(Debug, Clone)]
 pub struct SearchQuery {

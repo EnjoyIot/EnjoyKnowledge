@@ -1,12 +1,12 @@
-# 贡献指南
+﻿# 贡献指南
 
-感谢你对 EnjoyFlow 的关注！
+感谢你对 enjoyknowledge 的关注！
 
 ## 快速开始
 
 ```bash
-git clone https://github.com/enjoyflow/enjoyflow
-cd enjoyflow
+git clone https://github.com/enjoyknowledge/enjoyknowledge
+cd enjoyknowledge
 cargo build
 cargo test
 ```

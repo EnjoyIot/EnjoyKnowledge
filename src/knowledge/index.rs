@@ -1,4 +1,4 @@
-/// .enjoyflow/.index.json 惰性索引
+/// .enjoyknowledge/.index.json 惰性索引
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
@@ -15,9 +15,9 @@ pub struct Index {
 }
 
 impl Index {
-    /// 从 .enjoyflow/.index.json 加载
+    /// 从 .enjoyknowledge/.index.json 加载
     pub fn load(root: &Path) -> anyhow::Result<Option<Self>> {
-        let path = root.join(".enjoyflow").join(".index.json");
+        let path = root.join(".enjoyknowledge").join(".index.json");
         if !path.exists() {
             return Ok(None);
         }
@@ -25,42 +25,32 @@ impl Index {
         Ok(Some(serde_json::from_str(&content)?))
     }
 
-    /// 保存到 .enjoyflow/.index.json
+    /// 保存到 .enjoyknowledge/.index.json
     pub fn save(&self, root: &Path) -> anyhow::Result<()> {
-        let path = root.join(".enjoyflow").join(".index.json");
+        let path = root.join(".enjoyknowledge").join(".index.json");
         let content = serde_json::to_string_pretty(self)?;
         Ok(std::fs::write(path, content)?)
     }
 
     /// 按 class 查询文件列表
+    #[allow(dead_code)]
     pub fn files_by_class(&self, class: &str) -> Vec<&str> {
-        self.by_class
-            .get(class)
-            .map(|v| v.iter().map(String::as_str).collect())
-            .unwrap_or_default()
+        self.by_class.get(class).map(|v| v.iter().map(String::as_str).collect()).unwrap_or_default()
     }
 
     /// 按 tag 查询文件列表
+    #[allow(dead_code)]
     pub fn files_by_tag(&self, tag: &str) -> Vec<&str> {
-        self.by_tag
-            .get(tag)
-            .map(|v| v.iter().map(String::as_str).collect())
-            .unwrap_or_default()
+        self.by_tag.get(tag).map(|v| v.iter().map(String::as_str).collect()).unwrap_or_default()
     }
 
     /// 增量更新：添加 class → file 映射
     pub fn add_class_file(&mut self, class: &str, file: &str) {
-        self.by_class
-            .entry(class.to_string())
-            .or_default()
-            .push(file.to_string());
+        self.by_class.entry(class.to_string()).or_default().push(file.to_string());
     }
 
     /// 增量更新：添加 tag → file 映射
     pub fn add_tag_file(&mut self, tag: &str, file: &str) {
-        self.by_tag
-            .entry(tag.to_string())
-            .or_default()
-            .push(file.to_string());
+        self.by_tag.entry(tag.to_string()).or_default().push(file.to_string());
     }
 }

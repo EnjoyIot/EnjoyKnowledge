@@ -1,9 +1,9 @@
-# EnjoyFlow 接口规范
+# enjoyknowledge 接口规范
 
-> 版本 1.0 | 2026-06-21
+> OKF v0.1 兼容
 >
-> EnjoyFlow 兼容实现的最小接口合约。第三方适配器、工具生成器、AI 工具集成的唯一参考。
-> 不解释为什么，只定义是什么。
+> enjoyknowledge 兼容实现的最小接口合约。第三方适配器、工具生成器、AI 工具集成的唯一参考。
+> 对齐 Google OKF (Open Knowledge Format) v0.1。
 
 ---
 
@@ -11,329 +11,311 @@
 
 | 级别 | 要求 | 标识 |
 |---|---|---|
-| **L1 完整兼容** | 实现本文档全部合约 | `enjoyflow/v1` |
-| **L2 格式兼容** | 读/写 EnjoyFlow 格式的文件，不实现 CLI | `enjoyflow-format/v1` |
-| **L3 源兼容** | 实现 Source Adapter 接口，接入 search | `enjoyflow-source/v1` |
+| **L1 Core 完整兼容** | 实现本文档全部 Core 合约 | `enjoyknowledge-core` |
+| **L2 格式兼容** | 读/写 OKF 兼容的 Markdown 文件，不实现 CLI | `enjoyknowledge-format` |
+| **L3 应用兼容** | 基于 Core 定义某个 for X 应用的目录、入口和工作流 | `enjoyknowledge-app` |
 
 ---
 
-## 2. 配置文件
+## 2. 目录结构
 
-### 2.1 config.yaml
+### 2.1 for Coding 默认结构
 
-```yaml
-# .enjoyflow/config.yaml — 完整 schema
-# 所有字段可为空时使用默认值
-
-sources:                        # 必填，至少 1 个
-  - type: filesystem            # "filesystem" | "git" | "mcp"
-    path: .enjoyflow/knowledge-base/  # filesystem 必填
-    # git 专用:
-    # url: <git-url>
-    # branch: main
-    # mcp 专用:
-    # server: <mcp-server-name>
-
-class_labels:                   # 可选，未列出时用内置默认映射
-  A1: architecture
-  A2: code_standards
-  # ... 见 §7 完整注册表
-
-ai_tool: auto                   # auto | cursor | claude | copilot | windsurf | cline | codex | gemini
+```
+<项目根目录>/
+├── AGENTS.md               # 必需，AI 入口（内含知识摘要推送块）
+├── .enjoyknowledge/
+│   ├── architecture/       # 架构知识
+│   ├── gotchas/            # 踩坑记录
+│   ├── patterns/           # 最佳实践
+│   ├── business/           # 业务规则
+│   ├── decisions/          # 架构决策记录
+│   ├── index.md            # OKF 保留，目录的目录
+│   └── log.md              # OKF 保留，变更历史
+└── knowledge-tasks/        # 可选，任务过程材料；审核后再迁入 .enjoyknowledge/
+    └── <REQ-ID>/
 ```
 
-### 2.2 默认值
+### 2.2 规则
 
-| 字段 | 默认值 |
+| 规则 | 约束 |
 |---|---|
-| `sources` | `[{type: filesystem, path: .enjoyflow/knowledge-base/}]` |
-| `class_labels` | §7 内置注册表 |
-| `ai_tool` | `auto` |
+| 深度 | `.enjoyknowledge/` 内不超过 2 层：`category/file.md` |
+| 目录名即分类 | 文件所在目录名决定了它的概念类型，无需在 frontmatter 中重复声明 |
+| 文件名自解释 | 文件名表达主题，无需在文件名中重复目录名 |
+| 应用目录 | `architecture/`、`gotchas/`、`knowledge-tasks/` 等属于 for Coding，不属于 Core 强制目录 |
+| 任务暂存区 | `knowledge-tasks/<REQ-ID>/` 与 `.enjoyknowledge/` 并列，不进入长期知识索引，审核后再迁入 |
 
 ---
 
 ## 3. 知识文档格式
 
-所有 EnjoyFlow 知识文件的必须格式：
-
 ### 3.1 Frontmatter
 
 ```yaml
 ---
-class: C1_gotchas              # 必填，来自 §7 注册表
-tags:                          # 必填，≥1 个
-  - export
-  - excel
-last_modified: 2026-06-20      # 必填，ISO 8601 日期
-description: "导出 Excel 功能的踩坑记录"  # 可选，search 匹配用
+title: 导出功能踩坑       # 推荐，人类可读标题
+description: 超过10万行时接口超时，当前分批导出  # 强烈推荐，一行摘要
+tags: [export, excel, performance]  # 推荐，跨分类过滤
+timestamp: 2026-06-21     # 推荐，ISO 8601 日期
+resource: bigquery://...  # 可选，对应实际资源的 URI
 ---
 ```
 
-| 字段 | 类型 | 必填 | 约束 |
+> 文件所在目录名即分类（如 `gotchas/` 下的文件属于 Gotcha 类）。不再需要 frontmatter 中的 `type` 字段。
+
+### 3.2 字段约束
+
+| 字段 | 类型 | 必需 | 约束 |
 |---|---|---|---|
-| `class` | string | 是 | §7 注册表中的 ID |
-| `tags` | string[] | 是 | ≥1 个，纯小写字母+连字符 |
-| `last_modified` | date | 是 | ISO 8601 `YYYY-MM-DD` |
-| `description` | string | 否 | ≤200 字符，search 匹配 |
+| `title` | string | 否 | 人类可读标题 |
+| `description` | string | 强烈推荐 | ≦200 字符，一行摘要。出现在 `ls`、`tree`、AGENTS.md 推送块中 |
+| `tags` | string[] | 否 | 纯小写字母+连字符，跨分类检索用 |
+| `timestamp` | string | 否 | ISO 8601 `YYYY-MM-DD` |
+| `resource` | string | 否 | 对应实际资源的 URI |
 
-### 3.2 正文
+### 3.3 正文
 
-```markdown
-# 标题（唯一，一级标题）
+自由 Markdown。每个 `##` 二级标题为一个**条目**（entry），是知识的基本叙事单元：
 
-## 段标题（二级标题，search 段界）
-正文内容...
+- `grep` 输出定位到 `##` 段
+- doctor 以 `##` 标题数统计条目量（超过 20 条建议拆分）
+- `add` 追加内容推荐以 `##` 为开头
+- Markdown 链接可用于表达概念间关系：`相关架构见 [导出模块](../architecture/overview.md)`
 
-### 子段标题（三级标题，可嵌套）
-...
-```
+### 3.4 保留文件名
 
-| 规则 | 要求 |
-|---|---|
-| 一级标题 `#` | 文件唯一，作为文件名等价物 |
-| 二级标题 `##` | search 的段界——每条结果定位到 `##` |
-| 三级标题 `###` | 可选，辅助组织 |
-| tags 出现位置 | 只在 frontmatter，不在正文 |
+| 文件 | 位置 | 作用 |
+|---|---|---|
+| `index.md` | 任何目录下（可选） | 该目录的目录，列出所有概念文件及 description |
 
 ---
 
-## 4. search 输出格式
+## 4. CLI 命令
 
-### 4.1 命令行
+### 4.1 命令总览
 
-```bash
-enjoyflow search <query>           # 自由文本
-enjoyflow search <query> --class gotchas   # 按 class 过滤
-enjoyflow search <query> --tag excel       # 按 tag 过滤
-enjoyflow search <query> --archive         # 含归档
-```
+所有命令以 `enjoyknowledge` 为前缀。
 
-多个 `--class` / `--tag` 之间为 AND 逻辑。
+| 命令 | 语义 | 输出 |
+|---|---|---|
+| `enjoyknowledge init [--ai <tool>] [--template <name>] [--link <path>]` | 初始化知识库 | 目录骨架 + AGENTS.md |
+| `enjoyknowledge ls [path] [--bare]` | 列出目录/文件 | 文件列表，默认每文件附带 `description` |
+| `enjoyknowledge tree [--bare]` | 递归目录树 | 目录树，默认每文件附带 `description` |
+| `enjoyknowledge cat <path>` | 查看文件内容 | 文件全文（stdout） |
+| `enjoyknowledge grep <pattern> [--type] [--tags] [--path]` | 结构化搜索 | `文件##段标题\n  上下文 snippet` |
+| `enjoyknowledge add <path> <content>` | 新增/追加知识 | 确认消息（stderr） |
+| `enjoyknowledge doctor` | 合规检查 | 问题清单 |
+| `enjoyknowledge fix` | 自动修复 | 修复结果 |
 
-### 4.2 输出格式
-
-每行一条命中记录：
-
-```
-<文件路径>##<段标题>
-  <匹配行周围上下文>
-```
+### 4.2 `ls` — 核心入口
 
 ```
-# 示例输出
-.enjoyflow/knowledge-base/development/GOTCHAS.md##导出
-  t_export_record 无 status 字段，用 create_time 判断
-.enjoyflow/knowledge-base/business/water-billing.md##导出规则
-  单次最多 10 万行，超限分批，格式 xlsx/csv
+$ enjoyknowledge ls
+architecture/
+  overview.md           — 项目整体架构、模块划分
+  tech-stack.md         — 技术栈选型
+gotchas/
+  export.md             — 导出超时、OOM、status字段缺失（3条）
+  auth.md               — Token刷新失效、权限缓存不一致（2条）
+patterns/
+  batch-processing.md   — 分批处理大数据集的通用模式
+business/
+  water-billing.md      — 水费计算规则、分段计价公式
 ```
 
-### 4.3 实现要求
+指定路径（相对于 `.enjoyknowledge/`）：
+
+```
+$ enjoyknowledge ls gotchas/
+  export.md   — 导出超时、OOM、status字段缺失（3条）
+  auth.md     — Token刷新失效、权限缓存不一致（2条）
+```
+
+`--bare`：只列文件名，不含 description。
+
+### 4.3 `tree` — 递归目录树
+
+```
+$ enjoyknowledge tree
+.enjoyknowledge/
+├── architecture/
+│   ├── overview.md       — 项目整体架构
+│   └── tech-stack.md     — 技术栈选型
+├── gotchas/
+│   ├── export.md         — 导出相关踩坑（3条）
+│   └── auth.md           — 认证相关（2条）
+├── patterns/
+│   └── batch-processing.md — 分批处理模式
+└── business/
+    └── water-billing.md  — 水费计算规则
+```
+
+`--bare` 同 `ls`，去掉 description。
+
+### 4.4 `grep` — 结构化搜索
+
+**与系统 `grep` 的差异**：系统 grep 是行匹配器，`enjoyknowledge grep` 是知识检索器——输出定位到 `##` 段，附带上下文 snippet。
+
+```
+$ enjoyknowledge grep "导出超时"
+gotchas/export.md##大数据量超时
+  - 超过 10 万行时接口超时
+  - 当前方案：分批导出，单次最多 10 万行
+```
+
+选项：
+
+| 选项 | 说明 |
+|---|---|
+| `--type <type>` | 限定概念类型（即目录名，如 `gotchas`） |
+| `--tags <tag>` | tag 过滤（AND 逻辑，可重复） |
+| `--path <dir>` | 限定搜索目录 |
+| `--archive` | 含已归档的任务材料 |
+
+实现要求：
 
 | 要求 | 说明 |
 |---|---|
-| 匹配范围 | frontmatter（class, tags, description）+ 标题 + 正文 |
+| 匹配范围 | 正文（`##` 段），不搜 frontmatter。frontmatter 已通过 `type` / `tags` 过滤 |
 | 大小写 | 不区分 |
-| 排序 | 按文件路径字母序 |
-| 归档搜索 | 默认跳过 `archive/` 目录，`--archive` 包含 |
-| 多源搜索 | 并行查询所有源，合并输出 |
+| 排序 | 按匹配段的知识密度（段越长越靠前） |
+| 段界定位 | 每个匹配行定位到最近的 `##` 标题 |
+
+### 4.5 `add` — 新增知识
+
+```
+enjoyknowledge add gotchas/export.md "## Excel内存溢出
+- 现象: SXSSFWorkbook 未关闭导致 OOM
+- 方案: try-with-resources 自动关闭"
+```
+
+行为：
+- 文件存在 → 追加到末尾
+- 如果 frontmatter 有 `timestamp`，更新为当前日期
+- 文件不存在 → 创建（生成含 `description` 和 `timestamp` 的 frontmatter 模板），写入内容
+- 目录不存在 → 自动创建
+- 追加后自动更新 AGENTS.md 中的知识摘要块
+
+### 4.6 `cat` — 查看文件
+
+路径相对于 `.enjoyknowledge/`。补全前缀后输出文件全文。
+
+### 4.7 `fix` — 自动修复
+
+`enjoyknowledge fix` 自动修复可程序化处理的合规问题。
+
+**可自动修复：**
+
+| 问题 | 修复方式 |
+|---|---|
+| 缺 `description` | 从正文首段提取或填入模板占位 |
+| AGENTS.md 过期 | 重新生成摘要块（同步 `ls` 输出） |
+| 超出预算（>20 条目） | 将最早的 `##` 条目移到归档文件中 |
+| 待归档任务 | 将 `knowledge-tasks/<REQ-ID>/` 下可复用条目提取到 `.enjoyknowledge/` |
+
+**不可自动修复（需手动）：**
+
+| 问题 | 原因 |
+|---|---|
+| 缺 frontmatter | 无法推断描述和元数据 |
+| 深度超标 | 需要重新组织目录结构 |
+| 疑似重复 | 需人工判断 |
+
+**归档机制：**
+
+归档针对已完成任务的 `knowledge-tasks/<REQ-ID>/` 目录：
+- `doctor` 检测到已完成的任务目录 → 提示归档
+- `fix` 将 `knowledge-tasks/<REQ-ID>/` 下的可复用条目提取到 `.enjoyknowledge/` 对应分类，原目录标记为已归档
+- `grep --archive` 搜索范围包含已归档的任务材料
+
+### 4.8 AGENTS.md 生成
+
+`enjoyknowledge init` 生成 AGENTS.md，内嵌知识摘要块（`<!-- enjoyknowledge_LS_START -->` ... `<!-- enjoyknowledge_LS_END -->` 之间）。
+`enjoyknowledge add` 时自动更新此摘要块，保持与 `ls` 输出一致。
 
 ---
 
-## 5. record 写入合约
+## 5. 模板系统与 `init --template`
 
-### 5.1 命令行
+### 5.1 默认模板（for Coding）
+
+`enjoyknowledge init` 默认使用 for Coding 模板，生成：
+- `.enjoyknowledge/{architecture,gotchas,patterns,business,decisions}/`
+- `knowledge-tasks/`
+- `AGENTS.md`（含知识摘要推送块）
+
+### 5.2 自定义模板
 
 ```bash
-enjoyflow record gotcha [--task <REQ-ID>] --tag <tag> --content "<文本>"
-enjoyflow record pattern --tag <tag> --content "<文本>"
-enjoyflow record decision --task <REQ-ID> --content "<文本>"
+enjoyknowledge init --template legal
 ```
 
-### 5.2 目标文件路由
+模板加载优先级（高到低）：
+1. `.enjoyknowledge/templates/<name>/`（项目级）
+2. `~/.enjoyknowledge/templates/<name>/`（用户级）
 
-| record 类型 | 写入文件 | 写入方式 |
-|---|---|---|
-| `gotcha` | `.enjoyflow/knowledge-tasks/<REQ-ID>/gotchas.md`（有 --task）或 `.enjoyflow/knowledge-base/development/GOTCHAS.md`（无 --task） | 追加条目到末尾 |
-| `pattern` | `.enjoyflow/knowledge-base/development/PATTERNS.md` | 追加条目到末尾 |
-| `decision` | `.enjoyflow/knowledge-tasks/<REQ-ID>/adr.md` | 追加到 ## Decisions 段 |
-
-### 5.3 追加格式
-
-```markdown
-- <tag>: <content>（<REQ-ID>, <YYYY-MM-DD>）
+模板目录结构约定：
+```
+<template-dir>/
+├── .enjoyknowledge/          # 目录骨架（直接复制）
+│   ├── contracts/
+│   └── regulations/
+├── knowledge-tasks/          # 可选，任务暂存区骨架
+└── AGENTS.md.template        # AGENTS.md 模板
 ```
 
-**约束**：只追加，不修改已有条目。追加后更新 `last_modified`。
+引擎不写死目录名——目录名即分类，`contracts/` 下的文件属于 Contract 类，`regulations/` 下的文件属于 Regulation 类。
+
+### 5.3 关键行为
+
+- `--link <path>` 引用外部知识库时，不创建 `.enjoyknowledge/` 目录，只在 AGENTS.md 中指向外部路径
+- `init --ai auto` 自动检测当前 AI 工具
+- 无论指定哪个 AI 工具，AGENTS.md 始终生成（作为通用标准入口）
 
 ---
 
-## 6. 源适配器接口
+## 6. AI 工具文件生成
 
-### 6.1 语言无关接口
+`enjoyknowledge init --ai <tool>` 生成：
 
-```
-KnowledgeSource {
-    search(query: SearchQuery) → [SearchResult]
-    read(path: string) → string
-    append(path: string, content: string) → void
-    listFiles() → [string]
-}
-
-SearchQuery {
-    text: string              // 自由文本
-    class: string | null      // 可选 class 过滤
-    tags: string[] | null     // 可选 tag 过滤（AND）
-    includeArchive: bool      // 默认 false
-}
-
-SearchResult {
-    file: string              // 文件路径
-    section: string           // ## 标题
-    snippet: string           // 匹配行 ± 3 行上下文
-}
-```
-
-### 6.2 源类型
-
-| type | 接入方式 | 实现要求 |
+| `--ai` | 生成的工具专有文件 | 格式 |
 |---|---|---|
-| `filesystem` | 直接读写本地文件 | `search` 用 grep / 索引 |
-| `git` | `git clone --depth 1` + filesystem 逻辑 | 只读 |
-| `mcp` | MCP 客户端协议 | 实现 MCP tools/resources |
-
-### 6.3 多源合并
-
-实现方调用所有源的 `search`，按 `file` 字母序合并 `SearchResult`。重复文件去重（保留第一个）。
+| 默认（不指定） | `AGENTS.md` | Markdown（含知识摘要推送块） |
+| `cursor` | `.cursor/rules/enjoyknowledge.mdc` | YAML frontmatter + Markdown |
+| `claude` | `.claude/skills/enjoyknowledge.md` | Markdown |
+| `copilot` | `.github/copilot-instructions.md` | 追加 Markdown 块 |
+| `windsurf` | `.windsurf/rules/enjoyknowledge.md` | Markdown |
+| `cline` | `.clinerules/enjoyknowledge.md` | Markdown |
+| `codex` | `.codex/prompts/enjoyknowledge.md` | Markdown |
+| `trae` | `.trae/rules/enjoyknowledge.md` | Markdown |
+| `gemini` | `GEMINI.md` | 追加 Markdown 块 |
+| `auto` | 自动检测当前环境中的 AI 工具 | — |
 
 ---
 
-## 7. class 字段
+## 7. doctor 检查
 
-class 是 frontmatter 中的必填字符串，标识知识文档的类别。格式为 `<字母><数字>_<描述>`，如 `C1_gotchas`。
+`enjoyknowledge doctor` 是知识文件的 linter。
 
-`--class` 参数接受 class ID（如 `C1_gotchas`）或语义标签（如 `gotchas`）——实现方在 `config.yaml` 的 `class_labels` 中维护映射。
-
-| class_labels 内置默认 | ID |
+| 检查项 | 说明 |
 |---|---|
-| architecture | A1 |
-| code_standards | A2 |
-| api_contract | A3 |
-| data_model | A4 |
-| api_specs | A5 |
-| requirements | A6 |
-| ui_ux_design | A7 |
-| adr | A8 |
-| test_report | A9 |
-| dependencies | A10 |
-| environments | A11 |
-| releases | A12 |
-| glossary | B1 |
-| business_rules | B2 |
-| business_flow | B3 |
-| constraints | B4 |
-| cases | B5 |
-| gotchas | C1 |
-| patterns | C2 |
-| decisions | C3 |
-| test_strategy | C4 |
-| known_issues | C5 |
-| team_convention | C6 |
-| review_checklist | C7 |
-| deployment | C8 |
-| task_progress | D1 |
-| session_log | D2 |
-| decision_history | D3 |
-| contract_sync | D4 |
-| ai_call_chain | D5 |
-| contextflow | D6 |
-| failure_modes | D7 |
-
-完整定义（每个 class 的含义、典型内容、物理路径）见 [KNOWLEDGE-ARCHITECTURE.md §2](KNOWLEDGE-ARCHITECTURE.md)。
-
-自定义 class 可在 `config.yaml` 的 `class_labels` 中追加映射，使用 A-Z 之外的字母类别（如 `X1_my_domain`）。
+| 缺 frontmatter | 每个 `.md` 有可解析 YAML frontmatter |
+| 缺 description | 强烈推荐有 |
+| 超出预算 | 单文件超过 20 条 `##` 条目时建议拆分 |
+| 疑似重复 | 同 tag 组内条目相似度 > 70% |
+| 深度超标 | 目录超过 2 层 |
+| AGENTS.md 过期 | `ls` 输出与 AGENTS.md 摘要不一致 |
+| 待归档任务 | `knowledge-tasks/` 下已完成未归档的任务目录 |
 
 ---
 
-## 8. CLI 合约
-
-兼容实现必须提供的命令及其行为：
-
-| 命令 | 输入 | 输出 | 副作用 |
-|---|---|---|---|
-| `enjoyflow search <query> [--class] [--tag] [--archive]` | §4 | §4.2 格式，stdout | 无 |
-| `enjoyflow record <type> --tag <t> --content "<c>"` | §5 | `✓` 或错误信息，stderr | 追加到目标文件 |
-| `enjoyflow init [path] [--ai <t>] [--link <p>]` | §2 | 生成目录 + AGENTS.md | 创建文件和目录 |
-| `enjoyflow doctor` | 无 | 问题清单，stdout | 无 |
-| `enjoyflow fix` | 无 | 修复结果，stdout | 修改文件 |
-
-### 8.1 错误码
+## 8. 错误码
 
 | 码 | 含义 |
 |---|---|
 | 0 | 成功 |
 | 1 | 输入参数错误 |
 | 2 | 文件/路径不存在 |
-| 3 | 格式校验失败 |
-| 4 | 源不可达 |
-
-### 8.2 AI 工具文件生成
-
-`enjoyflow init --ai <tool>` 必须生成：
-
-| --ai | 生成的文件 | 格式 |
-|---|---|---|
-| 任意 / 默认 | `AGENTS.md` | Markdown |
-| `cursor` | `.cursor/rules/enjoyflow.mdc` | YAML frontmatter + Markdown |
-| `claude` | `.claude/skills/enjoyflow.md` | Markdown |
-| `copilot` | `.github/copilot-instructions.md` | 追加 Markdown 块 |
-| `windsurf` | `.windsurf/rules/enjoyflow.md` | Markdown |
-| `cline` | `.clinerules/enjoyflow.md` | Markdown |
-| `codex` | `.codex/prompts/enjoyflow.md` | Markdown |
-| `gemini` | `GEMINI.md` | 追加 Markdown 块 |
-
----
-
-## 9. 版本化
-
-`config.yaml` 中的 `apiVersion: enjoyflow/v1` 标识本文档版本。实现方应检查此字段：
-
-- 主版本变更 → 拒绝加载，提示升级
-- 次版本 → 向后兼容，警告
-- 未知字段 → 忽略（forward compatibility）
-
----
-
-## 10. 测试套件
-
-兼容性验证用指定输入和预期输出验证：
-
-```
-enjoyflow-test/
-├── fixtures/
-│   ├── minimal-project/        # 最小项目
-│   │   └── .enjoyflow/
-│   │       ├── config.yaml
-│   │       └── knowledge-base/...
-│   └── full-project/           # 多源项目
-├── cases/
-│   ├── search-basic.txt        # 输入 → 预期输出
-│   ├── search-class-filter.txt
-│   ├── search-multi-source.txt
-│   └── record-gotcha.txt
-└── validate.sh                 # 跑全部用例
-```
-
-用例格式：
-
-```
-# cases/search-basic.txt
-INPUT:  search "导出"
-EXPECT: .enjoyflow/knowledge-base/development/GOTCHAS.md##导出
-EXPECT: t_export_record 无 status 字段
-```
-
-通过全部用例即为 L1 兼容。
-
----
-
-*文档版本: 1.0 | apiVersion: enjoyflow/v1*
+| 3 | 格式校验失败（frontmatter 不可解析、description 缺失等 fix 无法自动修复的问题） |
+| 4 | 文件不可读写 |
