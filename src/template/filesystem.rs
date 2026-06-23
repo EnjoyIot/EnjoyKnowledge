@@ -36,7 +36,7 @@ impl TemplateProvider for FilesystemTemplateProvider {
             let global = home.join(".enjoyknowledge").join("templates");
             if let Ok(entries) = std::fs::read_dir(&global) {
                 for entry in entries.flatten() {
-                    if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+                    if entry.file_type().is_ok_and(|t| t.is_dir()) {
                         names.push(entry.file_name().to_string_lossy().to_string());
                     }
                 }
@@ -47,7 +47,7 @@ impl TemplateProvider for FilesystemTemplateProvider {
         let local = Path::new(EK_DIR).join("templates");
         if let Ok(entries) = std::fs::read_dir(&local) {
             for entry in entries.flatten() {
-                if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+                if entry.file_type().is_ok_and(|t| t.is_dir()) {
                     let name = entry.file_name().to_string_lossy().to_string();
                     if !names.contains(&name) {
                         names.push(name);

@@ -20,7 +20,7 @@ impl FilesystemSource {
         Self { root: root.into(), project_root: project_root.into() }
     }
 
-    // ── helpers ──────────────────────────────────────────────
+    // 鈹€鈹€ helpers 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
     /// Build a case-insensitive regex from a literal query string.
     fn build_pattern(query: &str) -> Regex {
@@ -86,7 +86,7 @@ impl KnowledgeSource for FilesystemSource {
         let mut subdirs: Vec<String> = Vec::new();
         if let Ok(iter) = std::fs::read_dir(&scan_root) {
             for entry in iter.flatten() {
-                let is_dir = entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false);
+                let is_dir = entry.file_type().is_ok_and(|ft| ft.is_dir());
                 if is_dir {
                     let name = entry.file_name().to_string_lossy().to_string();
                     if !name.starts_with('.') && name != "templates" {
@@ -143,7 +143,7 @@ impl KnowledgeSource for FilesystemSource {
         Ok(entries)
     }
 
-    // ── tree_entries ─────────────────────────────────────────
+    // 鈹€鈹€ tree_entries 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
     fn tree_entries(&self, bare: bool) -> anyhow::Result<Vec<KnowledgeEntry>> {
         let all_files = self.walk_md_files(None);
         #[allow(clippy::type_complexity)]
@@ -199,13 +199,13 @@ impl KnowledgeSource for FilesystemSource {
         Ok(entries)
     }
 
-    // ── read_file ────────────────────────────────────────────
+    // 鈹€鈹€ read_file 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
     fn read_file(&self, path: &str) -> anyhow::Result<String> {
         let full = self.root.join(path);
         Ok(std::fs::read_to_string(full)?)
     }
 
-    // ── search ───────────────────────────────────────────────
+    // 鈹€鈹€ search 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
     fn search(&self, query: &SearchQuery) -> anyhow::Result<Vec<SearchResult>> {
         let pattern = Self::build_pattern(&query.pattern);
         let mut results: Vec<SearchResult> = Vec::new();
@@ -262,7 +262,7 @@ impl KnowledgeSource for FilesystemSource {
                             continue;
                         }
                     } else if !query.type_filter.is_empty() || !query.tags.is_empty() {
-                        // No frontmatter but filters active →?skip
+                        // No frontmatter but filters active 鈫?skip
                         continue;
                     }
                 }
@@ -298,11 +298,11 @@ impl KnowledgeSource for FilesystemSource {
         }
 
         // Sort by content density: longer snippet first
-        results.sort_by(|a, b| b.snippet.len().cmp(&a.snippet.len()));
+        results.sort_by_key(|b| std::cmp::Reverse(b.snippet.len()));
         Ok(results)
     }
 
-    // ── add_entry ────────────────────────────────────────────
+    // 鈹€鈹€ add_entry 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
     fn add_entry(&self, path: &str, content: &str) -> anyhow::Result<()> {
         let full = self.root.join(path);
 
