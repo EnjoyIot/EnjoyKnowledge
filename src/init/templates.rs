@@ -24,6 +24,7 @@
 /// The default `for-coding` template ships with 5 knowledge categories:
 /// `architecture`, `gotchas`, `patterns`, `business`, `decisions`.
 use crate::core::{Profile, TemplateProvider};
+use crate::EK_DIR;
 use std::path::Path;
 
 /// Apply a named template to `project_root`.
@@ -39,9 +40,9 @@ pub fn apply_template(
     let Some(template_dir) = provider.resolve(name) else { return Ok(false) };
 
     // 1. Copy .enjoyknowledge/ skeleton
-    let ek_src = template_dir.join(".enjoyknowledge");
+    let ek_src = template_dir.join(EK_DIR);
     if ek_src.exists() {
-        copy_dir_recursive(&ek_src, &project_root.join(".enjoyknowledge"))?;
+        copy_dir_recursive(&ek_src, &project_root.join(EK_DIR))?;
     } else {
         // Fall back to profile-defined skeleton
         super::skeleton::generate_skeleton(project_root, profile)?;

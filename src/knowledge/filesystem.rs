@@ -262,7 +262,7 @@ impl KnowledgeSource for FilesystemSource {
                             continue;
                         }
                     } else if !query.type_filter.is_empty() || !query.tags.is_empty() {
-                        // No frontmatter but filters active → skip
+                        // No frontmatter but filters active →?skip
                         continue;
                     }
                 }
@@ -324,5 +324,9 @@ impl KnowledgeSource for FilesystemSource {
         }
 
         Ok(())
+    }
+
+    fn all_entry_paths(&self) -> Vec<String> {
+        self.walk_md_files(None).into_iter().map(|(_, rel)| rel).collect()
     }
 }

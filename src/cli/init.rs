@@ -2,6 +2,7 @@
 use crate::core::template::TemplateProvider;
 use crate::core::Profile;
 use crate::init;
+use crate::EK_DIR;
 use std::path::Path;
 
 pub fn run(
@@ -36,7 +37,7 @@ pub fn run(
     if let Some(link_path) = link {
         // Link mode: only generate AGENTS.md pointing to external knowledge base
         let linked = Path::new(link_path);
-        if !linked.join(".enjoyknowledge").exists() {
+        if !linked.join(EK_DIR).exists() {
             eprintln!("enjoyknowledge: {link_path} does not contain a .enjoyknowledge/ directory");
             std::process::exit(1);
         }
@@ -90,7 +91,11 @@ enjoyknowledge --root {link_path} ls
 
     // Generate AI tool files
     if let Some(tool) = ai {
-        let ai_tool = crate::init::ai_tools::AiTool::from_str(tool);
+        let Some(ai_tool) = crate::init::ai_tools::AiTool::from_str(tool) else {
+            eprintln!("enjoyknowledge: unknown AI tool '{tool}'");
+            eprintln!("Available: auto, cursor, claude, copilot, windsurf, cline, codex, trae, gemini, generic");
+            std::process::exit(1);
+        };
         crate::init::ai_tools::generate_tool_files(&project_root, ai_tool)?;
     }
 

@@ -30,18 +30,19 @@ pub enum AiTool {
 
 impl AiTool {
     /// Parse a tool name from the `--ai` flag value (case-insensitive).
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
-            "cursor" => Self::Cursor,
-            "claude" => Self::Claude,
-            "copilot" => Self::Copilot,
-            "windsurf" => Self::Windsurf,
-            "cline" => Self::Cline,
-            "codex" => Self::Codex,
-            "trae" => Self::Trae,
-            "gemini" => Self::Gemini,
-            "generic" => Self::Generic,
-            _ => Self::Auto,
+            "cursor" => Some(Self::Cursor),
+            "claude" => Some(Self::Claude),
+            "copilot" => Some(Self::Copilot),
+            "windsurf" => Some(Self::Windsurf),
+            "cline" => Some(Self::Cline),
+            "codex" => Some(Self::Codex),
+            "trae" => Some(Self::Trae),
+            "gemini" => Some(Self::Gemini),
+            "generic" => Some(Self::Generic),
+            "auto" => Some(Self::Auto),
+            _ => None,
         }
     }
 

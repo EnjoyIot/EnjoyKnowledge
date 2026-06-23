@@ -1,0 +1,108 @@
+//! CLI argument definitions — separated from main.rs for cleanliness.
+
+use clap::Parser;
+use clap::Subcommand;
+
+#[derive(Parser)]
+#[command(name = "enjoyknowledge", version, about = "AI coding context layer")]
+pub struct Cli {
+    #[command(subcommand)]
+    pub command: Command,
+}
+
+#[derive(Subcommand)]
+pub enum Command {
+    /// Initialize .enjoyknowledge/ knowledge base skeleton
+    Init {
+        /// Project path (default: current directory)
+        path: Option<String>,
+
+        /// AI coding tool to generate tool-specific files for
+        #[arg(long)]
+        ai: Option<String>,
+
+        /// Apply a named template (from ~/.enjoyknowledge/templates/ or .enjoyknowledge/templates/)
+        #[arg(long)]
+        template: Option<String>,
+
+        /// Link to an external knowledge base directory
+        #[arg(long)]
+        link: Option<String>,
+
+        /// Knowledge profile: "for-coding" (default), "for-design", etc.
+        #[arg(long, default_value = "for-coding")]
+        profile: String,
+    },
+
+    /// List knowledge files with descriptions
+    Ls {
+        /// Subdirectory path to list (e.g. "architecture")
+        path: Option<String>,
+
+        /// Bare mode — filename only, no descriptions or counts
+        #[arg(long)]
+        bare: bool,
+    },
+
+    /// Recursive directory tree with descriptions
+    Tree {
+        /// Bare mode — filenames only
+        #[arg(long)]
+        bare: bool,
+    },
+
+    /// Read a knowledge file
+    Cat {
+        /// Relative path under .enjoyknowledge/
+        path: String,
+    },
+
+    /// Structure-aware search inside ## sections
+    Grep {
+        /// Case-insensitive search pattern
+        pattern: String,
+
+        /// Filter by directory name (repeatable)
+        #[arg(long = "type", value_name = "DIR")]
+        type_filter: Vec<String>,
+
+        /// Filter by frontmatter tags (repeatable)
+        #[arg(long, value_name = "TAG")]
+        tags: Vec<String>,
+
+        /// Limit search to a subdirectory
+        #[arg(long, value_name = "PATH")]
+        path: Option<String>,
+
+        /// Include knowledge-tasks/ in search scope
+        #[arg(long)]
+        archive: bool,
+
+        /// Search within a specific task directory: knowledge-tasks/<REQ-ID>
+        #[arg(long, value_name = "REQ-ID", conflicts_with = "archive")]
+        req: Option<String>,
+    },
+
+    /// Append or create a knowledge entry
+    Add {
+        /// Relative path under .enjoyknowledge/ (e.g. "gotchas/export.md")
+        path: String,
+
+        /// Markdown content to append (## sections + body)
+        content: String,
+    },
+
+    /// Run health checks against the knowledge base
+    Doctor {
+        /// Exit with non-zero code if any warnings exist (for CI pipelines)
+        #[arg(long)]
+        ci: bool,
+    },
+
+    /// Auto-fix common issues
+    Fix {
+        /// Fix/archive a specific task: knowledge-tasks/<REQ-ID>
+        #[arg(long, value_name = "REQ-ID")]
+        req: Option<String>,
+    },
+}

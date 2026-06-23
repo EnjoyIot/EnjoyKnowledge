@@ -1,9 +1,10 @@
 /// Filesystem-backed template provider.
 ///
 /// Resolve order:
-/// 1. `~/.enjoyknowledge/templates/<name>/` (global, shared across projects)
-/// 2. `.enjoyknowledge/templates/<name>/`   (local, project-specific)
+/// 1. `~/.enjoyknowledge/templates/<name>/` (global config, shared across projects)
+/// 2. `{EK_DIR}/templates/<name>/`          (local, project-specific)
 use crate::core::TemplateProvider;
+use crate::EK_DIR;
 use std::path::{Path, PathBuf};
 
 pub struct FilesystemTemplateProvider;
@@ -19,7 +20,7 @@ impl TemplateProvider for FilesystemTemplateProvider {
         }
 
         // 2. Local: .enjoyknowledge/templates/<name>/
-        let local = Path::new(".enjoyknowledge").join("templates").join(name);
+        let local = Path::new(EK_DIR).join("templates").join(name);
         if local.is_dir() {
             return Some(local);
         }
@@ -43,7 +44,7 @@ impl TemplateProvider for FilesystemTemplateProvider {
         }
 
         // Local templates
-        let local = Path::new(".enjoyknowledge").join("templates");
+        let local = Path::new(EK_DIR).join("templates");
         if let Ok(entries) = std::fs::read_dir(&local) {
             for entry in entries.flatten() {
                 if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {

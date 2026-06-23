@@ -1,5 +1,6 @@
-/// Directory skeleton generation.
 use crate::core::Profile;
+/// Directory skeleton generation.
+use crate::EK_DIR;
 use std::fmt::Write;
 use std::path::Path;
 
@@ -9,7 +10,7 @@ use std::path::Path;
 /// `profile.seed_files()`, so different contexts (coding, design, research, �?
 /// produce different directory trees.
 pub fn generate_skeleton(project_root: &Path, profile: &dyn Profile) -> anyhow::Result<()> {
-    let ek = project_root.join(".enjoyknowledge");
+    let ek = project_root.join(EK_DIR);
     std::fs::create_dir_all(&ek)?;
 
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();

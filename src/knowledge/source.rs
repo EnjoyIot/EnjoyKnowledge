@@ -18,4 +18,8 @@ pub trait KnowledgeSource {
     /// Append content to a knowledge file, creating it (with frontmatter) if needed.
     /// Automatically updates the `timestamp` field in existing frontmatter.
     fn add_entry(&self, path: &str, content: &str) -> anyhow::Result<()>;
+
+    /// Return relative paths of all Markdown knowledge files.
+    /// Used by doctor checks for comprehensive diagnostics.
+    fn all_entry_paths(&self) -> Vec<String>;
 }

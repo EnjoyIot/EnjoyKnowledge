@@ -1,6 +1,5 @@
 //! doctor diagnostic checks for the knowledge base.
-use crate::knowledge::source::KnowledgeSource;
-use crate::knowledge::FilesystemSource;
+use crate::knowledge::KnowledgeSource;
 use std::path::Path;
 
 /// Severity of a check finding.
@@ -21,23 +20,23 @@ pub struct CheckResult {
 }
 
 /// Run all health checks against the knowledge base.
-pub fn run_all(source: &FilesystemSource, _project_root: &Path) -> Vec<CheckResult> {
+pub fn run_all(source: &dyn KnowledgeSource, project_root: &Path) -> Vec<CheckResult> {
     let mut results = Vec::new();
 
     results.extend(check_frontmatter(source));
     results.extend(check_budget(source));
     results.extend(check_missing_description(source));
-    results.extend(check_agents_md(source));
-    results.extend(check_pending_archive(source));
+    results.extend(check_agents_md(project_root));
+    results.extend(check_pending_archive(project_root));
 
     results
 }
 
 /// Check 1: Every .md file has valid frontmatter.
-fn check_frontmatter(source: &FilesystemSource) -> Vec<CheckResult> {
+fn check_frontmatter(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
     let mut results = Vec::new();
-    let files = source.walk_md_files(None);
-    for (_abs, rel) in &files {
+    let paths = source.all_entry_paths();
+    for rel in &paths {
         match source.read_file(rel) {
             Ok(content) => {
                 if crate::format::frontmatter::parse_frontmatter(&content).is_none() {
@@ -61,10 +60,10 @@ fn check_frontmatter(source: &FilesystemSource) -> Vec<CheckResult> {
 }
 
 /// Check 2: File budget — warn if a file has ≥20 ## entries.
-fn check_budget(source: &FilesystemSource) -> Vec<CheckResult> {
+fn check_budget(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
     let mut results = Vec::new();
-    let files = source.walk_md_files(None);
-    for (_abs, rel) in &files {
+    let paths = source.all_entry_paths();
+    for rel in &paths {
         if let Ok(content) = source.read_file(rel) {
             let count =
                 content.lines().filter(|l| l.starts_with("## ") && !l.starts_with("### ")).count();
@@ -81,10 +80,10 @@ fn check_budget(source: &FilesystemSource) -> Vec<CheckResult> {
 }
 
 /// Check 3: Missing or empty description in frontmatter.
-fn check_missing_description(source: &FilesystemSource) -> Vec<CheckResult> {
+fn check_missing_description(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
     let mut results = Vec::new();
-    let files = source.walk_md_files(None);
-    for (_abs, rel) in &files {
+    let paths = source.all_entry_paths();
+    for rel in &paths {
         if let Ok(content) = source.read_file(rel) {
             if let Some(fm) = crate::format::frontmatter::parse_frontmatter(&content) {
                 if fm.description.is_none() || fm.description.as_deref() == Some("") {
@@ -101,8 +100,8 @@ fn check_missing_description(source: &FilesystemSource) -> Vec<CheckResult> {
 }
 
 /// Check 4: AGENTS.md includes the enjoyknowledge block.
-fn check_agents_md(source: &FilesystemSource) -> Vec<CheckResult> {
-    let agents_path = source.project_root.join("AGENTS.md");
+fn check_agents_md(project_root: &Path) -> Vec<CheckResult> {
+    let agents_path = project_root.join("AGENTS.md");
     if !agents_path.exists() {
         return vec![CheckResult {
             file: "AGENTS.md".to_string(),
@@ -132,9 +131,9 @@ fn check_agents_md(source: &FilesystemSource) -> Vec<CheckResult> {
 }
 
 /// Check 5: Completed tasks in knowledge-tasks/ that are pending archive.
-fn check_pending_archive(source: &FilesystemSource) -> Vec<CheckResult> {
+fn check_pending_archive(project_root: &Path) -> Vec<CheckResult> {
     let mut results = Vec::new();
-    let tasks_dir = source.project_root.join("knowledge-tasks");
+    let tasks_dir = project_root.join("knowledge-tasks");
     if !tasks_dir.exists() {
         return results;
     }
@@ -148,7 +147,7 @@ fn check_pending_archive(source: &FilesystemSource) -> Vec<CheckResult> {
     for entry in walker {
         let rel = entry
             .path()
-            .strip_prefix(&source.project_root)
+            .strip_prefix(project_root)
             .unwrap_or_else(|_| entry.path())
             .to_string_lossy()
             .replace('\\', "/");
