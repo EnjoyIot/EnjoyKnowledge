@@ -1,11 +1,10 @@
 ---
-class: C1_gotchas
+description: 导出功能的踩坑记录
 tags:
   - export
   - excel
   - backend
-last_modified: 2026-06-20
-description: "导出功能的踩坑记录"
+timestamp: 2026-06-20
 ---
 
 # 导出功能踩坑清单

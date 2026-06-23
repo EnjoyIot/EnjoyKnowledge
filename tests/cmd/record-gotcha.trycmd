@@ -1,5 +1,0 @@
-﻿# record-gotcha: 记录踩坑
-# 预期：成功写入并显示文件路径
-
-$ enjoyknowledge record gotcha --tag test --content "这是一个测试踩坑条目"
-[..]已记录到[..]GOTCHAS.md[..]

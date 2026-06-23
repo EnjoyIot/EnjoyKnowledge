@@ -1,89 +1,97 @@
-/// doctor 诊断的 5 项检查
-use crate::doctor::budget;
-use crate::knowledge::index::Index;
-use std::collections::HashSet;
+//! doctor diagnostic checks for the knowledge base.
+use crate::knowledge::source::KnowledgeSource;
+use crate::knowledge::FilesystemSource;
 use std::path::Path;
 
-/// 单个检查结果
-#[derive(Debug)]
+/// Severity of a check finding.
+#[derive(Debug, Clone)]
+pub enum Severity {
+    /// Hard failure — blocks correctness.
+    Error,
+    /// Soft warning — quality issue but not broken.
+    Warning,
+}
+
+/// A single check result.
+#[derive(Debug, Clone)]
 pub struct CheckResult {
     pub file: String,
     pub issue: String,
     pub severity: Severity,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum Severity {
-    Error,
-    Warning,
-}
-
-/// 运行全部 5 项检查
-#[allow(clippy::unnecessary_wraps)]
-pub fn run_all(root: &Path) -> anyhow::Result<Vec<CheckResult>> {
+/// Run all health checks against the knowledge base.
+pub fn run_all(source: &FilesystemSource, _project_root: &Path) -> Vec<CheckResult> {
     let mut results = Vec::new();
-    results.extend(check_missing_class(root));
-    results.extend(check_missing_tags(root));
-    results.extend(check_budget(root));
-    results.extend(check_duplicates(root));
-    results.extend(check_index_consistency(root));
-    Ok(results)
+
+    results.extend(check_frontmatter(source));
+    results.extend(check_budget(source));
+    results.extend(check_missing_description(source));
+    results.extend(check_agents_md(source));
+    results.extend(check_pending_archive(source));
+
+    results
 }
 
-/// 收集 .enjoyknowledge/ 下所有 .md 文件路径（相对路径）
-fn collect_md_files(root: &Path) -> Vec<String> {
-    let base = root.join(".enjoyknowledge");
-    let mut files = Vec::new();
-    for entry in walkdir::WalkDir::new(&base)
-        .into_iter()
-        .filter_map(std::result::Result::ok)
-        .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
-    {
-        if let Ok(rel) = entry.path().strip_prefix(&base) {
-            files.push(rel.to_string_lossy().to_string());
-        }
-    }
-    files
-}
-
-/// 检查 1: 缺 class 字段
-pub fn check_missing_class(root: &Path) -> Vec<CheckResult> {
+/// Check 1: Every .md file has valid frontmatter.
+fn check_frontmatter(source: &FilesystemSource) -> Vec<CheckResult> {
     let mut results = Vec::new();
-    let base = root.join(".enjoyknowledge");
-    for rel in collect_md_files(root) {
-        let path = base.join(&rel);
-        if let Ok(content) = std::fs::read_to_string(&path) {
-            match crate::format::frontmatter::parse_frontmatter(&content) {
-                None => results.push(CheckResult {
-                    file: rel,
-                    issue: "缺少 YAML frontmatter".into(),
+    let files = source.walk_md_files(None);
+    for (_abs, rel) in &files {
+        match source.read_file(rel) {
+            Ok(content) => {
+                if crate::format::frontmatter::parse_frontmatter(&content).is_none() {
+                    results.push(CheckResult {
+                        file: rel.clone(),
+                        issue: "missing or invalid frontmatter".to_string(),
+                        severity: Severity::Error,
+                    });
+                }
+            }
+            Err(_) => {
+                results.push(CheckResult {
+                    file: rel.clone(),
+                    issue: "unreadable file".to_string(),
                     severity: Severity::Error,
-                }),
-                Some(fm) if fm.class.is_none() => results.push(CheckResult {
-                    file: rel,
-                    issue: "frontmatter 缺少 class 字段".into(),
-                    severity: Severity::Error,
-                }),
-                _ => {}
+                });
             }
         }
     }
     results
 }
 
-/// 检查 2: 缺 tags 或 tags 为空
-pub fn check_missing_tags(root: &Path) -> Vec<CheckResult> {
+/// Check 2: File budget — warn if a file has ≥20 ## entries.
+fn check_budget(source: &FilesystemSource) -> Vec<CheckResult> {
     let mut results = Vec::new();
-    let base = root.join(".enjoyknowledge");
-    for rel in collect_md_files(root) {
-        let path = base.join(&rel);
-        if let Ok(content) = std::fs::read_to_string(&path) {
+    let files = source.walk_md_files(None);
+    for (_abs, rel) in &files {
+        if let Ok(content) = source.read_file(rel) {
+            let count =
+                content.lines().filter(|l| l.starts_with("## ") && !l.starts_with("### ")).count();
+            if count >= 20 {
+                results.push(CheckResult {
+                    file: rel.clone(),
+                    issue: format!("over 20 limit ({count} entries)"),
+                    severity: Severity::Warning,
+                });
+            }
+        }
+    }
+    results
+}
+
+/// Check 3: Missing or empty description in frontmatter.
+fn check_missing_description(source: &FilesystemSource) -> Vec<CheckResult> {
+    let mut results = Vec::new();
+    let files = source.walk_md_files(None);
+    for (_abs, rel) in &files {
+        if let Ok(content) = source.read_file(rel) {
             if let Some(fm) = crate::format::frontmatter::parse_frontmatter(&content) {
-                if fm.tags.is_empty() {
+                if fm.description.is_none() || fm.description.as_deref() == Some("") {
                     results.push(CheckResult {
-                        file: rel,
-                        issue: "frontmatter 中 tags 为空（需要至少 1 个 tag）".into(),
-                        severity: Severity::Error,
+                        file: rel.clone(),
+                        issue: "missing description".to_string(),
+                        severity: Severity::Warning,
                     });
                 }
             }
@@ -92,117 +100,67 @@ pub fn check_missing_tags(root: &Path) -> Vec<CheckResult> {
     results
 }
 
-/// 检查 3: 文件超出预算
-pub fn check_budget(root: &Path) -> Vec<CheckResult> {
-    budget::check_budget(root)
+/// Check 4: AGENTS.md includes the enjoyknowledge block.
+fn check_agents_md(source: &FilesystemSource) -> Vec<CheckResult> {
+    let agents_path = source.project_root.join("AGENTS.md");
+    if !agents_path.exists() {
+        return vec![CheckResult {
+            file: "AGENTS.md".to_string(),
+            issue: "AGENTS.md not found — run `enjoyknowledge init` to create".to_string(),
+            severity: Severity::Warning,
+        }];
+    }
+    match std::fs::read_to_string(&agents_path) {
+        Ok(content) => {
+            if !content.contains("enjoyknowledge") {
+                return vec![CheckResult {
+                    file: "AGENTS.md".to_string(),
+                    issue: "AGENTS.md missing enjoyknowledge section — run `enjoyknowledge init` to regenerate".to_string(),
+                    severity: Severity::Warning,
+                }];
+            }
+        }
+        Err(_) => {
+            return vec![CheckResult {
+                file: "AGENTS.md".to_string(),
+                issue: "unreadable file".to_string(),
+                severity: Severity::Error,
+            }];
+        }
+    }
+    Vec::new()
+}
+
+/// Check 5: Completed tasks in knowledge-tasks/ that are pending archive.
+fn check_pending_archive(source: &FilesystemSource) -> Vec<CheckResult> {
+    let mut results = Vec::new();
+    let tasks_dir = source.project_root.join("knowledge-tasks");
+    if !tasks_dir.exists() {
+        return results;
+    }
+
+    let walker = walkdir::WalkDir::new(&tasks_dir)
+        .max_depth(3)
         .into_iter()
-        .map(|e| CheckResult {
-            file: e.path,
-            issue: format!("超出预算：{} 行 > {} 行上限", e.lines, e.max),
-            severity: Severity::Warning,
-        })
-        .collect()
-}
+        .filter_map(std::result::Result::ok)
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"));
 
-/// 检查 4: 疑似重复条目（L1 tag 交集过滤）
-pub fn check_duplicates(root: &Path) -> Vec<CheckResult> {
-    let mut results = Vec::new();
-    let base = root.join(".enjoyknowledge");
-    let gotchas_path = base.join("knowledge-base/development/GOTCHAS.md");
-
-    if let Ok(content) = std::fs::read_to_string(&gotchas_path) {
-        let entries: Vec<&str> = content.lines().filter(|l| l.starts_with("- ")).collect();
-
-        // 按首 tag 分组（粗粒度 L1 过滤）
-        let mut by_tag: std::collections::HashMap<String, Vec<(usize, &str)>> =
-            std::collections::HashMap::new();
-        for (i, entry) in entries.iter().enumerate() {
-            let tag = entry
-                .split(':')
-                .next()
-                .map(|t| t.trim_start_matches("- ").trim().to_lowercase())
-                .unwrap_or_default();
-            by_tag.entry(tag).or_default().push((i, entry));
-        }
-
-        for group in by_tag.values() {
-            if group.len() < 2 {
-                continue;
-            }
-            // 简单的词重叠相似度检测
-            for i in 0..group.len() {
-                for j in (i + 1)..group.len() {
-                    let words_a: HashSet<&str> = group[i].1.split_whitespace().collect();
-                    let words_b: HashSet<&str> = group[j].1.split_whitespace().collect();
-                    let intersection = words_a.intersection(&words_b).count();
-                    let union = words_a.union(&words_b).count();
-                    if union > 0 {
-                        #[allow(clippy::cast_precision_loss)]
-                        let similarity = intersection as f64 / union as f64;
-                        if similarity > 0.7 {
-                            results.push(CheckResult {
-                                file: "knowledge-base/development/GOTCHAS.md".into(),
-                                issue: format!(
-                                    "疑似重复条目（相似度 {:.0}%）：\n  行 {}: {}\n  行 {}: {}",
-                                    similarity * 100.0,
-                                    group[i].0 + 1,
-                                    group[i].1,
-                                    group[j].0 + 1,
-                                    group[j].1,
-                                ),
-                                severity: Severity::Warning,
-                            });
-                        }
-                    }
-                }
+    for entry in walker {
+        let rel = entry
+            .path()
+            .strip_prefix(&source.project_root)
+            .unwrap_or_else(|_| entry.path())
+            .to_string_lossy()
+            .replace('\\', "/");
+        if let Ok(content) = std::fs::read_to_string(entry.path()) {
+            if content.contains("status: completed") && !rel.contains("archive") {
+                results.push(CheckResult {
+                    file: rel,
+                    issue: "pending archive (completed task not in archive)".to_string(),
+                    severity: Severity::Warning,
+                });
             }
         }
     }
-    results
-}
-
-/// 检查 5: 索引与文件系统不一致
-pub fn check_index_consistency(root: &Path) -> Vec<CheckResult> {
-    let mut results = Vec::new();
-    let fs_files: HashSet<String> = collect_md_files(root).into_iter().collect();
-
-    if let Ok(Some(index)) = Index::load(root) {
-        let mut indexed_files = HashSet::new();
-        for files in index.by_class.values() {
-            for f in files {
-                indexed_files.insert(f.clone());
-            }
-        }
-        for files in index.by_tag.values() {
-            for f in files {
-                indexed_files.insert(f.clone());
-            }
-        }
-
-        // 索引中有但文件系统没有的
-        for f in indexed_files.difference(&fs_files) {
-            results.push(CheckResult {
-                file: f.clone(),
-                issue: "索引中引用但文件不存在（孤立条目）".into(),
-                severity: Severity::Warning,
-            });
-        }
-
-        // 文件系统有但索引中没有的
-        for f in fs_files.difference(&indexed_files) {
-            results.push(CheckResult {
-                file: f.clone(),
-                issue: "文件存在但索引中无记录（需重建索引）".into(),
-                severity: Severity::Warning,
-            });
-        }
-    } else {
-        results.push(CheckResult {
-            file: ".index.json".into(),
-            issue: "索引文件不存在或无法解析，运行 enjoyknowledge doctor 重建".into(),
-            severity: Severity::Warning,
-        });
-    }
-
     results
 }

@@ -1,6 +1,0 @@
-﻿# search-tag-filter: 按 tag 过滤
-# 预期：只返回 tag 包含 excel 的文档
-
-$ enjoyknowledge search "导出" --tag excel
-.enjoyflow/knowledge-base/development/GOTCHAS.md##导出
-[..]t_export_record 无 status 字段[..]

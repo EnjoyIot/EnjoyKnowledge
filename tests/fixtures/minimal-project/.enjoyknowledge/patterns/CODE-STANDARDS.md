@@ -1,9 +1,9 @@
 ---
-class: A2_code_standards
+description: Vue3 和 Java 代码规范
 tags:
   - code-standards
   - vue3
-last_modified: 2026-06-21
+timestamp: 2026-06-21
 ---
 
 # 代码规范

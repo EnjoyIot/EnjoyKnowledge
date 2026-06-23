@@ -1,8 +1,0 @@
-﻿# search-basic: 自由文本搜索
-# 预期：匹配标题或正文中包含 "导出" 的文档
-
-$ enjoyknowledge search "导出"
-.enjoyflow/knowledge-base/business/water-billing.md##导出规则
-[..]单次最多 10 万行[..]
-.enjoyflow/knowledge-base/development/GOTCHAS.md##导出
-[..]t_export_record 无 status 字段[..]

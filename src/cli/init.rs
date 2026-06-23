@@ -1,50 +1,100 @@
-//! enjoyknowledge init — 项目初始化
-
-use crate::init::{ai_tools, skeleton};
+//! `enjoyknowledge init` — initialize the knowledge base.
+use crate::core::template::TemplateProvider;
+use crate::core::Profile;
+use crate::init;
 use std::path::Path;
 
 pub fn run(
-    path: Option<&str>,
-    scan: bool,
-    describe: Option<&str>,
-    link: Option<&str>,
+    project_path: Option<&str>,
     ai: Option<&str>,
+    template: Option<&str>,
+    link: Option<&str>,
+    profile: &dyn Profile,
 ) -> anyhow::Result<()> {
-    let root = Path::new(path.unwrap_or("."));
+    let project_root = match project_path {
+        Some(p) => Path::new(p).to_path_buf(),
+        None => std::env::current_dir()?,
+    };
+
+    // Handle --template list: display available templates and exit
+    if let Some(tpl) = template {
+        if tpl.eq_ignore_ascii_case("list") {
+            let provider = init::default_template_provider();
+            let names = provider.list_all();
+            if names.is_empty() {
+                eprintln!("enjoyknowledge: no templates found (check ~/.enjoyknowledge/templates/ and .enjoyknowledge/templates/)");
+            } else {
+                println!("Available templates:");
+                for name in &names {
+                    println!("  {name}");
+                }
+            }
+            return Ok(());
+        }
+    }
 
     if let Some(link_path) = link {
-        // --link 模式：只生成 AI 工具文件，不创建 .enjoyknowledge/
-        let tool = ai_tools::AiTool::from_str(ai.unwrap_or("auto"));
-        ai_tools::generate_agents_md(root)?;
-        ai_tools::generate_tool_files(root, tool)?;
-        println!("✓ 已链接到 {link_path}");
+        // Link mode: only generate AGENTS.md pointing to external knowledge base
+        let linked = Path::new(link_path);
+        if !linked.join(".enjoyknowledge").exists() {
+            eprintln!("enjoyknowledge: {link_path} does not contain a .enjoyknowledge/ directory");
+            std::process::exit(1);
+        }
+
+        let agents_content = format!(
+            r#"# AGENTS.md
+
+This project uses [enjoyknowledge](https://enjoyknowledge.dev) for shared AI context.
+
+**Knowledge base**: `{link_path}`
+
+## Commands
+
+Run enjoyknowledge commands from the knowledge base directory, or use `enjoyknowledge` with the path:
+```bash
+enjoyknowledge --root {link_path} ls
+```
+
+| Command | Why |
+|---|---|
+| `enjoyknowledge ls` | List files with descriptions |
+| `enjoyknowledge grep <pattern>` | Search inside `##` sections |
+| `enjoyknowledge cat <path>` | Read a knowledge file |
+| `enjoyknowledge add <path> "<content>"` | Record a new entry |
+| `enjoyknowledge doctor` | Health check |
+| `enjoyknowledge fix` | Auto-fix common issues |
+"#
+        );
+        std::fs::write(project_root.join("AGENTS.md"), agents_content)?;
+        eprintln!("enjoyknowledge: AGENTS.md generated -> linked to {link_path}");
         return Ok(());
     }
 
-    // 标准 init
-    if scan {
-        let result = crate::init::scan::scan_project(root);
-        println!("扫描结果: {:?}", result.tech_stack);
+    // Check for template
+    if let Some(template_name) = template {
+        let provider = init::default_template_provider();
+        if !init::templates::apply_template(&project_root, template_name, &provider, profile)? {
+            eprintln!(
+                "enjoyknowledge: template '{template_name}' not found (check ~/.enjoyknowledge/templates/ or .enjoyknowledge/templates/)"
+            );
+            std::process::exit(1);
+        }
+        eprintln!("enjoyknowledge: applied template '{template_name}'");
+    } else {
+        // Default skeleton from profile
+        init::skeleton::generate_skeleton(&project_root, profile)?;
     }
 
-    if let Some(_desc) = describe {
-        #[cfg(feature = "llm")]
-        {
-            let proposal = crate::init::describe::describe_to_proposal(desc, root)?;
-            println!("{}", proposal);
-        }
-        #[cfg(not(feature = "llm"))]
-        {
-            anyhow::bail!("需要启用 'llm' feature 才能使用 --describe");
-        }
+    // Generate AGENTS.md
+    init::skeleton::generate_agents_md(&project_root, ai, profile)?;
+
+    // Generate AI tool files
+    if let Some(tool) = ai {
+        let ai_tool = crate::init::ai_tools::AiTool::from_str(tool);
+        crate::init::ai_tools::generate_tool_files(&project_root, ai_tool)?;
     }
 
-    skeleton::generate(root)?;
-    let tool = ai_tools::AiTool::from_str(ai.unwrap_or("auto"));
-    ai_tools::generate_agents_md(root)?;
-    ai_tools::generate_tool_files(root, tool)?;
-    ai_tools::update_gitignore(root)?;
+    eprintln!("enjoyknowledge: initialized at {}", project_root.display());
 
-    println!("✓ enjoyknowledge 已初始化");
     Ok(())
 }

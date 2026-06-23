@@ -31,7 +31,6 @@
 │   ├── business/           # 业务规则
 │   ├── decisions/          # 架构决策记录
 │   ├── index.md            # OKF 保留，目录的目录
-│   └── log.md              # OKF 保留，变更历史
 └── knowledge-tasks/        # 可选，任务过程材料；审核后再迁入 .enjoyknowledge/
     └── <REQ-ID>/
 ```
@@ -58,7 +57,6 @@ title: 导出功能踩坑       # 推荐，人类可读标题
 description: 超过10万行时接口超时，当前分批导出  # 强烈推荐，一行摘要
 tags: [export, excel, performance]  # 推荐，跨分类过滤
 timestamp: 2026-06-21     # 推荐，ISO 8601 日期
-resource: bigquery://...  # 可选，对应实际资源的 URI
 ---
 ```
 
@@ -72,7 +70,6 @@ resource: bigquery://...  # 可选，对应实际资源的 URI
 | `description` | string | 强烈推荐 | ≦200 字符，一行摘要。出现在 `ls`、`tree`、AGENTS.md 推送块中 |
 | `tags` | string[] | 否 | 纯小写字母+连字符，跨分类检索用 |
 | `timestamp` | string | 否 | ISO 8601 `YYYY-MM-DD` |
-| `resource` | string | 否 | 对应实际资源的 URI |
 
 ### 3.3 正文
 
@@ -99,13 +96,13 @@ resource: bigquery://...  # 可选，对应实际资源的 URI
 
 | 命令 | 语义 | 输出 |
 |---|---|---|
-| `enjoyknowledge init [--ai <tool>] [--template <name>] [--link <path>]` | 初始化知识库 | 目录骨架 + AGENTS.md |
+| `enjoyknowledge init [--ai <tool>] [--template <name|list>] [--link <path>]` | 初始化知识库 | 目录骨架 + AGENTS.md |
 | `enjoyknowledge ls [path] [--bare]` | 列出目录/文件 | 文件列表，默认每文件附带 `description` |
 | `enjoyknowledge tree [--bare]` | 递归目录树 | 目录树，默认每文件附带 `description` |
 | `enjoyknowledge cat <path>` | 查看文件内容 | 文件全文（stdout） |
 | `enjoyknowledge grep <pattern> [--type] [--tags] [--path]` | 结构化搜索 | `文件##段标题\n  上下文 snippet` |
 | `enjoyknowledge add <path> <content>` | 新增/追加知识 | 确认消息（stderr） |
-| `enjoyknowledge doctor` | 合规检查 | 问题清单 |
+| `enjoyknowledge doctor [--ci]` | 合规检查 | 问题清单；`--ci` 模式 warning 也返回非零 |
 | `enjoyknowledge fix` | 自动修复 | 修复结果 |
 
 ### 4.2 `ls` — 核心入口
@@ -219,8 +216,6 @@ enjoyknowledge add gotchas/export.md "## Excel内存溢出
 | 问题 | 原因 |
 |---|---|
 | 缺 frontmatter | 无法推断描述和元数据 |
-| 深度超标 | 需要重新组织目录结构 |
-| 疑似重复 | 需人工判断 |
 
 **归档机制：**
 
@@ -270,6 +265,7 @@ enjoyknowledge init --template legal
 ### 5.3 关键行为
 
 - `--link <path>` 引用外部知识库时，不创建 `.enjoyknowledge/` 目录，只在 AGENTS.md 中指向外部路径
+- `--template list` 列出所有可用模板（全局 + 项目级）并退出，不初始化
 - `init --ai auto` 自动检测当前 AI 工具
 - 无论指定哪个 AI 工具，AGENTS.md 始终生成（作为通用标准入口）
 
@@ -290,6 +286,7 @@ enjoyknowledge init --template legal
 | `codex` | `.codex/prompts/enjoyknowledge.md` | Markdown |
 | `trae` | `.trae/rules/enjoyknowledge.md` | Markdown |
 | `gemini` | `GEMINI.md` | 追加 Markdown 块 |
+| `generic` | `enjoyknowledge.md` (project root) | Markdown |
 | `auto` | 自动检测当前环境中的 AI 工具 | — |
 
 ---
@@ -303,10 +300,14 @@ enjoyknowledge init --template legal
 | 缺 frontmatter | 每个 `.md` 有可解析 YAML frontmatter |
 | 缺 description | 强烈推荐有 |
 | 超出预算 | 单文件超过 20 条 `##` 条目时建议拆分 |
-| 疑似重复 | 同 tag 组内条目相似度 > 70% |
-| 深度超标 | 目录超过 2 层 |
 | AGENTS.md 过期 | `ls` 输出与 AGENTS.md 摘要不一致 |
 | 待归档任务 | `knowledge-tasks/` 下已完成未归档的任务目录 |
+
+### `doctor --ci`
+
+`enjoyknowledge doctor --ci` 用于 CI 流水线：
+- 任何 warning 也触发非零退出码（非 CI 模式下 warning 不阻塞）
+- 退出码 3 表示格式问题（含 warning）
 
 ---
 

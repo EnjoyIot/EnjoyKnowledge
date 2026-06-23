@@ -1,0 +1,5 @@
+﻿# grep-basic: search for a known term in fixture files
+# The fixture has gotchas export data and business water-billing data with Chinese text.
+
+$ enjoyknowledge grep "导出"
+[..]

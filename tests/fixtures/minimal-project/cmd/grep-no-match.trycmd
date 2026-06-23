@@ -1,0 +1,5 @@
+﻿# grep-no-match: searching for a non-existent term exits with code 1
+
+$ enjoyknowledge grep "xyz_nonexistent_keyword_123456"
+
+[1]

@@ -155,6 +155,7 @@ enjoyknowledge init --ai copilot      # GitHub Copilot
 enjoyknowledge init --ai windsurf     # Windsurf
 enjoyknowledge init --ai cline        # Cline
 enjoyknowledge init --ai codex        # OpenAI Codex CLI
+enjoyknowledge init --ai trae         # Trae
 enjoyknowledge init --ai gemini       # Google Gemini CLI
 enjoyknowledge init --ai generic      # 生成工具无关的 enjoyknowledge.md
 enjoyknowledge init --ai auto         # 自动检测（默认）
@@ -231,7 +232,7 @@ $ enjoyknowledge add gotchas/export.md "## Excel内存溢出
 - 目录不存在 → 自动创建中间目录
 - 追加后自动更新 AGENTS.md 中的知识摘要
 
-**type 自动推导**：`add` 从文件路径推导分类——`gotchas/export.md` → 属于 Gotcha 类。不需要手动填。
+**分类自动推导**：`add` 从文件路径推导分类——`gotchas/export.md` → 属于 Gotcha 类。不需要手动填。
 
 ---
 
@@ -252,11 +253,11 @@ $ enjoyknowledge fix
 ⚠ patterns/ — 需手动添加文件
 ```
 
-`doctor` 是知识文件的 linter，8 项检查：缺 frontmatter、缺 type、type 与目录不一致、缺 description、超出预算（单文件 >20 条）、疑似重复、深度超标、AGENTS.md 过期。`doctor --ci` 在 CI 管线中使用，不通过则失败。
+`doctor` 是知识文件的 linter，5 项检查：缺 frontmatter、缺 description、超出预算（单文件 >20 条）、AGENTS.md 过期、待归档任务。`doctor --ci` 在 CI 管线中使用，不通过则失败。
 
 ### 5.2 知识库进 git
 
-`.enjoyknowledge/` 整个目录进 git——Markdown 文件是团队共享的知识源。`index.md` 和 `log.md` 由系统生成但也可以 diff。本地产物（`.doctor-cache`）不进 git。
+`.enjoyknowledge/` 整个目录进 git——Markdown 文件是团队共享的知识源。`index.md` 由系统生成但也可以 diff。
 
 ---
 
@@ -279,7 +280,6 @@ $ enjoyknowledge fix
 │   ├── business/                 # 业务规则、计算公式
 │   ├── decisions/                # 架构决策记录 (ADR)
 │   ├── index.md                  # OKF 保留，目录的目录
-│   └── log.md                    # OKF 保留，变更历史
 │
 ├── knowledge-tasks/               # 短期任务工作区，审核后再沉淀
 │   └── REQ-042/
@@ -305,7 +305,6 @@ $ enjoyknowledge fix
 
 ```yaml
 ---
-type: Gotcha
 title: 导出功能踩坑
 description: 导出超时、OOM、status字段缺失的记录
 tags: [export, excel, performance]
@@ -379,6 +378,7 @@ enjoyknowledge cat <path>                   # 查看文件内容
 enjoyknowledge add <path> <content>         # 追加知识条目
 
 enjoyknowledge doctor                      # 健康检查（7 项）（8 项）
+enjoyknowledge doctor                      # 健康检查（5 项）
 enjoyknowledge fix                          # 自动修复
 ```
 

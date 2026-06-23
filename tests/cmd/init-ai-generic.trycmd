@@ -1,0 +1,3 @@
+﻿# init-ai-generic: creates tool-agnostic enjoyknowledge.md
+$ enjoyknowledge init --path test-project --ai generic
+[..]

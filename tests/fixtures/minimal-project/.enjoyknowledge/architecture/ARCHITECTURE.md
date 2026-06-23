@@ -1,8 +1,8 @@
 ---
-class: A1_architecture
+description: IoT 水务平台架构概览
 tags:
   - architecture
-last_modified: 2026-06-21
+timestamp: 2026-06-21
 ---
 
 # IoT 水务平台架构

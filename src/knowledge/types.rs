@@ -1,32 +1,44 @@
-/// 搜索查询与结果类型
-/// 搜索条件
+//! Search query, result, and entry types for the knowledge layer.
+
+/// Structured search filter.
 #[derive(Debug, Clone)]
 pub struct SearchQuery {
-    /// 自由文本查询（匹配标题 + 正文前 200 字符 + frontmatter description）
-    pub text: String,
-    /// class 过滤（AND 逻辑，空 = 不过滤）
-    pub class: Vec<String>,
-    /// tag 过滤（AND 逻辑，空 = 不过滤）
+    /// Case-insensitive pattern to match inside `##` sections (body only).
+    pub pattern: String,
+    /// Filter by directory name (AND logic; empty = no filter).
+    pub type_filter: Vec<String>,
+    /// Filter by frontmatter tags (AND logic; empty = no filter).
     pub tags: Vec<String>,
-    /// 是否包含归档目录
+    /// Limit search to a specific subdirectory under `.enjoyknowledge/`.
+    pub path: Option<String>,
+    /// Include archived task materials (`knowledge-tasks/`).
     pub include_archive: bool,
+    /// If set, limit archive search to specific task: knowledge-tasks/<req>
+    pub req: Option<String>,
 }
 
-/// 单条搜索结果
+/// A single search hit keyed to the enclosing `##` section.
 #[derive(Debug, Clone)]
 pub struct SearchResult {
-    /// 文件路径
+    /// Relative path under `.enjoyknowledge/` (forward slashes).
     pub file: String,
-    /// ## 段标题
+    /// Closest `##` section title above the match.
     pub section: String,
-    /// 匹配行 ± 3 行上下文
+    /// Matching line ± 3 lines of context.
     pub snippet: String,
 }
 
-/// record 命令的记录类型
-#[derive(Debug, Clone, Copy)]
-pub enum RecordType {
-    Gotcha,
-    Pattern,
-    Decision,
+/// Directory or file entry for `ls` / `tree` output.
+#[derive(Debug, Clone)]
+pub struct KnowledgeEntry {
+    /// Relative path (directory name or file path).
+    pub path: String,
+    /// Frontmatter `description` — the primary indexing signal.
+    pub description: Option<String>,
+    /// `true` for directories, `false` for files.
+    pub is_dir: bool,
+    /// Number of `##` sections in the file (files only).
+    pub entry_count: Option<usize>,
+    /// Sub-entries for recursive tree display.
+    pub children: Vec<Self>,
 }

@@ -1,0 +1,5 @@
+﻿# init-creates-skeleton: init creates the directory structure
+# Init should succeed and create AGENTS.md at project root.
+
+$ enjoyknowledge init --path test-project
+[..]

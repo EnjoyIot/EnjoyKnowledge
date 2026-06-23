@@ -1,0 +1,4 @@
+﻿# init-template-list: listing available templates
+# Since no templates may be installed, just check the command runs.
+$ enjoyknowledge init --template list
+[..]

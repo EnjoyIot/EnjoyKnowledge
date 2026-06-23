@@ -1,19 +1,21 @@
-/// 知识源统一接口
-#[allow(dead_code)] // trait 方法 stub 阶段保留
-use super::types::{SearchQuery, SearchResult};
+/// Unified knowledge-source interface — every backend implements this.
+use super::types::{KnowledgeEntry, SearchQuery, SearchResult};
 
-/// 所有知识源必须实现此 trait
-#[allow(dead_code)]
+/// The single abstraction that all CLI commands operate through.
 pub trait KnowledgeSource {
-    /// 按条件搜索，返回匹配结果列表
-    fn search(&self, query: &SearchQuery) -> anyhow::Result<Vec<SearchResult>>;
+    /// Flat listing of directories and files in `dir` (None = root).
+    fn list_entries(&self, dir: Option<&str>, bare: bool) -> anyhow::Result<Vec<KnowledgeEntry>>;
 
-    /// 读取文件全部内容
+    /// Recursive tree of all directories and files.
+    fn tree_entries(&self, bare: bool) -> anyhow::Result<Vec<KnowledgeEntry>>;
+
+    /// Read the full content of a single knowledge file.
     fn read_file(&self, path: &str) -> anyhow::Result<String>;
 
-    /// 追加内容到文件末尾
-    fn append_to_file(&self, path: &str, content: &str) -> anyhow::Result<()>;
+    /// Structure-aware search — results are keyed to `##` sections.
+    fn search(&self, query: &SearchQuery) -> anyhow::Result<Vec<SearchResult>>;
 
-    /// 列出所有文件路径
-    fn list_files(&self) -> anyhow::Result<Vec<String>>;
+    /// Append content to a knowledge file, creating it (with frontmatter) if needed.
+    /// Automatically updates the `timestamp` field in existing frontmatter.
+    fn add_entry(&self, path: &str, content: &str) -> anyhow::Result<()>;
 }

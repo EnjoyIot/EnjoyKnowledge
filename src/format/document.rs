@@ -23,6 +23,19 @@ pub fn find_section_at_line(content: &str, line_num: usize) -> Option<String> {
         .map(|l| l[3..].trim().to_string())
 }
 
+/// Locate the byte offset where the Markdown body begins (after frontmatter `---` block).
+pub fn find_body_start(content: &str) -> usize {
+    let trimmed = content.trim_start();
+    if !trimmed.starts_with("---\n") && !trimmed.starts_with("---\r\n") {
+        return content.len() - trimmed.len();
+    }
+    let after_first = &trimmed[3..];
+    if let Some(end) = after_first.find("\n---") {
+        return content.len() - trimmed.len() + 3 + end + 4;
+    }
+    content.len() - trimmed.len()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

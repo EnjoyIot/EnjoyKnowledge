@@ -1,5 +1,0 @@
-﻿# search-no-match: 无结果情况
-# 预期：输出 (无匹配结果)
-
-$ enjoyknowledge search "不存在的关键字xyz123"
-(无匹配结果)
