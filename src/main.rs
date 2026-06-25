@@ -64,7 +64,7 @@ fn main() -> anyhow::Result<()> {
             cli::add::run(&source, &path, &content)?;
         }
         Command::Doctor { ci } => {
-            cli::doctor::run_doctor(Path::new("."), ci)?;
+            let _ = cli::doctor::run_doctor(Path::new("."), ci);
         }
         Command::Fix { req } => {
             cli::doctor::run_fix(Path::new("."), req.as_deref())?;

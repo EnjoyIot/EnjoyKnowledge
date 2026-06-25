@@ -30,8 +30,9 @@ pub fn find_body_start(content: &str) -> usize {
         return content.len() - trimmed.len();
     }
     let after_first = &trimmed[3..];
-    if let Some(end) = after_first.find("\n---") {
-        return content.len() - trimmed.len() + 3 + end + 4;
+    if let Some(end) = after_first.find("\n---").or_else(|| after_first.find("\r\n---")) {
+        let delimiter_len = if after_first[end..].starts_with("\r\n---") { 5 } else { 4 };
+        return content.len() - trimmed.len() + 3 + end + delimiter_len;
     }
     content.len() - trimmed.len()
 }

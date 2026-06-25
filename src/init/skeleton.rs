@@ -78,16 +78,13 @@ pub fn sync_agents_md_summary(
     let start_marker = "<!-- enjoyknowledge_LS_START -->";
     let end_marker = "<!-- enjoyknowledge_LS_END -->";
 
-    let start = match content.find(start_marker) {
-        Some(pos) => pos + start_marker.len(),
-        None => return Ok(()),
-    };
-    let Some(end) = content.find(end_marker) else { return Ok(()) };
+    let Some(start_pos) = content.find(start_marker) else { return Ok(()) };
+    let Some(end_pos) = content.find(end_marker) else { return Ok(()) };
 
     let new_content = format!(
         "{}{start_marker}\n{summary}\n{end_marker}{}",
-        &content[..start],
-        &content[end + end_marker.len()..]
+        &content[..start_pos],
+        &content[end_pos + end_marker.len()..]
     );
 
     std::fs::write(&agents_path, new_content)?;
@@ -100,16 +97,10 @@ fn format_ls_summary(entries: &[crate::knowledge::KnowledgeEntry]) -> String {
     for entry in entries {
         if entry.is_dir {
             let _ = writeln!(out, "{}/", entry.path);
+        } else if let Some(desc) = &entry.description {
+            let _ = writeln!(out, "  {} → {}", entry.path, desc);
         } else {
-            match (&entry.description, entry.entry_count) {
-                (Some(desc), Some(n)) if n > 1 => {}
-                (Some(desc), _) => {
-                    let _ = writeln!(out, "  {} �?{}", entry.path, desc);
-                }
-                _ => {
-                    let _ = writeln!(out, "  {}", entry.path);
-                }
-            }
+            let _ = writeln!(out, "  {}", entry.path);
         }
     }
     out.trim_end().to_string()

@@ -17,7 +17,10 @@ Thumbs.db
 
 # Claude Code
 .claude/
-
+.gh-config
+.hermes
+$CODEX_HOME
+.codex
 # Node (if applicable)
 node_modules/
 
@@ -36,3 +39,4 @@ venv/
 # Added by cargo
 
 /target
+

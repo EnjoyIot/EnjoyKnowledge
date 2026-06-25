@@ -89,6 +89,13 @@ enjoyknowledge --root {link_path} ls
     // Generate AGENTS.md
     init::skeleton::generate_agents_md(&project_root, ai, profile)?;
 
+    // Populate the knowledge summary block in AGENTS.md
+    {
+        let ek = project_root.join(EK_DIR);
+        let source = crate::knowledge::filesystem::FilesystemSource::new(&ek, &project_root);
+        init::skeleton::sync_agents_md_summary(&project_root, &source)?;
+    }
+
     // Generate AI tool files
     if let Some(tool) = ai {
         let Some(ai_tool) = crate::init::ai_tools::AiTool::from_str(tool) else {

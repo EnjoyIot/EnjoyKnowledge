@@ -65,8 +65,7 @@ fn check_budget(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
     let paths = source.all_entry_paths();
     for rel in &paths {
         if let Ok(content) = source.read_file(rel) {
-            let count =
-                content.lines().filter(|l| l.starts_with("## ") && !l.starts_with("### ")).count();
+            let count = content.lines().filter(|l| l.starts_with("## ")).count();
             if count >= 20 {
                 results.push(CheckResult {
                     file: rel.clone(),

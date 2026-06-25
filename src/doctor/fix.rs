@@ -88,8 +88,9 @@ pub fn run_fix(
     // Fix 4: Regenerate AGENTS.md summary
     if has_agents_issue {
         // Regenerate AGENTS.md
-        let profile = crate::profile::coding::CodingProfile;
-        crate::init::skeleton::generate_agents_md(project_root, None, &profile)?;
+        let profile = crate::init::resolve_profile("for-coding")
+            .unwrap_or_else(|| Box::new(crate::profile::coding::CodingProfile));
+        crate::init::skeleton::generate_agents_md(project_root, None, profile.as_ref())?;
         eprintln!("enjoyknowledge: regenerated AGENTS.md");
     }
 

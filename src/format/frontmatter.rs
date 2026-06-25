@@ -7,13 +7,16 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Frontmatter {
     /// Human-readable title (defaults to filename when absent).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     /// One-line summary ≤ 200 chars — the most important index field.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     /// Cross-category tags (lowercase + hyphens).
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tags: Vec<String>,
     /// ISO 8601 date (YYYY-MM-DD).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub timestamp: Option<String>,
 }
 
@@ -26,7 +29,7 @@ pub fn parse_frontmatter(content: &str) -> Option<Frontmatter> {
     }
 
     let after_first = &content[3..];
-    let end = after_first.find("\n---")?;
+    let end = after_first.find("\n---").or_else(|| after_first.find("\r\n---"))?;
 
     let yaml_str = &after_first[..end];
     serde_yaml::from_str(yaml_str).ok()
@@ -35,7 +38,13 @@ pub fn parse_frontmatter(content: &str) -> Option<Frontmatter> {
 /// Generate minimal frontmatter for a newly-created file.
 pub fn generate_frontmatter(description: &str) -> String {
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-    format!("---\ndescription: {description}\ntimestamp: {today}\n---\n\n")
+    let fm = Frontmatter {
+        description: Some(description.to_string()),
+        timestamp: Some(today),
+        ..Default::default()
+    };
+    let yaml = serde_yaml::to_string(&fm).unwrap_or_default();
+    format!("---\n{yaml}---\n\n")
 }
 
 /// Update the `timestamp` field in existing frontmatter in-place.

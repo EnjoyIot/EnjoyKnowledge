@@ -275,4 +275,39 @@ mod tests {
         assert!(sections[0].contains("Section A"));
         assert!(sections[1].contains("Section B"));
     }
+
+    #[test]
+    fn test_is_task_completed_true() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let task_dir = dir.path().join("test-task");
+        std::fs::create_dir_all(&task_dir).unwrap();
+        std::fs::write(task_dir.join("notes.md"), "status: completed").unwrap();
+        assert!(is_task_completed(&task_dir));
+    }
+
+    #[test]
+    fn test_is_task_completed_false() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let task_dir = dir.path().join("test-task");
+        std::fs::create_dir_all(&task_dir).unwrap();
+        std::fs::write(task_dir.join("notes.md"), "status: in-progress").unwrap();
+        assert!(!is_task_completed(&task_dir));
+    }
+
+    #[test]
+    fn test_is_task_completed_empty_dir() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let task_dir = dir.path().join("test-task");
+        std::fs::create_dir_all(&task_dir).unwrap();
+        assert!(!is_task_completed(&task_dir));
+    }
+
+    #[test]
+    fn test_extract_entries_with_subheadings() {
+        let input = "## Section A\ncontent a\n### Sub A\nmore content\n## Section B\ncontent b\n";
+        let sections = extract_entries(input);
+        assert_eq!(sections.len(), 2);
+        assert!(sections[0].contains("### Sub A"));
+        assert!(sections[1].contains("Section B"));
+    }
 }
