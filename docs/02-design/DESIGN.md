@@ -10,7 +10,7 @@
 > - [architecture/workflows.md](./architecture/workflows.md) — 工作流（v4）
 > - [INTERFACE-SPEC.md](./INTERFACE-SPEC.md) — 接口规范
 >
-> **历史版本**：[DESIGN-V3.md.bak](./DESIGN-V3.md.bak) + [PRODUCT-DESIGN.md.bak](./PRODUCT-DESIGN.md.bak)
+|> **v3 内容已合并到本文**。v3/PRODUCT-DESIGN 原始版本已归档（见 git history `5632dd4`）。
 
 ---
 

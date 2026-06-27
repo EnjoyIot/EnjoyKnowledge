@@ -294,6 +294,109 @@ output:
 | 步骤超时 | fail，timeout 信息记录 |
 | render 失败 | fail，**不写文件**（不部分写入） |
 
+---
+
+## 7. filter 语法定义
+
+> **v0.1 阻塞级技术债**——5 个工作流 YAML 都用了 `filter` 但 v0.1 之前必须先定义其语法。本节给出 v1 规范。
+
+### 7.1 通用形式
+
+```yaml
+filter: <object>      # 一个对象 = AND 所有 key
+filter: <list>        # 一个列表 = OR 所有项
+```
+
+### 7.2 5 种 filter key
+
+#### ① `frontmatter_<field>` — 按 frontmatter 字段
+
+```yaml
+filter: { frontmatter_severity: 4-5 }                    # 范围字符串（4 ≤ x ≤ 5）
+filter: { frontmatter_severity: [4, 5] }                 # 枚举列表
+filter: { frontmatter_reversible: true }                 # 布尔
+filter: { frontmatter_kind: "gotcha" }                   # 字符串精确匹配
+filter: { frontmatter_tags: ["utf8", "encoding"] }      # 列表包含任一
+```
+
+- 字段名格式：`frontmatter_<yaml-field-name>`（不写 `frontmatter:` 前缀的反面是 `applies_to` / `trigger`）
+- 值类型：string / number / bool / list
+- 范围字符串 `<a>-<b>`：仅用于**数字字段**，`a ≤ x ≤ b` 闭区间
+
+#### ② `trigger_file_match` — gotcha 触发文件
+
+```yaml
+filter: { trigger_file_match: "src/cli/args.rs" }        # 精确路径
+filter: { trigger_file_match: "src/cli/**" }             # glob
+filter: { trigger_file_match: ["src/cli/**", "src/init/**"] }  # 任一匹配
+```
+
+匹配 `gotcha.frontmatter.trigger`（glob 模式）。**gotcha 专属**。
+
+#### ③ `applies_to` — rule / decision 适用范围
+
+```yaml
+filter: { applies_to: "*.rs" }                          # glob
+filter: { applies_to: ["*.rs", "*.toml"] }               # 任一匹配
+```
+
+匹配 `rule.frontmatter.applies_to` 或 `decision.frontmatter.applies_to`。**rule / decision 专属**。
+
+#### ④ `content_match` — 内容搜索
+
+```yaml
+filter: { content_match: "UTF-8 编码" }                  # substring
+filter: { content_match: "/utf-?8/i" }                  # 正则（用 /.../ 包裹 + 可选 flag）
+```
+
+- 字符串 = substring 匹配
+- `/.../` 包裹 = 正则；末尾可加 `i`（大小写不敏感）
+
+#### ⑤ `frontmatter_reversible` — decision 可逆性
+
+```yaml
+filter: { frontmatter_reversible: true }                 # 仅可逆
+filter: { frontmatter_reversible: false }                # 仅不可逆
+```
+
+`①` 的语法糖。为 decision 工作流便利而设。
+
+### 7.3 AND vs OR 语义
+
+```yaml
+# 单个对象 = AND 所有 key
+filter: { frontmatter_kind: "gotcha", frontmatter_severity: 4-5 }
+# = kind=gotcha AND severity in [4,5]
+
+# 列表 = OR 所有元素
+filter:
+  - { frontmatter_kind: "gotcha" }
+  - { frontmatter_kind: "decision" }
+# = kind=gotcha OR kind=decision
+
+# 嵌套：外层 AND，内层 OR（少见但允许）
+filter:
+  frontmatter_kind: "gotcha"
+  frontmatter_severity: 4-5
+```
+
+### 7.4 模板变量
+
+filter 值支持 `{{...}}` 模板变量（来自 `input` 字段）：
+
+```yaml
+filter: { trigger_file_match: "{{input.files}}" }       # 多文件
+filter: { content_match: "{{input}}" }                   # 自由文本
+filter: { applies_to: "{{inferred_modules}}" }          # AI 推断
+```
+
+### 7.5 校验规则
+
+- 未知 `frontmatter_xxx` 字段 → `doctor` warning（不阻塞）
+- 范围字符串用在非数字字段 → 编译/加载失败（阻塞）
+- glob 语法错误 → 编译/加载失败
+- 模板变量在 `input` 中找不到 → 加载时 warning + 运行时 fail
+
 ## 6. 与 B 站的差异
 
 | 维度 | B 站 bili-fe-workflow | enjoyknowledge v4 |

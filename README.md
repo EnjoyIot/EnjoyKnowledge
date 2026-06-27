@@ -84,13 +84,13 @@ AI 编码工具 (Cursor/Copilot/Claude Code)
 
 | 文档 | 内容 |
 |---|---|
-| [DESIGN-V3.md](docs/DESIGN-V3.md) | 系统设计、知识流转、模块架构、CLI 命令参考 |
-| [DESIGN-PHILOSOPHY.md](docs/DESIGN-PHILOSOPHY.md) | 设计哲学：为什么存在、取舍原则 |
-| [INTERFACE-SPEC.md](docs/INTERFACE-SPEC.md) | CLI 合约、输出格式、兼容性级别 |
-| [POSITIONING.md](docs/POSITIONING.md) | 定位宣言、竞品对比 |
-| [PRODUCT-DESIGN.md](docs/PRODUCT-DESIGN.md) | 用户视角的产品设计 |
-| [SCENARIO-TEMPLATES.md](docs/SCENARIO-TEMPLATES.md) | 场景模板 |
-| [GLOSSARY.md](docs/GLOSSARY.md) | 术语表 |
+| 文档 | 内容 |
+|---|---|
+| [AGENTS.md](./AGENTS.md) | AI 入口（30 秒读懂项目）|
+| [POSITIONING.md](./docs/00-vision/POSITIONING.md) | 定位宣言、竞品对比 |
+| [DESIGN-PHILOSOPHY.md](./docs/01-philosophy/DESIGN-PHILOSOPHY.md) | 设计哲学：为什么存在、取舍原则 |
+| [DESIGN.md](./docs/02-design/DESIGN.md) | 整体架构 + 4 个子文档入口 |
+| [GLOSSARY.md](./docs/01-philosophy/GLOSSARY.md) | 术语表 |
 
 ## 贡献
 
