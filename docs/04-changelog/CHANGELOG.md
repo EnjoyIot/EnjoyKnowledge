@@ -20,8 +20,10 @@
 
 - BLUEPRINT.md — 新增 §1.2、§2.4、§2.5
 - ROADMAP.md — v0.3 重写，v0.4-v1.0 调整
-- GLOSSARY.md — 新增 ules/ 条目，含三层防护定义
-- PRODUCT-DESIGN.md — §6 目录结构增加 ules/ 及三层防护说明
+- GLOSSARY.md — 新增 
+ules/ 条目，含三层防护定义
+- PRODUCT-DESIGN.md — §6 目录结构增加 
+ules/ 及三层防护说明
 
 ---
 
@@ -88,3 +90,73 @@
 
 - 重排前：19 个文档 / 312KB
 - 重排后：24 个文档 / 334KB（增加 5 个 v4 设计 + 讨论历史）
+
+---
+
+## [v1.3] — 2026-06-27（v0.2 收尾）
+
+### 砍功能 4 项（双 AI 验证 + Jay 决策）
+
+基于 codex + claude 双 AI 独立评审 + GitHub API 90+ 竞品 + Reddit r/ClaudeCode/r/cursor/r/vibecoding 痛点社区证据 + 4 轮市场调研（MARKET-RESEARCH-2026Q2），砍 v0.2 scope 到最小可 ship 版本：
+
+1. **9 工具 → 2 工具**（首发 Claude + Cursor）
+   - 1 工具会"杀 thesis"（定位塌缩到"Cursor 辅助工具"）
+   - 2 工具证明跨工具概念
+   - 架构保留 9 工具 adapter trait，v0.3+ 渐进
+   - 首发 Claude（r/ClaudeCode 90+ 评论"AGENTS.MD standard"+ 适配更简单 CLAUDE.md 追加 vs .mdc frontmatter + Jay 工具栈）
+
+2. **5 工作流 → 2 工作流**（onboard + capture）
+   - workflows.md §4.2 preflight.yaml 整段删（46 行）
+   - workflows.md §4.5 prd-preprocess.yaml 整段删（38 行）
+   - preflight / prd-preprocess 永久禁用（保留历史描述）
+
+3. **3 scope → 1 scope**（只 project）
+   - team / user scope 永久不实现
+   - rule 文档已删 scope 字段（commit 2dadb14）
+
+4. **禁 rule_code_sync**（NLP 级不可行）
+   - rule-system.md §8 改"永久禁用"
+   - doctor 不再检查 R-Code 一致性
+
+5. **命令 sync → export**（1 工具时 sync 撒谎）
+   - export 暗示单向导出，诚实
+   - 未来真 sync 留名
+
+### 定位（v4.2）
+
+- 一句话："**一份 markdown，多个 AI 工具**"（v0.2 首发 Claude + Cursor）
+- 推销话术：Claude 写代码 + Cursor 审 PR = 1 份 markdown export 2 工具
+- 差异化：3 维组合（多工具 + frontmatter schema + YAML 工作流）vs ECC 222K / planning-with-files 24K / ai-rules-sync 124 ★
+
+### 文档修复 5 commits
+
+| commit | 改 | 价值 |
+|---|---|---|
+| `ff2af5a` | 3 P0 致命（删 2 .bak 38.9KB + GLOSSARY v4 重写 + workflows filter 语法）| 修 3 致命问题 |
+| `2dadb14` | 4 P1（命令名 / 8→10 类 / 6 类 schema / 9 工具 sync 示例）| 修 4 中等问题 |
+| `6c4c316` | v4.2 定位 + 砍功能（POSITIONING v4.1 + 3 architecture 改）| 锁 v0.2 定位 |
+| `69c12ff` | 清 v4.2 残留（11 处：GLOSSARY + POSITIONING + DESIGN）| 防 v4.2 不一致 |
+| `e90ef48` | 砍 5→2 工作流 + 禁 rule_code_sync（5 文档原子一致）| 砍 4 项落地 |
+| `d035def` | 跟进 POSITIONING + AGENTS（5 处残留）| 防"定位文档说一套、设计文档说另一套"|
+
+### 调研证据
+
+- **GitHub API 90+ 竞品**：跨 AI 工具 rule sync 赛道 90 个项目（最大 124 ★）/ Provider-agnostic 知识管理 1 个（0 ★）/ 跨 agent memory sync 23 个（< 15 ★ 中位）
+- **痛点社区证据**：
+  - 痛点 A 跨工具同步（7-8/10）：r/vibecoding 14 答案"switching AI tools kills flow"
+  - 痛点 B 知识→AI 上下文（**9/10**）：r/ClaudeCode 90 评论"AGENTS.MD standard" + r/cursor 10 评论 40%→92% 合规率
+  - 痛点 C 任务临时文件（5-6/10）：ECC 222K "memory + sessions" 二分模型
+
+### v0.2 终态（文档层面）
+
+- 2 工具：Claude + Cursor
+- 2 工作流：onboard + capture
+- 1 scope：project
+- 1 命令：export（非 sync）
+- 4 维 doctor（去 rule_code_sync）
+
+### 下一步（v0.2 真正能 ship）
+
+- 实施 `enjoyknowledge export --tool claude` + `--tool cursor` 命令（Rust + clap）
+- AGENTS.md 路由表模式生成
+- capture 工作流的 SoT 写入 + 必填字段校验
