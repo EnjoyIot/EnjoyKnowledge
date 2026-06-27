@@ -266,30 +266,30 @@ enjoyknowledge init --template legal
 
 - `--link <path>` 引用外部知识库时，不创建 `.enjoyknowledge/` 目录，只在 AGENTS.md 中指向外部路径
 - `--template list` 列出所有可用模板（全局 + 项目级）并退出，不初始化
-- `init --ai auto` 自动检测当前 AI 工具
+- `init --ai auto` 自动检测当前 AI 工具（v0.2 说明：`init` 仍支持 9 工具一次性生成，**真正动态跨工具同步是 v0.2 新增的 `export --tool` 命令**）
 - 无论指定哪个 AI 工具，AGENTS.md 始终生成（作为通用标准入口）
 
 ---
 
 ## 6. AI 工具文件生成
 
-`enjoyknowledge init --ai <tool>` 生成：
+`enjoyknowledge init --ai <tool>` 生成（v0.2 一次性，仍支持 9 工具）：
 
-> **v0.2 状态**：仅 `cursor` 和 `claude` 真支持；其他 7 工具是**架构保留**（adapter trait 存在，impl 待 v0.3+ 实现）。`enjoyknowledge export --tool` 仅对 cursor/claude 有效。
+> **v0.2 状态**：v0.1 的 `init --ai <tool>` 仍支持 9 工具（一次性生成 AGENTS.md + 工具入口文件）；v0.2 新增 `export --tool <tool>`（动态同步，**仅 `cursor` 和 `claude` 真支持**；其他 7 工具是**架构保留**，待 v0.3+ 实现）。`enjoyknowledge export --tool` 对非 cursor/claude 返回"暂未实现"错误。
 
 | `--ai` | 生成的工具专有文件 | 格式 |
 |---|---|---|
 | 默认（不指定） | `AGENTS.md` | Markdown（含知识摘要路由表）|
-| **`cursor`**（v0.2 首发）| `.cursor/rules/enjoyknowledge.mdc` | YAML frontmatter + Markdown |
-| **`claude`**（v0.2 首发）| `.claude/skills/enjoyknowledge.md` | Markdown |
-| `copilot`（v0.2 暂未实现）| `.github/copilot-instructions.md` | 追加 Markdown 块 |
-| `windsurf`（v0.2 暂未实现）| `.windsurf/rules/enjoyknowledge.md` | Markdown |
-| `cline`（v0.2 暂未实现）| `.clinerules/enjoyknowledge.md` | Markdown |
-| `codex`（v0.2 暂未实现）| `.codex/prompts/enjoyknowledge.md` | Markdown |
-| `trae`（v0.2 暂未实现）| `.trae/rules/enjoyknowledge.md` | Markdown |
-| `gemini`（v0.2 暂未实现）| `GEMINI.md` | 追加 Markdown 块 |
-| `generic`（v0.2 暂未实现）| `enjoyknowledge.md` (project root) | Markdown |
-| `auto` | 自动检测当前环境中的 AI 工具 | — |
+| **`cursor`**（v0.2 export 首发）| `.cursor/rules/enjoyknowledge.mdc` | YAML frontmatter + Markdown |
+| **`claude`**（v0.2 export 首发）| `.claude/skills/enjoyknowledge.md` | Markdown |
+| `copilot`（init 仍支持，export 暂未实现）| `.github/copilot-instructions.md` | 追加 Markdown 块 |
+| `windsurf`（init 仍支持，export 暂未实现）| `.windsurf/rules/enjoyknowledge.md` | Markdown |
+| `cline`（init 仍支持，export 暂未实现）| `.clinerules/enjoyknowledge.md` | Markdown |
+| `codex`（init 仍支持，export 暂未实现）| `.codex/prompts/enjoyknowledge.md` | Markdown |
+| `trae`（init 仍支持，export 暂未实现）| `.trae/rules/enjoyknowledge.md` | Markdown |
+| `gemini`（init 仍支持，export 暂未实现）| `GEMINI.md` | 追加 Markdown 块 |
+| `generic`（init 仍支持，export 暂未实现）| `enjoyknowledge.md` (project root) | Markdown |
+| `auto` | 自动检测当前环境中的 AI 工具（init 用，export 不支持）| — |
 
 ---
 

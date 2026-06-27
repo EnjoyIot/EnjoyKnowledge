@@ -106,7 +106,7 @@ Layer 1: 文件系统
 - **10 类知识资产** —— rule / template / architecture / gotcha / pattern / decision / business / contract / convention / context
 - **frontmatter schema** —— 部分必填（rule/template 的 applies_to / gotcha 的 trigger / decision 的 reversible+decided_at）
 - **YAML 工作流** —— v0.2 2 个核心工作流（onboard / capture），用户可加文件 = 加工作流
-- **5 维 health check** —— doctor 检查 schema / 体积 / 必填字段 / Rule-Code 一致性 / 多工具 export 一致性
+- **4 维 health check** —— doctor 检查 schema / 体积 / 必填字段 / 多工具 export 一致性（**v0.2 砍 5→4**：永久禁用 Rule-Code 一致性）
 
 ### 4.3 工具特性保留（v4 哲学 #4）
 
@@ -121,7 +121,7 @@ Layer 1: 文件系统
 ## 5. MVP 路径（v0.1 当前 → v0.2 收缩）
 
 ### 5.1 v0.1 已交付（Core CLI）
-`init` / `ls` / `tree` / `grep` / `cat` / `add` / `doctor` / `fix` —— 7 个 CLI 命令 + profile 系统
+`init` / `ls` / `tree` / `grep` / `cat` / `add` / `doctor` / `fix` / `export` —— 8 个 CLI 命令 + profile 系统（v0.2 新增 `export`）
 
 ### 5.2 v0.2 砍功能后的 scope（基于 codex + claude 双 AI 验证 + Jay 决策）
 **砍**（v4.2 收敛原则）：

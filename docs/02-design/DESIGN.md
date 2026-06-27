@@ -91,7 +91,11 @@ enjoyknowledge for X       ← 领域应用（for Coding 是默认）
 
 详细见 [INTERFACE-SPEC.md](./INTERFACE-SPEC.md)。
 
-## 7. MVP 边界（v0.1）
+## 7. MVP 边界（v0.2 收尾后）
+
+- **v0.1（2026-06-22，已交付）**：5 命令（init/search/record/doctor/fix）
+- **v0.1.1（2026-06-26）**：codex 副作用文档（已归档）
+- **v0.2（2026-06-27，**收尾完成**）**：8 命令（v0.1 + ls/tree/cat/grep/export），2 工具（Claude + Cursor），2 工作流（onboard + capture），1 scope（project），4 维 doctor
 
 **必含 6 项**：
 1. `add` + 路由（自动判断 gotcha/pattern/decision/...）
