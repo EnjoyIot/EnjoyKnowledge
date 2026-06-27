@@ -64,7 +64,7 @@
 | **定位** | 项目知识 SoT + 多工具路由 | Agent harness 性能优化 | 任务级文件规划 | Rule 同步 |
 | **工具支持** | ✅ 多工具（v0.2 首发 2：Claude + Cursor）| 部分 | ❌ | 部分（3-4 工具）|
 | **frontmatter schema** | ✅（10 类知识 + filter 语法）| ❌ | ❌ | ❌ |
-| **YAML 工作流** | ✅（onboard/capture/preflight/sync）| ❌ | ❌ | ❌ |
+| **YAML 工作流** | ✅（onboard/capture）| ❌ | ❌ | ❌ |
 | **项目级 vs 任务级** | 项目（+ knowledge-tasks 短期）| Agent | 任务 | Rule only |
 | **作者背景** | Jay 自身痛点驱动 | Affaan（agent 性能）| AI 元老 | 个人项目 |
 
@@ -105,7 +105,7 @@ Layer 1: 文件系统
 - **单一 SoT** —— v0.2 首发 2 工具（Claude + Cursor）入口都从 .enjoyknowledge/ export 生成，不各自维护
 - **10 类知识资产** —— rule / template / architecture / gotcha / pattern / decision / business / contract / convention / context
 - **frontmatter schema** —— 部分必填（rule/template 的 applies_to / gotcha 的 trigger / decision 的 reversible+decided_at）
-- **YAML 工作流** —— 5 个核心工作流（onboard / capture / preflight / sync / prd-preprocess），用户可加文件 = 加工作流
+- **YAML 工作流** —— v0.2 2 个核心工作流（onboard / capture），用户可加文件 = 加工作流
 - **5 维 health check** —— doctor 检查 schema / 体积 / 必填字段 / Rule-Code 一致性 / 多工具 export 一致性
 
 ### 4.3 工具特性保留（v4 哲学 #4）
@@ -140,7 +140,7 @@ Layer 1: 文件系统
 
 **延后**（v0.3+）：
 - 9 工具完整实现（架构上保留 adapter trait）
-- 5 个工作流完整实现
+- 2 个工作流完整实现
 - 语义检索
 - 跨项目 / 跨仓库
 - Web UI

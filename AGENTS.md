@@ -22,14 +22,14 @@
 ## Top 3 things to know
 
 1. **3 机制协同**: rule（约束）+ template（范式）+ knowledge（上下文）—— 详见 [for-coding-design.md §3](./docs/02-design/architecture/for-coding-design.md)
-2. **9 工具入口**: Cursor / Claude / Codex / Copilot / Windsurf / Cline / Trae / Gemini / Generic —— 详见 [DESIGN.md §6](./docs/02-design/DESIGN.md)
+2. **v0.2 多工具入口**（首发 Claude + Cursor）—— 详见 [DESIGN.md §6](./docs/02-design/DESIGN.md)
 3. **元数据驱动工作流**: 工作流 = YAML 文件，不实现引擎 —— 详见 [workflows.md](./docs/02-design/architecture/workflows.md)
 
 ## Current status
 
 - **阶段**: v0.1 MVP（设计基线 v4，2026-06-27）
 - **代码**: Rust CLI，5 命令（init/search/record/doctor/fix）
-- **下次重点**: 实施 9 工具 sync 命令 + 工作流元数据 schema
+- **下次重点**: 实施 export 命令（首发 Claude + Cursor）+ v0.2 工作流元数据 schema
 
 ## How to use this repo
 
