@@ -63,7 +63,7 @@ enjoyknowledge for X       ← 领域应用（for Coding 是默认）
 | **显式失败** | 不静默降级——缺失/未实现直接报错 |
 | **工具特性保留** | Cursor `.mdc` / Claude `@path` / Codex `$file` 不强制统一 |
 
-## 5. 工作流（5 个核心）
+## 5. v0.2 2 个工作流（onboard + capture）
 
 | 工作流 | 触发 | 价值 |
 |---|---|---|

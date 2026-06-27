@@ -275,18 +275,20 @@ enjoyknowledge init --template legal
 
 `enjoyknowledge init --ai <tool>` 生成：
 
+> **v0.2 状态**：仅 `cursor` 和 `claude` 真支持；其他 7 工具是**架构保留**（adapter trait 存在，impl 待 v0.3+ 实现）。`enjoyknowledge export --tool` 仅对 cursor/claude 有效。
+
 | `--ai` | 生成的工具专有文件 | 格式 |
 |---|---|---|
-| 默认（不指定） | `AGENTS.md` | Markdown（含知识摘要推送块） |
-| `cursor` | `.cursor/rules/enjoyknowledge.mdc` | YAML frontmatter + Markdown |
-| `claude` | `.claude/skills/enjoyknowledge.md` | Markdown |
-| `copilot` | `.github/copilot-instructions.md` | 追加 Markdown 块 |
-| `windsurf` | `.windsurf/rules/enjoyknowledge.md` | Markdown |
-| `cline` | `.clinerules/enjoyknowledge.md` | Markdown |
-| `codex` | `.codex/prompts/enjoyknowledge.md` | Markdown |
-| `trae` | `.trae/rules/enjoyknowledge.md` | Markdown |
-| `gemini` | `GEMINI.md` | 追加 Markdown 块 |
-| `generic` | `enjoyknowledge.md` (project root) | Markdown |
+| 默认（不指定） | `AGENTS.md` | Markdown（含知识摘要路由表）|
+| **`cursor`**（v0.2 首发）| `.cursor/rules/enjoyknowledge.mdc` | YAML frontmatter + Markdown |
+| **`claude`**（v0.2 首发）| `.claude/skills/enjoyknowledge.md` | Markdown |
+| `copilot`（v0.2 暂未实现）| `.github/copilot-instructions.md` | 追加 Markdown 块 |
+| `windsurf`（v0.2 暂未实现）| `.windsurf/rules/enjoyknowledge.md` | Markdown |
+| `cline`（v0.2 暂未实现）| `.clinerules/enjoyknowledge.md` | Markdown |
+| `codex`（v0.2 暂未实现）| `.codex/prompts/enjoyknowledge.md` | Markdown |
+| `trae`（v0.2 暂未实现）| `.trae/rules/enjoyknowledge.md` | Markdown |
+| `gemini`（v0.2 暂未实现）| `GEMINI.md` | 追加 Markdown 块 |
+| `generic`（v0.2 暂未实现）| `enjoyknowledge.md` (project root) | Markdown |
 | `auto` | 自动检测当前环境中的 AI 工具 | — |
 
 ---

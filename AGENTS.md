@@ -1,6 +1,6 @@
 # enjoyknowledge
 
-> AI 时代的工程知识资产管理层 | 当前阶段: **v0.1 MVP**
+> AI 时代的工程知识资产管理层 | 当前阶段: **v0.2 收尾**（2026-06-27，文档层面就绪，代码 export 命令待实施）
 
 ## Quick links
 
@@ -27,9 +27,9 @@
 
 ## Current status
 
-- **阶段**: v0.1 MVP（设计基线 v4，2026-06-27）
-- **代码**: Rust CLI，5 命令（init/search/record/doctor/fix）
-- **下次重点**: 实施 export 命令（首发 Claude + Cursor）+ v0.2 工作流元数据 schema
+- **阶段**: v0.2 收尾（设计基线 v4.2，2026-06-27）
+- **代码**: Rust CLI，5 命令（init/ls/tree/grep/cat/add/doctor/fix）+ v0.2 待加 `export`
+- **下次重点**: 实施 `enjoyknowledge export --tool claude|cursor` 命令（v0.2 真正能 ship 的硬门槛）+ 2 个工作流 YAML 实现
 
 ## How to use this repo
 
