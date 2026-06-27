@@ -83,30 +83,26 @@ business/  →  约束 →  architecture/  →  产生 →  contracts/ + pattern
 
 **核心约束**：`id` 全项目唯一（路径即 ID + `id` 字段一致）。**不发明 `priority` 等新抽象**——按复杂度自然淘汰。
 
-## 6. 6 个核心场景
+## 6. 4 个核心场景
 
 | # | 场景 | 触发 | 价值 | 失败模式 |
 |---|---|---|---|---|
 | 1 | **Onboard Agent** | AI 工具启动 | 30 秒建立项目心智模型 | 入口文件超限或过期 |
 | 2 | **Capture Gotcha** | 开发者发现隐性坑 | 永久消除同类 bug | 描述模糊/无 trigger |
 | 3 | **Enforce Rule** | AI 工具生成代码前 | "生成时就不违反" | 规则 > 8 条被 AI 忽略 |
-| 4 | **PR Preflight** | commit/PR 前 | CI 之前发现冲突 | 只匹配文件名不匹配语义 |
-| 5 | **Export to AI Tools** | 改 rule/加 knowledge | 2 工具一次 export（v0.2 首发）| export 不完整 |
-| 6 | **Doctor Check** | pre-commit/CI | 防止知识腐烂 | 假阳/假阴/被忽略 |
+| 4 | **Doctor Check** | pre-commit/CI | 防止知识腐烂 | 假阳/假阴/被忽略 |
 
-## 7. 5 个工作流（YAML 元数据驱动）
+> v0.2 砍 6→4 场景：删 PR Preflight（工作流已删）+ Export to AI Tools（归到 capture 流程内）。
+
+## 7. 2 个工作流（YAML 元数据驱动）
 
 ```
 onboard (W1) ──── 唯一前置依赖
     ↓
-    ├──→ prd-preprocess (W2)  ← 每次新需求
-    │       ↓
-    │       └──→ preflight (W3) ← 每次变更前
-    │               ↓
-    │               └──→ capture (W4) ← 每次有价值的产出
-    │
-    └──→ sync (W5) ← AI 工具切换时（低频）
+    └──→ capture (W2) ← 每次有价值的产出
 ```
+
+> v0.2 砍 5→2 工作流：只留 onboard + capture；preflight / prd-preprocess / sync 全部永久禁用（详见 workflows.md）。
 
 **主动 vs 被动**：
 - 被动（入口文件触发）：W1 onboard
@@ -137,7 +133,7 @@ onboard (W1) ──── 唯一前置依赖
 
 ## How to use
 - **New to project?** → Read [overview.md] + run `enjoyknowledge onboard`
-- **Making changes?** → Run `enjoyknowledge preflight` before commit
+- **Making changes?** → Run `enjoyknowledge capture` after commit
 - **Captured a gotcha?** → Use `enjoyknowledge capture "description"`
 
 ## Sync status
@@ -171,12 +167,10 @@ onboard (W1) ──── 唯一前置依赖
 5. 4000 词硬上限 + 100 词单条
 6. frontmatter 必填校验（含 `trigger` for gotcha, `reversible` for decision）
 
-### 🟡 应包含但可简单做 5 项
-1. `capture` 基础版（手动 `/remember`）
-2. `preflight` 基础版（只做路径匹配）
-3. v0.2 多工具 export 基础版（首发 2 工具：Claude + Cursor）
-4. `pattern` 全文搜索 + tags filter
-5. 入口文件路由表模板
+### 🟡 应包含但可简单做 3 项
+1. v0.2 多工具 export 基础版（首发 2 工具：Claude + Cursor）
+2. `pattern` 全文搜索 + tags filter
+3. 入口文件路由表模板
 
 ### 🟢 延后到 v0.2/v0.3
 1. 语义级 preflight（embedding）

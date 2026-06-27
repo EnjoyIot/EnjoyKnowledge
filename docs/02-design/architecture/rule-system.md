@@ -102,14 +102,9 @@ Claude 的 managed section 模式：
 | 渲染输出 > 100 行 | **报错**——说明 rule 太多或太长 |
 | 渲染幂等性失败 | **error**——renderer bug |
 
-## 8. Rule-Code 同步检测（v3 F9 致命反模式）
+## 8. ~~Rule-Code 同步检测~~ **永久禁用**（v4.2 决策）
 
-**问题**：Rule 说"API 返回 `{data, error}`"但代码混用 `{result, msg}`——AI 按 rule 生成不一致的代码。
-
-**缓解**：
-- doctor 加 R-Code 一致性检查
-- 检测方式：扫描 rule 提到的 API 格式 + grep 代码实际格式
-- 失败 = warning（不能 hard fail，因为不是所有 rule 都能静态检查）
+> **v4.2 决定永久禁用**——v0.2 砍功能计划（5 问题清单 #5）。扫描 rule 提到的 API 格式 + grep 代码实际格式需要 NLP 级理解，不是 grep 能做的。"检测方式"描述在 v3 写过，但实现路径模糊（"扫描 API 格式"实际是 NLP 问题）。**保留 R-Code 概念作为未来研究方向**；v0.2 不实现，doctor 也不再检查。
 
 ## 9. 与 Template/Knowledge 的关系
 

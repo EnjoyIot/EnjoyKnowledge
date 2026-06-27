@@ -2,7 +2,7 @@
 
 > 版本: 1.0 | 2026-06-27 | 来源: v4 §4
 >
-> **本文件定义 5 个核心工作流 + YAML schema + 主动/被动分层**。
+> **本文件定义 v0.2 2 个核心工作流 + YAML schema + 主动/被动分层**。
 
 ---
 
@@ -18,27 +18,18 @@
 
 **关键好处**：用户加工作流不需要懂 Rust 也不需要重新编译——**vibe-coding friendly**。
 
-## 2. 5 个核心工作流
+## 2. v0.2 2 个核心工作流
 
 ```
 onboard (W1) ──── 唯一前置依赖
     ↓
-    ├──→ prd-preprocess (W2)  ← 每次新需求
-    │       ↓
-    │       └──→ preflight (W3) ← 每次变更前
-    │               ↓
-    │               └──→ capture (W4) ← 每次有价值的产出
-    │
-    └──→ sync (W5) ← AI 工具切换时（低频）
+    └──→ capture (W2) ← 每次有价值的产出
 ```
 
 | # | 工作流 | 触发 | 主动/被动 |
 |---|---|---|---|
 | W1 | **onboard** | AI 工具启动 | 被动（入口文件触发）|
-| W2 | **prd-preprocess** | 用户输入需求 | 主动 |
-| W3 | **preflight** | git commit/PR 前 | 主动 |
-| W4 | **capture** | 用户/AI 主动 | 主动 |
-| W5 | **sync** | AI 工具切换 | 主动 |
+| W2 | **capture** | 用户/AI 主动 | 主动 |
 
 **原则**：**"读"走被动（让 AI 工具自己发现）；"写"走主动（必须有意图）**
 
@@ -79,7 +70,7 @@ output: <object>                  # 输出定义
 | `ask_human` | 中断流程，问用户 | （无 target）|
 | `record` | 把结果写回 SoT | `target: .enjoyknowledge/knowledge/gotchas/<id>.md` |
 
-## 4. 5 个工作流定义（YAML 示例）
+## 4. v0.2 2 个工作流定义（YAML 示例）
 
 ### 4.1 onboard.yaml
 
@@ -118,55 +109,7 @@ output:
   max_words: 4000
 ```
 
-### 4.2 preflight.yaml
-
-```yaml
-name: preflight
-description: PR 提交前/AI 大改前检查冲突
-trigger:
-  - on_pre_commit
-  - on_pr_open
-  - manual: enjoyknowledge preflight
-
-input:
-  type: git_diff
-  source: "git diff --name-only HEAD~1"
-
-steps:
-  - id: find_related_gotchas
-    action: grep
-    target: .enjoyknowledge/knowledge/gotchas/
-    filter: { trigger_file_match: "{{input.files}}" }
-    required: true
-
-  - id: find_related_decisions
-    action: grep
-    target: .enjoyknowledge/knowledge/decisions/
-    filter: { applies_to: "{{input.files}}" }
-    required: true
-
-  - id: find_relevant_rules
-    action: grep
-    target: .enjoyknowledge/rules/
-    filter: { applies_to: "{{input.files}}" }
-    required: true
-
-  - id: rcode_sync_check
-    action: doctor
-    target: .enjoyknowledge/
-    check: rule_code_sync
-    required: false
-
-output:
-  type: report
-  format: markdown
-  sections:
-    - block: ["violates rule", "contradicts decision"]
-    - warn: ["matches gotcha"]
-    - info: ["related architecture"]
-```
-
-### 4.3 capture.yaml
+### 4.2 capture.yaml
 
 ```yaml
 name: capture
@@ -209,7 +152,7 @@ output:
   message: "已记录到 {{classified_to}}/{{generated_id}}"
 ```
 
-### 4.4 export.yaml
+### 4.3 export.yaml
 
 > **v0.2 重命名** = sync → export（1 工具时 sync 撒谎，export 诚实）
 
@@ -244,48 +187,6 @@ output:
   log_to: .enjoyknowledge/.log/export.log
 ```
 
-### 4.5 prd-preprocess.yaml
-
-```yaml
-name: prd-preprocess
-description: 把用户需求转化为结构化任务清单
-trigger:
-  - manual: enjoyknowledge prd "requirement"
-
-input:
-  type: free_text
-  source: "{{user_input}}"
-
-steps:
-  - id: find_related_business
-    action: grep
-    target: .enjoyknowledge/knowledge/business/
-    filter: { content_match: "{{input}}" }
-    required: true
-
-  - id: find_related_architecture
-    action: grep
-    target: .enjoyknowledge/knowledge/architecture/
-    filter: { content_match: "{{input}}" }
-    required: true
-
-  - id: find_related_gotchas
-    action: grep
-    target: .enjoyknowledge/knowledge/gotchas/
-    filter: { trigger_file_match: "{{inferred_modules}}" }
-    required: false
-
-  - id: generate_task_list
-    action: ai_decide
-    output_format: markdown_table
-    columns: [task, modules, known_risks, related_decisions]
-    required: true
-
-output:
-  type: markdown
-  max_words: 2000
-```
-
 ## 5. 失败处理
 
 | 失败模式 | 行为 |
@@ -300,7 +201,7 @@ output:
 
 ## 7. filter 语法定义
 
-> **v0.1 阻塞级技术债**——5 个工作流 YAML 都用了 `filter` 但 v0.1 之前必须先定义其语法。本节给出 v1 规范。
+> **v0.2 收缩后**——v0.2 仅 2 个工作流 YAML（onboard + capture）都用了 `filter`。本节给出 v1 规范。
 
 ### 7.1 通用形式
 
@@ -403,7 +304,7 @@ filter: { applies_to: "{{inferred_modules}}" }          # AI 推断
 
 | 维度 | B 站 bili-fe-workflow | enjoyknowledge v4 |
 |---|---|---|
-| 工作流数量 | 3 个硬编码 | 5 个 + 用户可加 |
+| 工作流数量 | 3 个硬编码 | 2 个 + 用户可加（v0.2 收缩）|
 | 工作流定义 | 编译到命令 | YAML 元数据 |
 | 加新工作流 | 改 Rust 代码 | 加 YAML 文件 |
 | 工具无关性 | 内部命令 | 多工具无关（v0.2 首发 2 工具，架构保留 9 工具 adapter）|
@@ -412,6 +313,6 @@ filter: { applies_to: "{{inferred_modules}}" }          # AI 推断
 ---
 
 **关联文档**：
-- [for-coding-design.md §7 5 个工作流依赖图](./for-coding-design.md)
+- [for-coding-design.md §7 v0.2 2 个工作流依赖图](./for-coding-design.md)
 - [rule-system.md §5 v0.2 2 工具 export](./rule-system.md)
 - [knowledge-types.md §4 必填字段](./knowledge-types.md)

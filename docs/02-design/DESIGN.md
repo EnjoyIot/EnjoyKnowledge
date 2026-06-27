@@ -67,9 +67,7 @@ enjoyknowledge for X       ← 领域应用（for Coding 是默认）
 
 | 工作流 | 触发 | 价值 |
 |---|---|---|
-| **onboard** | AI 工具启动 | 建立项目心智模型 |
-| **prd-preprocess** | 用户输入需求 | 需求 → 任务拆解 |
-| **preflight** | git commit/PR 前 | 检查冲突 |
+| **onboard** | AI 工具启动 | 30 秒建立项目心智模型 |
 | **capture** | 用户/AI 主动 | 沉淀知识 |
 | **export** | AI 工具切换 | export 到 v0.2 首发 2 工具 |
 
