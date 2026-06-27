@@ -105,4 +105,15 @@ pub enum Command {
         #[arg(long, value_name = "REQ-ID")]
         req: Option<String>,
     },
+
+    /// Generate AI tool entry files from .enjoyknowledge/ (v0.2 首发 2 工具：cursor / claude)
+    Export {
+        /// AI tool to generate entry file for (cursor / claude / auto; v0.2 其他 7 工具暂未实现)
+        #[arg(long, default_value = "auto")]
+        tool: String,
+
+        /// Print what would be generated without writing files
+        #[arg(long)]
+        dry_run: bool,
+    },
 }

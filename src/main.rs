@@ -69,6 +69,9 @@ fn main() -> anyhow::Result<()> {
         Command::Fix { req } => {
             cli::doctor::run_fix(Path::new("."), req.as_deref())?;
         }
+        Command::Export { tool, dry_run } => {
+            cli::export::run(Path::new("."), &tool, dry_run)?;
+        }
     }
 
     Ok(())
