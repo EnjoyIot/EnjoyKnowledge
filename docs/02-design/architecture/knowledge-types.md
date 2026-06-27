@@ -2,16 +2,18 @@
 
 > 版本: 1.0 | 2026-06-27 | 来源: v3 §3 + v4 修订
 >
-> **本文件定义 8 类知识 + 判断标准 + 依赖图**。
+> **本文件定义 10 类知识资产 + 判断标准 + 依赖图**。
+>
+> 说明：2 类 sync 资产（rules + templates）+ 8 类 knowledge 子目录 = 10 类知识资产。
 
 ---
 
-## 1. 8 类知识
+## 1. 10 类知识资产
 
 | # | 目录 | 本质 | 必含字段 | 例子 |
 |---|---|---|---|---|
-| 1 | `rules/` | 约束 | `id`, `applies_to` | "禁止 .unwrap()" |
-| 2 | `templates/` | 范式 | `id`, `applies_to` | "Builder 模式骨架" |
+| 1 | `rules/` | 约束（sync）| `id`, `applies_to` | "禁止 .unwrap()" |
+| 2 | `templates/` | 范式（sync）| `id`, `applies_to` | "Builder 模式骨架" |
 | 3 | `knowledge/architecture/` | 静态结构 | `id`, `last_reviewed` | "API 层用 axum + tower" |
 | 4 | `knowledge/gotchas/` | 触发器 | `id`, **`trigger`** | "IF 用 useEffect THEN 检查依赖" |
 | 5 | `knowledge/patterns/` | 项目特有模式 | `id`, `applies_to` | "本项目错误流：Result<T, AppError>" |

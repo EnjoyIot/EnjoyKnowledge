@@ -1,7 +1,7 @@
 ﻿# enjoyknowledge 设计哲学
 
 > 本文档回答：AI 编程时代，知识文档为什么需要一个和以前完全不同的设计。
-> 它只解释"相信什么"和"为什么相信"。具体怎么实现，见 DESIGN-V3.md。
+> 它只解释"相信什么"和"为什么相信"。具体怎么实现，见 [DESIGN.md](../02-design/DESIGN.md)。
 
 ---
 
@@ -145,8 +145,7 @@ EnjoyKnowledge 存在的前提是：
 
 | 文档 | 关系 |
 |---|---|
-| `DESIGN-V3.md` | 本文档原则的产品结构实现 |
-| `INTERFACE-SPEC.md` | CLI 行为合约 + AI 行为约束 |
-| `PRODUCT-DESIGN.md` | 产品体验与交付形态 |
-| `POSITIONING.md` | 市场定位 |
-| `GLOSSARY.md` | 统一术语 |
+| [DESIGN.md](../02-design/DESIGN.md) | 本文档原则的产品结构实现（合并了原 DESIGN-V3 + PRODUCT-DESIGN 内容） |
+| [INTERFACE-SPEC.md](../02-design/INTERFACE-SPEC.md) | CLI 行为合约 + AI 行为约束 |
+| [POSITIONING.md](../00-vision/POSITIONING.md) | 市场定位 |
+| [GLOSSARY.md](GLOSSARY.md) | 统一术语 |

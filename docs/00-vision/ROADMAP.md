@@ -5,12 +5,14 @@
 >
 > 本文档描述 enjoyknowledge 的分阶段发展计划。
 > 每个阶段有明确的目标、交付物和完成标准。
-> 路线图是活的——随着用户反馈和生态变化而调整。
 >
-> **关联文档**:
-> [BLUEPRINT.md](./BLUEPRINT.md) — 完整愿景与架构蓝图 |
-> [DESIGN-V3.md](./DESIGN-V3.md) — 当前系统架构 |
-> [CHANGELOG.md](./CHANGELOG.md) — 版本变更记录
+> **关联文档**（已更新到新结构）：
+> - [DESIGN.md](../02-design/DESIGN.md) — 整体设计入口
+> - [for-coding-design.md](../02-design/architecture/for-coding-design.md) — for Coding 完整设计
+> - [DESIGN-PHILOSOPHY.md](../01-philosophy/DESIGN-PHILOSOPHY.md) — 设计哲学
+> - [CHANGELOG.md](../04-changelog/CHANGELOG.md) — 版本变更记录
+> - 历史蓝图见 [99-archive/2026-06-26-codex/BLUEPRINT.md](../99-archive/2026-06-26-codex/BLUEPRINT.md)
+> 路线图是活的——随着用户反馈和生态变化而调整。
 
 ---
 
@@ -65,14 +67,12 @@ CLI 核心       打磨稳定      for Coding 场景深化   团队规模化    
 
 ### 文档
 
-- DESIGN-PHILOSOPHY.md — 设计哲学
-- DESIGN-V3.md — 系统架构
-- PRODUCT-DESIGN.md — 产品设计
-- INTERFACE-SPEC.md — CLI 行为合约
-- POSITIONING.md — 生态定位
-- GLOSSARY.md — 统一术语
-- BLUEPRINT.md — 完整愿景
-- ROADMAP.md — 本文档
+- [DESIGN-PHILOSOPHY.md](../01-philosophy/DESIGN-PHILOSOPHY.md) — 设计哲学
+- [DESIGN.md](../02-design/DESIGN.md) — 整体设计入口（含历史 DESIGN-V3 内容）
+- [INTERFACE-SPEC.md](../02-design/INTERFACE-SPEC.md) — CLI 行为合约
+- [POSITIONING.md](POSITIONING.md) — 生态定位
+- [GLOSSARY.md](../01-philosophy/GLOSSARY.md) — 统一术语
+- 历史蓝图见 [99-archive/2026-06-26-codex/BLUEPRINT.md](../99-archive/2026-06-26-codex/BLUEPRINT.md)
 
 ---
 

@@ -149,12 +149,14 @@ onboard (W1) ──── 唯一前置依赖
 
 | 强制 | 禁止 | 可选 |
 |---|---|---|
-| Rule ≤ 8 条 | AGENTS.md > 100 行 | 团队自定义模板 |
+| Rule ≤ 8 条 | AGENTS.md > 50 行（**硬约束**）| 团队自定义模板 |
 | Gotcha ≤ 100 词 + trigger 字段 | "注意性能"类空洞条目 | capture 触发方式 |
 | Decision 必含 reversible 字段 | 直接删 gotcha（必须先走 doctor 确认） | tasks/ 启用 |
 | 体积 ≤ 4000 词（doctor 检测）| Rule 写代码风格（留 formatter/linter） | 跨项目知识共享 |
 | `doctor` 必接 CI 且 fail=block | AGENTS.md 写"项目 README 第二份" | AI 工具主动 capture |
 | **R-Code 同步检测**（最致命反模式）| gotcha 50+ 文件不收敛 | 知识图谱可视化 |
+
+> **关于入口文件行数约束**：AGENTS.md 必须 ≤ 50 行（路由表模式）；9 工具的入口文件可 ≤ 100 行（多文件模式更宽容）。两处一致。
 
 ## 10. MVP 边界（v0.1）
 
