@@ -98,7 +98,7 @@ enjoyknowledge for X       ← 领域应用（for Coding 是默认）
 **必含 6 项**：
 1. `add` + 路由（自动判断 gotcha/pattern/decision/...）
 2. `search` + frontmatter filter
-3. 9 工具入口生成
+3. **多工具入口生成**（v0.2 首发 2 工具 = Claude + Cursor；架构上保留 9 工具 adapter trait，v0.3+ 渐进）
 4. `doctor` 3 项基础（frontmatter 有效 / 体积上限 / 链接完整）
 5. 4000 词硬上限 + 100 词单条
 6. frontmatter 必填校验

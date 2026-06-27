@@ -102,7 +102,7 @@ Layer 1: 文件系统
 
 ### 4.2 核心机制
 
-- **单一 SoT** —— 9 工具入口都从 .enjoyknowledge/ 同步生成，不各自维护
+- **单一 SoT** —— v0.2 首发 2 工具（Claude + Cursor）入口都从 .enjoyknowledge/ export 生成，不各自维护
 - **10 类知识资产** —— rule / template / architecture / gotcha / pattern / decision / business / contract / convention / context
 - **frontmatter schema** —— 部分必填（rule/template 的 applies_to / gotcha 的 trigger / decision 的 reversible+decided_at）
 - **YAML 工作流** —— 5 个核心工作流（onboard / capture / preflight / sync / prd-preprocess），用户可加文件 = 加工作流
