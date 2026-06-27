@@ -209,17 +209,19 @@ output:
   message: "已记录到 {{classified_to}}/{{generated_id}}"
 ```
 
-### 4.4 sync.yaml
+### 4.4 export.yaml
+
+> **v0.2 重命名** = sync → export（1 工具时 sync 撒谎，export 诚实）
 
 ```yaml
-name: sync
-description: 把 SoT 同步到 9 个 AI 工具的入口文件
+name: export
+description: 把 SoT 导出到 v0.2 已启用的 AI 工具（Claude + Cursor）
 trigger:
-  - manual: enjoyknowledge sync
+  - manual: enjoyknowledge export
   - on_post_record
 
 steps:
-  - id: list_target_tools
+  - id: list_enabled_tools
     action: grep
     target: .enjoyknowledge/.config/tools.yaml
     required: true
@@ -227,19 +229,19 @@ steps:
   - id: render_each_tool
     action: cat
     target: .enjoyknowledge/index.md
-    per_tool: "{{target_tools}}"
+    per_tool: "{{enabled_tools}}"
     template: per_tool_template
     required: true
 
   - id: validate_idempotency
     action: doctor
     target: .enjoyknowledge/
-    check: sync_idempotent
+    check: export_idempotent
     required: true
 
 output:
   type: log
-  log_to: .enjoyknowledge/.log/sync.log
+  log_to: .enjoyknowledge/.log/export.log
 ```
 
 ### 4.5 prd-preprocess.yaml
@@ -404,12 +406,12 @@ filter: { applies_to: "{{inferred_modules}}" }          # AI 推断
 | 工作流数量 | 3 个硬编码 | 5 个 + 用户可加 |
 | 工作流定义 | 编译到命令 | YAML 元数据 |
 | 加新工作流 | 改 Rust 代码 | 加 YAML 文件 |
-| 工具无关性 | 内部命令 | 9 工具无关 |
+| 工具无关性 | 内部命令 | 多工具无关（v0.2 首发 2 工具，架构保留 9 工具 adapter）|
 | 状态管理 | 部分 stateful | 完全 stateless |
 
 ---
 
 **关联文档**：
 - [for-coding-design.md §7 5 个工作流依赖图](./for-coding-design.md)
-- [rule-system.md §5 9 工具 sync](./rule-system.md)
+- [rule-system.md §5 v0.2 2 工具 export](./rule-system.md)
 - [knowledge-types.md §4 必填字段](./knowledge-types.md)

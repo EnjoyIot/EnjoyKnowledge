@@ -58,7 +58,7 @@ enjoyknowledge for X       ← 领域应用（for Coding 是默认）
 | 原则 | 含义 |
 |---|---|
 | **SoT 单一** | `.enjoyknowledge/` 是唯一真值源 |
-| **入口多元** | 9 个 AI 工具各自的入口文件（skills/mdc/rules） |
+| **入口多元** | v0.2 首发 2 个 AI 工具各自的入口文件（Claude skills + Cursor mdc） |
 | **元数据驱动** | 工作流 = YAML 文件，不实现引擎 |
 | **显式失败** | 不静默降级——缺失/未实现直接报错 |
 | **工具特性保留** | Cursor `.mdc` / Claude `@path` / Codex `$file` 不强制统一 |
@@ -71,11 +71,13 @@ enjoyknowledge for X       ← 领域应用（for Coding 是默认）
 | **prd-preprocess** | 用户输入需求 | 需求 → 任务拆解 |
 | **preflight** | git commit/PR 前 | 检查冲突 |
 | **capture** | 用户/AI 主动 | 沉淀知识 |
-| **sync** | AI 工具切换 | 同步到 9 工具 |
+| **export** | AI 工具切换 | export 到 v0.2 首发 2 工具 |
 
 详细见 [architecture/workflows.md](./architecture/workflows.md)。
 
-## 6. 9 个 AI 工具支持
+## 6. v0.2 多工具支持（首发 2 工具 = Claude + Cursor）
+
+> **v0.2 决定**：首发 2 工具（Claude + Cursor）；架构上保留 9 工具 adapter trait（Codex / Copilot / Windsurf / Cline / Trae / Gemini / Generic），v0.3+ 渐进。详细见 [architecture/rule-system.md §5](./architecture/rule-system.md) 和 [architecture/for-coding-design.md](./architecture/for-coding-design.md)。
 
 | 工具 | 入口 |
 |---|---|
