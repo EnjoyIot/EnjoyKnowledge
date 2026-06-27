@@ -1,6 +1,6 @@
-# enjoyknowledge 产品设计
+﻿# enjoyknowledge 产品设计
 
-> 版本 1.0 | 2026-06-22
+> 版本 1.1 | 2026-06-26
 >
 > 回答用户怎么用 enjoyknowledge——Core / for Coding 分层、交付形态、入口、端到端流程、AI 工具集成、团队共享。
 > 本文档不涉及内部实现（那是 [DESIGN-V3.md](./DESIGN-V3.md) 的职责）。设计决策的"为什么"见 [DESIGN-PHILOSOPHY.md](./DESIGN-PHILOSOPHY.md)。
@@ -173,7 +173,8 @@ enjoyknowledge init --ai auto         # 自动检测（默认）
 | **Copilot** | `.github/copilot-instructions.md` | GitHub 原生格式 |
 | **Windsurf** | `.windsurf/rules/enjoyknowledge.md` | Windsurf 规则目录 |
 | **Cline** | `.clinerules/enjoyknowledge.md` | Cline 规则目录 |
-| **Codex** | `.codex/prompts/enjoyknowledge.md` | Codex prompt 目录 |`r`n| **Trae** | `.trae/rules/enjoyknowledge.md` | Trae 规则目录 |
+| **Codex** | `.codex/prompts/enjoyknowledge.md` | Codex prompt 目录 |
+| **Trae** | `.trae/rules/enjoyknowledge.md` | Trae 规则目录 |
 | **Gemini CLI** | `GEMINI.md`（追加块） | Gemini CLI 原生格式 |
 
 ---
@@ -279,6 +280,7 @@ $ enjoyknowledge fix
 │   ├── patterns/                 # 验证过的模式和最佳实践
 │   ├── business/                 # 业务规则、计算公式
 │   ├── decisions/                # 架构决策记录 (ADR)
+│   ├── rules/                    # 规则源（三层防护：带适用范围标注 → AGENTS.md 分区推送 → doctor 一致性检查）
 │   ├── index.md                  # OKF 保留，目录的目录
 │
 ├── knowledge-tasks/               # 短期任务工作区，审核后再沉淀
@@ -396,4 +398,4 @@ enjoyknowledge fix                          # 自动修复
 
 ---
 
-*文档版本: 1.0 | 最后更新: 2026-06-22*
+*文档版本: 1.1 | 最后更新: 2026-06-26*
