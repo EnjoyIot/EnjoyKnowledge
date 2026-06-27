@@ -68,26 +68,58 @@ context/ + conventions/    ← 底层（被所有层引用）
 
 ## 4. 必填字段（frontmatter schema）
 
+> **重要原则**：frontmatter **不强制**——纯 markdown 也能用，只是失去 `applies_to` / `trigger` 过滤能力。v4 决策"不发明新抽象"（不引入 `priority` 之类的复杂概念）。`id` 推荐（路径即 ID 时可省）；`applies_to` 仅 rule/template 必填；`trigger` 仅 gotcha 必填；`reversible` + `decided_at` 仅 decision 必填。
+
 ```yaml
-# rule / template
-id: <string>           # 必填，稳定 slug
-applies_to: [list]      # 必填，glob 或语言
-priority: 1-5           # 选填，默认 3
-type: <string>          # 选填，分类
-tags: [list]            # 选填
-scope: project|user|team # 选填
+# rule（必含 applies_to，无 frontmatter 时无法 sync）
+id: rust-no-unwrap                  # 推荐（路径即 ID 可省）
+applies_to: [rust, "glob:**/*.rs"]  # 必填，glob 或语言
+tags: [rust, error-handling]        # 选填，跨分类标签
+
+# template（必含 applies_to）
+id: builder-pattern-skeleton
+applies_to: ["lang:rust"]           # 必填
+tags: [pattern, scaffold]           # 选填
 
 # gotcha（必含 trigger）
-id: <string>
-trigger: <string>        # 必填，触发条件
-severity: 1-5            # 选填
-tags: [list]
+id: useeffect-deps-must-be-stable
+trigger: "use useEffect"            # 必填，触发条件
+severity: 1-5                       # 选填
+tags: [react, hooks]                # 选填
 
-# decision（必含 reversible）
-id: <string>
-reversible: bool         # 必填
-decided_at: <date>       # 必填
-alternatives: [list]      # 选填
+# decision（必含 reversible + decided_at）
+id: postgresql-over-mysql
+reversible: false                   # 必填
+decided_at: 2026-04-15              # 必填
+alternatives: [mysql, sqlite]       # 选填
+
+# architecture（推荐 id + last_reviewed）
+id: api-layer-axum-tower
+last_reviewed: 2026-06-20           # 推荐，>90 天未审 doctor 警告
+tags: [api, backend]                # 选填
+
+# pattern（推荐 id + applies_to）
+id: error-flow-result-app-error
+applies_to: ["src/**/*.rs"]         # 推荐
+tags: [error-handling]              # 选填
+
+# contract（推荐 id + applies_to + breaking_change_since）
+id: api-user-avatar-can-be-null
+applies_to: ["src/api/user.ts"]     # 推荐
+breaking_change_since: null         # 选填
+
+# convention（推荐 id + enforced_by）
+id: pascalcase-components
+enforced_by: lint                   # 选填，lint/formatter/manual
+
+# context（推荐 id + env + last_verified）
+id: database-url-local
+env: DATABASE_URL=postgres://...    # 推荐
+last_verified: 2026-06-15           # 选填
+
+# business（推荐 id）
+id: user-module-fields
+tags: [user, domain]                # 选填
 ```
 
 ## 5. 体积约束
@@ -135,6 +167,6 @@ alternatives: [list]      # 选填
 ---
 
 **关联文档**：
-- [for-coding-design.md §4 8 类知识目录](./for-coding-design.md)
+- [for-coding-design.md §4 10 类知识目录](./for-coding-design.md)
 - [rule-system.md](./rule-system.md)
 - [workflows.md §4 步骤的 filter 用法](./workflows.md)

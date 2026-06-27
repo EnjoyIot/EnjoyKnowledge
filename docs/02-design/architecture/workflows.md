@@ -88,7 +88,7 @@ name: onboard
 description: AI 工具首次进入仓库时建立项目心智模型
 trigger:
   - on_ai_session_start
-  - manual: /ek onboard
+  - manual: enjoyknowledge onboard
 
 steps:
   - id: read_index
@@ -126,7 +126,7 @@ description: PR 提交前/AI 大改前检查冲突
 trigger:
   - on_pre_commit
   - on_pr_open
-  - manual: /ek preflight
+  - manual: enjoyknowledge preflight
 
 input:
   type: git_diff
@@ -215,7 +215,7 @@ output:
 name: sync
 description: 把 SoT 同步到 9 个 AI 工具的入口文件
 trigger:
-  - manual: /ek sync
+  - manual: enjoyknowledge sync
   - on_post_record
 
 steps:
@@ -248,7 +248,7 @@ output:
 name: prd-preprocess
 description: 把用户需求转化为结构化任务清单
 trigger:
-  - manual: /ek prd "requirement"
+  - manual: enjoyknowledge prd "requirement"
 
 input:
   type: free_text

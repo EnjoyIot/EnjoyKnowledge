@@ -36,7 +36,7 @@ Layer 3: Core 引擎（Rust 实现，跨 Profile 共享）
 Layer 4: 文件系统（markdown + frontmatter + git）
 ```
 
-## 4. 8 类知识目录
+## 4. 10 类知识目录
 
 ```
 .enjoyknowledge/
@@ -64,21 +64,24 @@ business/  →  约束 →  architecture/  →  产生 →  contracts/ + pattern
                                             context/ + conventions/  ←  底层
 ```
 
-## 5. 必填字段（frontmatter 硬约束）
+## 5. 必填字段（frontmatter 软约束）
 
-| 类型 | 必含字段 | 选填字段 |
+> **frontmatter 不强制**——纯 markdown 也能用。完整 schema 见 [knowledge-types.md §4](./knowledge-types.md)。
+
+| 类型 | 必含字段 | 推荐字段 |
 |---|---|---|
-| **rule** | `id`, `applies_to` | `priority`, `tags`, `tools` |
-| **template** | `id`, `applies_to` | `tags` |
-| **gotcha** | `id`, **`trigger`** | `severity`, `tags` |
-| **decision** | `id`, **`reversible`**, `decided_at` | `alternatives` |
-| **architecture** | `id` | `last_reviewed` |
-| **pattern** | `id`, `applies_to` | `tags` |
-| **contract** | `id`, `applies_to` | `breaking_change_since` |
-| **convention** | `id` | `enforced_by` (linter/formatter/manual) |
-| **context** | `id`, `env` | `last_verified` |
+| **rule** | `applies_to` | `id`, `tags` |
+| **template** | `applies_to` | `id`, `tags` |
+| **gotcha** | **`trigger`** | `id`, `severity`, `tags` |
+| **decision** | **`reversible`**, `decided_at` | `id`, `alternatives` |
+| **architecture** | — | `id`, `last_reviewed`, `tags` |
+| **pattern** | — | `id`, `applies_to`, `tags` |
+| **contract** | — | `id`, `applies_to`, `breaking_change_since` |
+| **convention** | — | `id`, `enforced_by` |
+| **context** | — | `id`, `env`, `last_verified` |
+| **business** | — | `id`, `tags` |
 
-**核心约束**：`id` 全项目唯一（路径即 ID + `id` 字段一致）。
+**核心约束**：`id` 全项目唯一（路径即 ID + `id` 字段一致）。**不发明 `priority` 等新抽象**——按复杂度自然淘汰。
 
 ## 6. 6 个核心场景
 
@@ -133,9 +136,9 @@ onboard (W1) ──── 唯一前置依赖
 3. **Active decisions**: [link to decisions/ with reversible:true]
 
 ## How to use
-- **New to project?** → Read [overview.md] + run `/ek onboard`
-- **Making changes?** → Run `/ek preflight` before commit
-- **Captured a gotcha?** → Use `/ek capture "description"`
+- **New to project?** → Read [overview.md] + run `enjoyknowledge onboard`
+- **Making changes?** → Run `enjoyknowledge preflight` before commit
+- **Captured a gotcha?** → Use `enjoyknowledge capture "description"`
 
 ## Sync status
 - Last sync: {timestamp}
