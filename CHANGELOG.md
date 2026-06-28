@@ -20,4 +20,10 @@
 - 惰性索引 (.index.json)
 - AGENTS.md + 7 种 AI 工具配置文件生成
 
+### Fixed (v0.4.1)
+- **stage/AGENTS.md 加 Draft frontmatter 必填规范** — AI 写 `stage/drafts/<id>.md` 时必填 kind-specific 字段（gotcha.trigger / rule.applies_to / decision.reversible+decided_at），promote 后 `ek doctor` 直接通过
+  - 之前：AI 写 gotcha draft 缺 trigger → `ek promote`（4 字段基础）→ `ek doctor` 报 "gotcha missing required field 'trigger'"
+  - 之后：stage/AGENTS.md 明确列出 3 类必填 + 例子 + "AI must fill these when writing drafts" 强提示
+  - 原因：R6 教训链 v9 "看起来错 ≠ 真错" — promote 强加 `trigger: "manual"` 默认值会污染灵魂字段，**规范放在文档层比工具层更对**
+
 [Unreleased]: https://github.com/enjoyknowledge/enjoyknowledge/compare/v0.1.0...HEAD
