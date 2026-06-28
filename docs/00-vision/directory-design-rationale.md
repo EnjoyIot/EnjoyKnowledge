@@ -41,7 +41,7 @@ v0.2 的 `for-coding` profile 硬编码 5 个知识目录：`architecture`、`go
 
 ## 3. 借鉴对标
 
-R1 诊断中梳理了 5 个对标系统，各有取舍：
+R1 诊断 + codex 第三轮评审，6 个对标系统各有取舍：
 
 **Code as Craft (Etsy)。** 5 类：How / Why / What / Conventions / Glossary。How ≈ commands/，Why ≈ decisions/，What ≈ context/，Conventions ≈ patterns/ + rules/（但 Etsy 不区分强制规则和推荐模式）。Glossary 在我们体系中等价于术语表文档，不需要独立目录。
 
@@ -49,11 +49,13 @@ R1 诊断中梳理了 5 个对标系统，各有取舍：
 
 **Diataxis。** 4 类：tutorial / how-to / reference / explanation。这是文档分类法，不是知识分类法。tutorial 在我们的体系里没有对应目录（那是 README 和 docs 的职责）；how-to ≈ commands/；reference ≈ architecture/；explanation ≈ decisions/ + patterns/。Diataxis 对"知识应该怎么组织"有启发，但对"AI 应该查什么目录看什么"帮助不大。
 
+**Divio（codex 评审补充）。** 4 类：tutorial / how-to / reference / explanation。**与 Diataxis 高度相似但更面向开发者文档**。Divio 强调"4 类不应该混"——explanation 不能放 how-to 目录，反之亦然。这与 rules/ 强制分离 patterns/ 的思路一致：分类互斥原则。**我们的 8 目录借鉴了 Divio 的"互斥分类"思路**。
+
 **ADR。** 1 类：decision。已被 v0.2 的 `decisions/` 正确吸收。保持。
 
 **Postmortem。** 3 段：incident / root cause / prevention。这≈我们的 gotchas/ 的 `##` 结构（Instance / Impact / Workaround 三段式——见 `src/profile/coding.rs:93-96`）。已吸收，保持。
 
-**关键启发：** 5 个对标系统的交集是 "context + decisions + patterns + gotchas + architecture"——这 5 个目录有跨系统共识。我们缺的 3 个（rules / commands / context）中，context 在 Arc42 和 Diataxis 中都被强调为独立类别；rules 是从 patterns 中强制分离出来的——对标系统都不太区分"推荐"和"必须"，但在 AI 编程场景下，这个区分是关键的（AI 应该无条件遵守 rules，可以自行判断是否使用 patterns）。
+**关键启发：** 6 个对标系统的交集是 "context + decisions + patterns + gotchas + architecture"——这 5 个目录有跨系统共识。我们缺的 3 个（rules / commands / context）中，context 在 Arc42 和 Divio 中都被强调为独立类别；rules 是从 patterns 中强制分离出来的——对标系统都不太区分"推荐"和"必须"，但在 AI 编程场景下，这个区分是关键的（AI 应该无条件遵守 rules，可以自行判断是否使用 patterns）。
 
 ---
 
@@ -190,6 +192,16 @@ v0.2 有 10 个 legal kind（`src/cli/workflow.rs:357-368`），但只有 5 个 
 
 ## 6. 迁移路径（v0.2 → v0.3+）
 
+### 决策树（codex 评审补充）
+
+```
+你的项目是 _____________
+│
+├─ 生产环境（用户已用 v0.2）→ 策略 A（保留不动，最稳）
+├─ 活跃开发（你天天用 capture）→ 策略 B（自动平移）
+└─ 想重组结构（清理时机）→ 策略 C（手动升级）
+```
+
 ### 新项目
 
 直接使用 8 目录。init 输出：
@@ -254,15 +266,62 @@ v0.2.1 用户用 `capture --kind contract` 写入的文件路径保持不变（`
 
 ## 7. 风险评估
 
-**风险 1：capture 命令 kind→dir 映射改动。** `src/cli/workflow.rs:381-403` 的 `default_path_for_kind` 需要更新——新增 `command` kind 的映射（`"command" → "commands/commands.md"`），确认 `context` 映射（已在代码中：`"context" → "context/context.md"`）。影响面：使用 `capture --kind` 的用户脚本。缓解：kind 枚举向后兼容（只是多了 1 个合法值 + 修正已有映射），不删除任何旧 kind。
+**风险 1：capture 命令 kind→dir 映射改动 + 单复数 bug。** `src/cli/workflow.rs:381-403` 的 `default_path_for_kind` 需要更新——但**当前代码 + 文档有 R6 漏洞**：kind `"contract"` 在代码中映射到 `contract/`（singular），但 §5 设计文档写 `contracts/`（plural）。`convention` → `convention/` vs `conventions/` 同理。`default_path_for_kind` 现 L387 `_ => kind` 用 kind 名作为目录名（contract / convention / context / template），与 §5 表的复数目录名（contracts / conventions / contexts / templates）不一致。
+
+**统一规则（v0.3+ 决定）**：目录名 = kind 名 + s，**除非不可数**（architecture / business / context / template 用原形）。这与 v0.2 已有的"patterns/gotchas/decisions"惯例一致。完整映射：
+
+| kind | 目录 |
+|---|---|
+| architecture | architecture/ |
+| business | business/ |
+| command | commands/ |
+| context | context/ |
+| convention | conventions/ |
+| contract | contracts/ |
+| decision | decisions/ |
+| gotcha | gotchas/ |
+| pattern | patterns/ |
+| rule | rules/ |
+| template | templates/ |
+
+影响面：使用 `capture --kind contract` 的 v0.2.1 用户脚本（写入 `contract/contracts.md`）→ v0.3+ 改为 `contracts/contracts.md`。**v0.3+ 必须用新路径**——这是破坏性变更，需要在 CHANGELOG v1.5 标注 + 在 `init` 升级时给旧路径文件 `mv` 操作（迁移工具负责）。
 
 **风险 2：`business/` 可选化。** 最终决策：始终创建空 `business/` 目录（与 §4.8 一致）。无 seed 文件——通过 `business/000-README.md` 一行提示"业务系统才填"代替。`contracts/`、`conventions/`、`templates/` 同策略。**统一原则：init 输出 11 个目录，8 个有 seed，3 个空骨架**。
 
-**风险 3：`POSITIONING.md` L124 要同步改。** 该行写"10 个 CLI 命令"，需要确认 v0.3+ CLI 命令数是否变化（不变——init 输出变但 init 命令本身在）。
+**风险 B 完整工具集**（codex 评审补充）：`migrate --from v0.2`（平移）+ `migrate --rollback`（回退）+ `migrate --dry-run`（预览）+ `migrate --status`（查当前版本）。rollback 必须保留：所有 v0.3 新建目录的清单 + v0.2 单复数改名清单（contract/ → contracts/ 等），保证一键回退到 v0.2 路径。
 
-**风险 4：`INTERFACE-SPEC.md` §2.1 要同步改。** 第 25-36 行的目录结构图需从 5 目录改为 8 目录。§4.2 的 `ls` 示例输出（第 113-122 行）需更新目录列表。
+**风险 3：AGENTS.md 路由表膨胀（codex 评审关键发现）。** v0.2.1 A1 实现的 AGENTS.md 路由表为 5 目录设计（`src/cli/workflow.rs:122`）。8 目录 → 11 目录（含 contracts/conventions/templates）= 路由表从 5 行变 11 行。**这破坏 v0.2 核心承诺"30 秒建立心智模型"**。缓解方案：路由表用分组折叠（3 组：Core（5）+ Context（3）+ Conditional（3）），AGENTS.md 顶部展示 Core 5 行，Context 在 `<details>` 折叠块，Conditional 标注"v0.3+ 才用"。token 成本：当前 5 行 ≈ 80 tokens，新方案 Core 5 行 ≈ 80 tokens（不变）+ Context 折叠 ≈ 30 tokens 隐藏 = 实际增量很小。
 
-**风险 5：`GLOSSARY.md` 的 for Coding 词条。** 描述从"默认知识结构（10 类资产）"改为"默认知识结构（11 类资产 + 8 个目录）"。
+**风险 4：doctor 检查项膨胀（codex 评审关键发现）。** v0.2 4 项 check → v0.3+ 预计 ~15 项（11 目录空/非空 + seed 完整性 + index.md 覆盖 + 新 4 项 check 关联）。文档未列出 v0.3 doctor 完整清单是信息缺失。**v0.3+ 强制要求**：必须在 INTERFACE-SPEC §7 列出 doctor 完整 check 清单 + 每项 severity。
+
+**风险 5：`POSITIONING.md` L124 要同步改。** 该行写"10 个 CLI 命令"，需要确认 v0.3+ CLI 命令数是否变化（不变——init 输出变但 init 命令本身在）。
+
+**风险 6：`INTERFACE-SPEC.md` §2.1 要同步改。** 第 25-36 行的目录结构图需从 5 目录改为 8 目录。§4.2 的 `ls` 示例输出（第 113-122 行）需更新目录列表。
+
+**风险 7：`GLOSSARY.md` 的 for Coding 词条。** 描述从"默认知识结构（10 类资产）"改为"默认知识结构（11 类资产 + 8 个目录）"。
+
+---
+
+## 8.5 全 v0.3 估时（codex 评审补充）
+
+v0.3 完整版 = C1-C7（7 commit / 6-8 天） + C8（目录重设计 8 子步骤）。**总估时**：
+
+| 阶段 | commit | why 估 | claude 估 | codex 估 | 最终 |
+|---|---|---|---|---|---|
+| C1 | add --dry-run + --field | 0.5 天 | agree | agree | 0.5 天 |
+| C2 | add 重复检测 | 0.5 天 | agree | agree | 0.5 天 |
+| C3 | add 自动 tags | 0.5 天 | agree | agree | 0.5 天 |
+| C4 | add --from-commit | 0.5 天 | agree | agree | 0.5 天 |
+| C5 | 种子文件增强 | 1 天 | agree | agree | 1 天 |
+| C6 | doctor 跨文件引用 + 描述一致性 | 1.5 天 | 2 天 | agree | 2 天 |
+| C7 | fix.rs 适配 + 预算拆分 | 1.5 天 | 2 天 | agree | 2 天 |
+| C8 | 目录重设计 8 子步骤 | - | 0.5 天 | **2.5-3 天** | **2.5-3 天** |
+| **v0.3 全量** | | **6-8 天** | | | **9-11 天** |
+
+**关键上调**：
+- C6 +0.5 天（claude 谨慎评估）
+- C7 +0.5 天（4 新 case + 8 snapshot 测试）
+- C8 +2-2.5 天（codex 估 migrate 2h + dogfooding 1.5h + 决策树/rollback/路由表/doctor 列表/8 文档同步）
 
 ---
 
