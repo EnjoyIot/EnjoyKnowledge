@@ -118,36 +118,40 @@ CLI 核心       打磨稳定      for Coding 场景深化   团队规模化    
 
 ---
 
-## v0.3 — for Coding 场景深化
+## v0.3 — 编码场景深化（一站式收尾）
 
 **目标**: 在编码场景下把产品体验做深做透。不是加目录，而是在知识生命周期的每个环节提升密度和可用性。
 
-**预计**: 3-4 个迭代
+**预计**: 1-2 个迭代（一站式收尾，不分散 v0.3.1/v0.3.2）
 
-### 种子文件增强
+### 核心 1：捕获体验
 
-让 `init` 生成的骨架文件不再是简单占位符，而是真正能引导开发者填写的内容：
-
-- [ ] 每个种子文件包含**填写指南**（这个文件该写什么、不该写什么）
-- [ ] 附带**常见场景示例**（如 `gotchas/export.md` 预填一个 Excel 导出的典型踩坑模板）
-- [ ] 附带**反例警示**（什么内容应该拆到别的文件、什么内容太琐碎不值得记录）
-- [ ] 标注**跨文件关联提示**（"如果你在写架构概览，记得同时更新 tech-stack.md"）
-
-### 捕获体验提升
+让 `add` / `workflow capture` 真正"零摩擦"——开发者不思考怎么写，只想记什么：
 
 - [ ] `add` 追加前自动检测**重复/相似条目**（基于标题和 description 的相似度），提示合并
 - [ ] `add` 自动建议 **tags**（基于已有 tags 和当前内容的匹配）
 - [ ] `add --from-commit`：从最近的 git commit message 中提取可能的知识入口，提示是否记录
 - [ ] `add --dry-run`：预览即将添加的内容和自动生成的 frontmatter
+- [ ] **种子文件增强**：让 `init` 生成的骨架文件不再是简单占位符（填写指南 / 常见场景 / 反例警示 / 跨文件关联提示）
 
-### 质量保障深化
+### 核心 2：质量保障深化
 
 在现有 4 项结构检查之外，增加内容质量维度：
 
 - [ ] **描述一致性检查**：`doctor` 检查 `description` 是否与正文存在明显偏差（基于关键词覆盖率）
 - [ ] **跨文件引用有效性**：`doctor` 检测正文中引用的其他 `.enjoyknowledge/` 文件路径是否真实存在
-- [ ] **知识新鲜度评分**：给出每个文件的新鲜度（基于 timestamp、更新频率、被引次数），`doctor` 标记超过 N 天未更新的条目
 - [ ] **预算与拆分建议**：单文件条目数超过阈值（>20 条）时，`doctor` 给出具体的拆分建议
+- [ ] **fix.rs 适配 v0.2 4 项 check**（v0.2 收尾遗留）：让 `fix` 命令能修 `check_frontmatter` / `check_required_fields` / `check_sot_staleness` / `check_export_consistency` 报的问题
+
+> **v0.3 不做的事**（合并到 v0.4）：搜索增强（grep --related/--semantic）、AI 集成深度（context 命令）、代码编织（git hook/link）、团队工作流基础（doctor --ci JSON）
+
+---
+
+## v0.4 — 知识 + 开发流程交织 + 团队规模化（合并发布）
+
+**目标**: 让知识不再只是静态文档，而是与开发流程交织；支持多仓库、多团队场景。
+
+**预计**: 2-3 个迭代（**原 v0.3 剩余 4 大类 + 原 v0.4 5 大类合并**）
 
 ### 搜索能力增强
 
@@ -158,70 +162,37 @@ CLI 核心       打磨稳定      for Coding 场景深化   团队规模化    
 
 ### AI 集成深度
 
-- [ ] **智能推送范围**：当知识库增大时，AGENTS.md 中的推送块根据当前任务上下文智能缩减（不是全量推送），保持 token 成本低
-- [ ] 对不同 AI 工具的**接入深度优化**：
-  - Cursor: rules 文件中包含领域特定的上下文注入策略
-  - Claude Code: Skill 文件支持 `/enjoyknowledge grep` 快捷调用
-  - Codex: prompt 文件利用 Codex 的 skill 机制自动加载
-- [ ] `enjoyknowledge context <task-description>`：根据任务描述输出相关知识的摘要（供 AI 工具在任务开始时调用）
+- [ ] **智能推送范围**：当知识库增大时，AGENTS.md 中的推送块根据当前任务上下文智能缩减
+- [ ] 对不同 AI 工具的**接入深度优化**：Cursor rules / Claude Code Skill / Codex prompt
+- [ ] `enjoyknowledge context <task-description>`：根据任务描述输出相关知识的摘要
 
 ### 代码编织
 
-让知识不只是静态文档，而是与开发流程交织在一起：
-
-- [ ] **规则统一管理（三层防护）**：① 源规则层 — `.enjoyknowledge/rules/` 为唯一真值源，每条规则强制带「适用范围」标注（自然语言），`doctor` 缺标注 → warning；② 推送层 — `add` 时间步更新 AGENTS.md `RULES` 块，按语言/框架分区（通用 / 前端 / Rust 后端 / API 等），规则全量推送但分区提供强信号，AI 自行判断适用性；③ 兜底层 — `doctor` 检查源与推送块一致性，`doctor --rules` 专项检查规则质量；④ 边界 — 工具特有规则（Cursor `globs`、Claude system prompt）留原生文件，不进入统一管理
-- [ ] **git commit hook**：commit 时自动检测变更文件，提示相关 `.enjoyknowledge/` 条目（"你改了 export.rs，gotchas/export.md 有 3 条导出相关注意事项"）
-- [ ] **PR 模板自动引用**：创建 PR 时自动检测变更涉及的目录，在 PR 描述中引用相关知识条目
+- [ ] **规则统一管理（三层防护）**：源规则层 + 推送层 + 兜底层
+- [ ] **git commit hook**：commit 时自动检测变更文件，提示相关知识条目
+- [ ] **PR 模板自动引用**：创建 PR 时自动检测变更涉及的目录
 - [ ] `enjoyknowledge link <file> --to <code-path>`：手动建立代码文件与知识条目的关联
-- [ ] `enjoyknowledge unlink` 查看哪些知识条目关联了哪些代码路径
 
 ### 团队工作流基础
 
-- [ ] 知识 PR 审核指南：为团队提供知识变更的 review checklist
-- [ ] 知识变更与代码变更的关联审查：PR 中代码变更触及了关联知识时，reviewer 收到提醒
-- [ ] `doctor --ci` 输出 JSON 格式，便于 CI 管道解析
-- [ ] 可配置严重级别（error / warning / info），团队自定义阈值
-
----
-
-## v0.4 — 团队与规模化
-
-**目标**: 支持多仓库、多团队场景，让知识在组织内流动。
-
-**预计**: 3-4 个迭代
+- [ ] 知识 PR 审核指南：review checklist
+- [ ] `doctor --ci` 输出 JSON 格式
+- [ ] 可配置严重级别（error / warning / info）
+- [ ] GitHub Actions / GitLab CI 集成模板
 
 ### 多仓库知识链接
 
 - [ ] `--link` 支持 Git URL（自动 clone + 缓存）
 - [ ] 知识溯源：OKF `resource` 字段标注来源仓库
 - [ ] `ls` / `grep` 标注知识归属（本地 / 上游 / 组织）
-- [ ] 上游知识更新检测：`doctor` 发现上游有新版本
 
-### 共享知识库
+### 共享知识库 + 组织级 + 知识废弃
 
-- [ ] 独立知识库仓库的推荐结构
-- [ ] 知识库版本管理：语义化版本 + CHANGELOG
+- [ ] 独立知识库仓库的推荐结构 + 语义化版本管理
 - [ ] `enjoyknowledge knowledge pull`：拉取上游知识库更新
-- [ ] 冲突标记：本地修改与上游冲突时标注
-
-### 组织级功能
-
-- [ ] 组织级预设：`--org` 标志，预设存放在组织仓库
-- [ ] 知识库聚合：`enjoyknowledge aggregate` 汇总多个知识库
-- [ ] 跨项目搜索：`grep --all-projects`
-
-### 知识废弃
-
-- [ ] `deprecated` frontmatter 字段
-- [ ] `doctor` 检测废弃知识的引用
-- [ ] 废弃知识在 `ls` 输出中标注
-- [ ] 废弃知识宽限期后自动归档
-
-### CI 阻断
-
-- [ ] `doctor --ci` 输出机器可读格式（JSON）
-- [ ] 可配置严重级别（error / warning / info）
-- [ ] GitHub Actions / GitLab CI 集成模板
+- [ ] 组织级预设：`--org` 标志
+- [ ] `enjoyknowledge aggregate` 汇总多个知识库
+- [ ] `deprecated` frontmatter 字段 + `doctor` 检测废弃引用
 
 ---
 
