@@ -137,3 +137,239 @@ fn doctor_ci_exits_nonzero_on_warnings() {
     // doctor --ci should fail with non-zero on any warning
     enjoyknowledge().args(["doctor", "--ci"]).current_dir(root).assert().code(3);
 }
+
+// ---- v0.4: Enhanced init ----
+
+#[test]
+fn init_creates_stage_directory_structure() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    assert!(root.join(".enjoyknowledge_stage").exists());
+    assert!(root.join(".enjoyknowledge_stage/tasks").exists());
+    assert!(root.join(".enjoyknowledge_stage/drafts").exists());
+    assert!(root.join(".enjoyknowledge_stage/.archive/tasks").exists());
+}
+
+#[test]
+fn init_creates_8_stage_templates() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let td = root.join(".enjoyknowledge_stage/tasks/_template");
+    assert!(td.exists());
+    for name in &[
+        "summary.md",
+        "requirements.md",
+        "design.md",
+        "plan.md",
+        "changes.md",
+        "tests.md",
+        "delivery.md",
+        "review.md",
+    ] {
+        assert!(td.join(name).exists(), "missing {name}");
+    }
+}
+
+#[test]
+fn init_generates_ek_agents_md() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let content =
+        std::fs::read_to_string(root.join(".enjoyknowledge/AGENTS.md")).unwrap();
+    assert!(content.contains("EnjoyKnowledge KB Index"));
+    assert!(content.contains("NEVER write to"));
+}
+
+#[test]
+fn init_generates_stage_agents_md() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let content =
+        std::fs::read_to_string(root.join(".enjoyknowledge_stage/AGENTS.md")).unwrap();
+    assert!(content.contains("Stage Writing Spec"));
+    assert!(content.contains("Hard Gate Protocol"));
+}
+
+#[test]
+fn init_creates_11_kind_directories() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let ek = root.join(".enjoyknowledge");
+    for kind in &[
+        "architecture",
+        "business",
+        "commands",
+        "context",
+        "decisions",
+        "gotchas",
+        "patterns",
+        "rules",
+        "contracts",
+        "conventions",
+        "templates",
+    ] {
+        assert!(ek.join(kind).exists(), "missing kind dir: {kind}");
+    }
+}
+
+#[test]
+fn init_updates_gitignore_when_present() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::write(root.join(".gitignore"), "target/\n").unwrap();
+
+    init_project(root);
+
+    let content = std::fs::read_to_string(root.join(".gitignore")).unwrap();
+    assert!(content.contains(".enjoyknowledge_stage/tasks/*/changes.md"));
+}
+
+// ---- v0.4: Promote ----
+
+#[test]
+fn promote_draft_to_gotcha() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    // Write a draft
+    std::fs::write(
+        root.join(".enjoyknowledge_stage/drafts/utf8-windows.md"),
+        "## Windows UTF-8 encoding\n- CP_UTF8 flag issue on Windows 10\n",
+    )
+    .unwrap();
+
+    enjoyknowledge()
+        .args(["promote", "utf8-windows.md", "--to", "gotcha", "--author", "jay"])
+        .current_dir(root)
+        .assert()
+        .success();
+
+    let target = root.join(".enjoyknowledge/gotchas/utf8-windows.md");
+    assert!(target.exists());
+    let content = std::fs::read_to_string(target).unwrap();
+    assert!(content.contains("id: utf8-windows"));
+    assert!(content.contains("kind: gotcha"));
+    assert!(content.contains("author: jay"));
+    assert!(content.contains("Windows UTF-8 encoding"));
+}
+
+#[test]
+fn promote_adds_promoted_marker() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    std::fs::write(
+        root.join(".enjoyknowledge_stage/drafts/my-draft.md"),
+        "## My Draft\n- test\n",
+    )
+    .unwrap();
+
+    enjoyknowledge()
+        .args(["promote", "my-draft.md", "--to", "architecture", "--author", "jay"])
+        .current_dir(root)
+        .assert()
+        .success();
+
+    let draft = std::fs::read_to_string(
+        root.join(".enjoyknowledge_stage/drafts/my-draft.md"),
+    )
+    .unwrap();
+    assert!(draft.contains("[PROMOTED]"));
+}
+
+#[test]
+fn promote_missing_draft_fails() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    enjoyknowledge()
+        .args(["promote", "nonexistent.md", "--to", "gotcha"])
+        .current_dir(root)
+        .assert()
+        .code(1);
+}
+
+// ---- v0.4: Stage Clean ----
+
+#[test]
+fn stage_clean_no_archive_is_noop() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    enjoyknowledge()
+        .args(["stage", "clean", "--force"])
+        .current_dir(root)
+        .assert()
+        .success();
+}
+
+#[test]
+fn stage_clean_dry_run_lists_tasks() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    // Create an old task in archive
+    let archive = root.join(".enjoyknowledge_stage/.archive/tasks/old-task");
+    std::fs::create_dir_all(&archive).unwrap();
+    std::fs::write(archive.join("summary.md"), "old task summary").unwrap();
+
+    enjoyknowledge()
+        .args(["stage", "clean", "--dry-run", "--older-than", "0"])
+        .current_dir(root)
+        .assert()
+        .success();
+}
+
+#[test]
+fn stage_clean_force_removes_old_tasks() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let archive = root.join(".enjoyknowledge_stage/.archive/tasks/old-task");
+    std::fs::create_dir_all(&archive).unwrap();
+    std::fs::write(archive.join("summary.md"), "old task").unwrap();
+
+    enjoyknowledge()
+        .args(["stage", "clean", "--force", "--older-than", "0"])
+        .current_dir(root)
+        .assert()
+        .success();
+
+    assert!(!archive.exists());
+}
+
+#[test]
+fn stage_clean_without_force_does_not_delete() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let archive = root.join(".enjoyknowledge_stage/.archive/tasks/old-task");
+    std::fs::create_dir_all(&archive).unwrap();
+    std::fs::write(archive.join("summary.md"), "old task").unwrap();
+
+    enjoyknowledge()
+        .args(["stage", "clean", "--older-than", "0"])
+        .current_dir(root)
+        .assert()
+        .success();
+
+    // Without --force, tasks should NOT be deleted
+    assert!(archive.exists());
+}

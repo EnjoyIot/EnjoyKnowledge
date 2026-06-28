@@ -9,7 +9,7 @@ mod knowledge;
 mod profile;
 mod template;
 
-use crate::cli::args::{Cli, Command};
+use crate::cli::args::{Cli, Command, StageAction};
 use clap::Parser;
 use std::path::Path;
 
@@ -75,6 +75,14 @@ fn main() -> anyhow::Result<()> {
         Command::Workflow { workflow, kind, field, body, path } => {
             cli::workflow::run(&workflow, Path::new("."), kind, field, body, path)?;
         }
+        Command::Promote { draft_file, to, id, author } => {
+            cli::promote::run(Path::new("."), &draft_file, &to, id.as_deref(), author.as_deref())?;
+        }
+        Command::Stage { action } => match action {
+            StageAction::Clean { dry_run, force, older_than } => {
+                cli::stage_clean::run(Path::new("."), dry_run, force, older_than)?;
+            }
+        },
     }
 
     Ok(())

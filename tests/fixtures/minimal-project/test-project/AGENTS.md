@@ -7,15 +7,27 @@ This project uses [enjoyknowledge](https://enjoyknowledge.dev) to manage shared 
 <!-- enjoyknowledge_LS_START -->
 architecture/
 business/
+commands/
+context/
+contracts/
+conventions/
 decisions/
 gotchas/
 patterns/
+rules/
+  AGENTS.md → Knowledge base index and AI tool usage guide
   overview.md → Project architecture overview -- system design, module map, data flow
   business.md → Business rules, domain logic, calculation formulas, and compliance requirements
+  commands.md → CLI commands, scripts, and one-liners worth remembering
+  context.md → Project context -- stakeholders, constraints, deadlines, and background
+  contracts.md → API contracts, data schemas, interface guarantees
+  conventions.md → Team conventions, workflow norms, and process agreements
   000-template.md → Architecture Decision Records (ADR) -- key technical decisions and their rationale
   gotchas.md → Gotchas, tricky bugs, edge cases, and workarounds discovered during development
   index.md → Knowledge base index — auto-generated directory of all knowledge files
   patterns.md → Validated patterns, conventions, and best practices for this project
+  rules.md → Coding rules, lint policies, naming conventions enforced in this project
+  templates.md → Reusable file and component templates
 <!-- enjoyknowledge_LS_END -->
 
 Above is the current knowledge base contents. Before starting any coding task, check here to see if relevant knowledge exists.

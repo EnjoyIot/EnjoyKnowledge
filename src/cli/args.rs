@@ -138,10 +138,53 @@ pub enum Command {
         #[arg(long, value_name = "PATH")]
         path: Option<String>,
     },
+
+    /// Promote a draft from `.enjoyknowledge_stage/drafts/` to the knowledge base (v0.4)
+    Promote {
+        /// Draft file path relative to `.enjoyknowledge_stage/drafts/`
+        draft_file: String,
+
+        /// Target knowledge kind
+        #[arg(long, value_name = "KIND")]
+        to: String,
+
+        /// Knowledge entry ID (defaults to draft filename without .md)
+        #[arg(long, value_name = "ID")]
+        id: Option<String>,
+
+        /// Author name (defaults to 'unknown')
+        #[arg(long, value_name = "NAME")]
+        author: Option<String>,
+    },
+
+    /// Stage management commands (v0.4)
+    Stage {
+        #[command(subcommand)]
+        action: StageAction,
+    },
 }
 
 /// Parse a `KEY=VALUE` string for `--field`.
 fn parse_field(s: &str) -> Result<(String, String), String> {
     let (k, v) = s.split_once('=').ok_or_else(|| format!("expected KEY=VALUE, got '{s}'"))?;
     Ok((k.trim().to_string(), v.trim().to_string()))
+}
+
+/// Subcommand actions for `ek stage`.
+#[derive(Subcommand)]
+pub enum StageAction {
+    /// Clean archived tasks older than TTL threshold
+    Clean {
+        /// Print what would be deleted without deleting
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+
+        /// Delete tasks older than N days (default: 180)
+        #[arg(long, value_name = "DAYS")]
+        older_than: Option<u64>,
+    },
 }
