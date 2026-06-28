@@ -1,168 +1,169 @@
 # enjoyknowledge 接口规范
 
-> OKF v0.1 兼容
+> v0.4.2 | 2026-06-28
 >
-> enjoyknowledge 兼容实现的最小接口合约。第三方适配器、工具生成器、AI 工具集成的唯一参考。
-> 对齐 Google OKF (Open Knowledge Format) v0.1。
+> CLI 行为合约。第三方适配器、工具生成器、AI 工具集成的唯一参考。
 
 ---
 
-## 1. 兼容性级别
+## 1. 目录结构
 
-| 级别 | 要求 | 标识 |
-|---|---|---|
-| **L1 Core 完整兼容** | 实现本文档全部 Core 合约 | `enjoyknowledge-core` |
-| **L2 格式兼容** | 读/写 OKF 兼容的 Markdown 文件，不实现 CLI | `enjoyknowledge-format` |
-| **L3 应用兼容** | 基于 Core 定义某个 for X 应用的目录、入口和工作流 | `enjoyknowledge-app` |
-
----
-
-## 2. 目录结构
-
-### 2.1 for Coding 默认结构 (v0.4)
+### 1.1 for Coding 默认结构
 
 ```
-<项目根目录>/
-├── AGENTS.md                      # 必需，AI 入口（内嵌 ls 摘要）
-├── .enjoyknowledge/               # 长期知识 SoT（人类编辑 / 审核）
+<项目根>/
+├── AGENTS.md                      # AI 入口（内嵌 ls 摘要）
+├── .enjoyknowledge/               # 长期知识 SoT（人类编辑/审核）
 │   ├── architecture/              # 架构知识
 │   ├── gotchas/                   # 踩坑记录
 │   ├── patterns/                  # 最佳实践
+│   ├── rules/                     # 强制规则
+│   ├── decisions/                 # 架构决策
 │   ├── business/                  # 业务规则
-│   ├── decisions/                 # 架构决策记录
-│   ├── index.md                   # OKF 保留，目录的目录
-│   ├── log.md
-│   └── AGENTS.md                  # KB 写入规则 (人类写, AI 读)
-└── .enjoyknowledge_stage/         # 短期任务工作区 (AI 自动写, 人类审核)
-    ├── tasks/<task-id>/           # 8 文件: requirements/design/plan/changes/tests/delivery/summary/review
+│   ├── contracts/                 # 接口契约
+│   ├── conventions/               # 命名/格式约定
+│   ├── context/                   # 项目背景/运行时
+│   ├── templates/                 # 范式模板
+│   ├── index.md                   # 索引
+│   ├── log.md                     # 操作日志
+│   └── AGENTS.md                  # KB 写入规则
+└── .enjoyknowledge_stage/         # 任务暂存区（AI 自动写）
+    ├── tasks/<task-id>/           # 8 文件
     ├── drafts/                    # 待 promote 草稿
-    ├── workflow/                  # 工作流定义 (v0.2 保留)
-    ├── .archive/                  # TTL 过期 (默认 180 天)
-    └── AGENTS.md                  # 任务写入规范 (AI 读)
+    ├── workflow/                  # 工作流 YAML
+    ├── .archive/                  # TTL 过期（180 天）
+    └── AGENTS.md                  # 任务写入规范
 ```
 
-### 2.2 规则
+### 1.2 结构约束
 
 | 规则 | 约束 |
 |---|---|
-| 深度 | `.enjoyknowledge/` 内不超过 2 层：`category/file.md` |
-| 目录名即分类 | 文件所在目录名决定了它的概念类型，无需在 frontmatter 中重复声明 |
-| 文件名自解释 | 文件名表达主题，无需在文件名中重复目录名 |
-| 应用目录 | `architecture/`、`gotchas/`、`.enjoyknowledge_stage/` 等属于 for Coding，不属于 Core 强制目录 |
-| 任务暂存区 | `.enjoyknowledge_stage/tasks/<task-id>/` 与 `.enjoyknowledge/` 并列，不进入长期知识索引，审核后再迁入 |
-| 物理分离 | v0.4 起：`.enjoyknowledge_stage/`（AI 写）与 `.enjoyknowledge/`（人类写）严格物理分离，不靠 frontmatter 字段区分 |
-| frontmatter 极简 | v0.4 起：KB 文件 frontmatter 仅 4 字段（id / kind / created / author），不附加 trust/lifecycle/scope 等元字段 |
+| 深度 | `.enjoyknowledge/` 内 ≤ 2 层（`category/file.md`） |
+| 目录名即分类 | 文件目录决定类型，不在 frontmatter 重复声明 |
+| 物理分离 | `.enjoyknowledge_stage/`（AI 写）与 `.enjoyknowledge/`（人类写）严格物理分离 |
+| frontmatter 极简 | KB 文件仅 4 字段：id / kind / created / author |
+| 任务暂存区 | `tasks/<task-id>/` 不进入长期知识索引 |
 
 ---
 
-## 3. 知识文档格式
+## 2. 知识文档格式
 
-### 3.1 Frontmatter
+### 2.1 Frontmatter
 
 ```yaml
 ---
-title: 导出功能踩坑       # 推荐，人类可读标题
-description: 超过10万行时接口超时，当前分批导出  # 强烈推荐，一行摘要
-tags: [export, excel, performance]  # 推荐，跨分类过滤
-timestamp: 2026-06-21     # 推荐，ISO 8601 日期
+title: 导出功能踩坑
+description: 超过10万行时接口超时
+tags: [export, excel]
+timestamp: 2026-06-21
 ---
 ```
 
-> 文件所在目录名即分类（如 `gotchas/` 下的文件属于 Gotcha 类）。不再需要 frontmatter 中的 `type` 字段。
-
-### 3.2 字段约束
+### 2.2 字段约束
 
 | 字段 | 类型 | 必需 | 约束 |
 |---|---|---|---|
 | `title` | string | 否 | 人类可读标题 |
-| `description` | string | 强烈推荐 | ≦200 字符，一行摘要。出现在 `ls`、`tree`、AGENTS.md 推送块中 |
-| `tags` | string[] | 否 | 纯小写字母+连字符，跨分类检索用 |
+| `description` | string | 强烈推荐 | ≤ 200 字符，出现在 `ls`/`tree`/AGENTS.md 中 |
+| `tags` | string[] | 否 | 纯小写+连字符 |
 | `timestamp` | string | 否 | ISO 8601 `YYYY-MM-DD` |
 
-### 3.3 正文
+### 2.3 正文
 
-自由 Markdown。每个 `##` 二级标题为一个**条目**（entry），是知识的基本叙事单元：
-
+自由 Markdown。每个 `##` 二级标题为一个条目（entry）：
 - `grep` 输出定位到 `##` 段
-- doctor 以 `##` 标题数统计条目量（超过 20 条建议拆分）
-- `add` 追加内容推荐以 `##` 为开头
-- Markdown 链接可用于表达概念间关系：`相关架构见 [导出模块](../architecture/overview.md)`
+- `doctor` 以 `##` 标题数统计条目量（> 20 条建议拆分）
+- `add` 追加内容以 `##` 为开头
 
-### 3.4 保留文件名
+### 2.4 必填 frontmatter 字段（v0.4 文档层规范）
+
+| kind | 必填字段 |
+|---|---|
+| gotcha | `trigger` |
+| decision | `reversible` + `decided_at` |
+| rule / contract / convention / template | `applies_to` |
+| 其他 | 无 |
+
+### 2.5 保留文件名
 
 | 文件 | 位置 | 作用 |
 |---|---|---|
-| `index.md` | 任何目录下（可选） | 该目录的目录，列出所有概念文件及 description |
+| `index.md` | 任何目录下（可选）| 该目录的目录 |
+| `AGENTS.md` | `.enjoyknowledge/` + `.enjoyknowledge_stage/` | AI 入口 + 写入规范 |
 
 ---
 
-## 4. CLI 命令
+## 3. CLI 命令
 
-### 4.1 命令总览
-
-所有命令以 `enjoyknowledge` 为前缀。
+### 3.1 命令总览
 
 | 命令 | 语义 | 输出 |
 |---|---|---|
-| `enjoyknowledge init [--ai <tool>] [--template <name|list>] [--link <path>]` | 初始化知识库 | 目录骨架 + AGENTS.md |
-| `enjoyknowledge ls [path] [--bare]` | 列出目录/文件 | 文件列表，默认每文件附带 `description` |
-| `enjoyknowledge tree [--bare]` | 递归目录树 | 目录树，默认每文件附带 `description` |
-| `enjoyknowledge cat <path>` | 查看文件内容 | 文件全文（stdout） |
-| `enjoyknowledge grep <pattern> [--type] [--tags] [--path]` | 结构化搜索 | `文件##段标题\n  上下文 snippet` |
-| `enjoyknowledge add <path> <content>` | 新增/追加知识 | 确认消息（stderr） |
-| `enjoyknowledge doctor [--ci]` | 合规检查 | 问题清单；`--ci` 模式 warning 也返回非零 |
-| `enjoyknowledge fix` | 自动修复 | 修复结果 |
-| `enjoyknowledge export --tool <cursor\|claude\|auto> [--dry-run]` | 生成 AI 工具入口文件 | `.cursor/rules/*.mdc` 或 `.claude/skills/*.md`（v0.2 首发 2 工具）|
-| `enjoyknowledge workflow <onboard\|capture>` | 运行 v0.2 核心工作流 | onboard：项目心智模型；capture：知识捕获（v0.2.1 实现）|
+| `init [--ai <tool>] [--template <name>] [--link <path>] [--profile <name>]` | 初始化知识库 | 目录骨架 + AGENTS.md |
+| `ls [path] [--bare]` | 列出目录/文件 | 文件列表，默认带 description |
+| `tree [--bare]` | 递归目录树 | 目录树，默认带 description |
+| `cat <path>` | 查看文件内容 | 文件全文（stdout） |
+| `grep <pattern> [--type <dir>] [--tags <tag>] [--path <path>] [--archive] [--req <REQ-ID>]` | 结构化搜索 | 定位到 `##` 段 + 上下文 snippet |
+| `add <path> <content>` | 新增/追加知识 | 确认消息（stderr） |
+| `doctor [--ci]` | 4 项健康检查 | 问题清单；`--ci` warning 也非零退出 |
+| `fix [--req <REQ-ID>]` | 自动修复 | 修复结果 |
+| `export --tool <cursor/claude/auto> [--dry-run]` | 生成 AI 工具入口 | `.cursor/rules/*.mdc` 或 `.claude/skills/*.md` |
+| `workflow <onboard/capture> [--kind <KIND>] [--field KEY=VALUE] [--body <BODY>] [--path <PATH>]` | 运行工作流 | onboard：心智模型；capture：知识捕获 |
+| `promote <draft_file> --to <kind> [--id <id>] [--author <name>]` | draft → KB | KB 文件 + frontmatter |
+| `stage clean [--dry-run] [--force] [--older-than <days>]` | TTL 清理 | 清理 .archive/ 过期文件 |
 
-### 4.2 `ls` — 核心入口
+### 3.2 `init`
+
+```
+enjoyknowledge init [--ai <tool>] [--template <name>] [--link <path>] [--profile <name>]
+```
+
+- 默认 profile = `for-coding`
+- 创建 `.enjoyknowledge/`（10 类目录 + AGENTS.md + index.md + log.md）
+- 创建 `.enjoyknowledge_stage/`（tasks/_template/ 8 文件 + drafts/ + .archive/ + workflow/ + AGENTS.md）
+- `--ai <tool>` 同时生成工具入口文件（支持 9 工具）
+- `--link <path>` 引用外部知识库，不创建目录
+
+### 3.3 `ls`
+
+```
+enjoyknowledge ls [path] [--bare]
+```
 
 ```
 $ enjoyknowledge ls
 architecture/
-  overview.md           — 项目整体架构、模块划分
-  tech-stack.md         — 技术栈选型
+  overview.md           — 项目整体架构
 gotchas/
-  export.md             — 导出超时、OOM、status字段缺失（3条）
-  auth.md               — Token刷新失效、权限缓存不一致（2条）
+  export.md             — 导出超时、OOM（3 条）
 patterns/
-  batch-processing.md   — 分批处理大数据集的通用模式
-business/
-  water-billing.md      — 水费计算规则、分段计价公式
+  batch-processing.md   — 分批处理模式
 ```
 
-指定路径（相对于 `.enjoyknowledge/`）：
+`--bare`：只列文件名。
+
+### 3.4 `tree`
 
 ```
-$ enjoyknowledge ls gotchas/
-  export.md   — 导出超时、OOM、status字段缺失（3条）
-  auth.md     — Token刷新失效、权限缓存不一致（2条）
+enjoyknowledge tree [--bare]
 ```
 
-`--bare`：只列文件名，不含 description。
+递归目录树。默认带 description。`--bare` 去掉 description。
 
-### 4.3 `tree` — 递归目录树
+### 3.5 `cat`
 
 ```
-$ enjoyknowledge tree
-.enjoyknowledge/
-├── architecture/
-│   ├── overview.md       — 项目整体架构
-│   └── tech-stack.md     — 技术栈选型
-├── gotchas/
-│   ├── export.md         — 导出相关踩坑（3条）
-│   └── auth.md           — 认证相关（2条）
-├── patterns/
-│   └── batch-processing.md — 分批处理模式
-└── business/
-    └── water-billing.md  — 水费计算规则
+enjoyknowledge cat <path>
 ```
 
-`--bare` 同 `ls`，去掉 description。
+路径相对于 `.enjoyknowledge/`。输出文件全文。
 
-### 4.4 `grep` — 结构化搜索
+### 3.6 `grep`
 
-**与系统 `grep` 的差异**：系统 grep 是行匹配器，`enjoyknowledge grep` 是知识检索器——输出定位到 `##` 段，附带上下文 snippet。
+```
+enjoyknowledge grep <pattern> [--type <dir>] [--tags <tag>] [--path <path>] [--archive] [--req <REQ-ID>]
+```
 
 ```
 $ enjoyknowledge grep "导出超时"
@@ -171,183 +172,137 @@ gotchas/export.md##大数据量超时
   - 当前方案：分批导出，单次最多 10 万行
 ```
 
-选项：
-
-| 选项 | 说明 |
-|---|---|
-| `--type <type>` | 限定概念类型（即目录名，如 `gotchas`） |
-| `--tags <tag>` | tag 过滤（AND 逻辑，可重复） |
-| `--path <dir>` | 限定搜索目录 |
-| `--archive` | 含已归档的任务材料 |
-
-实现要求：
-
 | 要求 | 说明 |
 |---|---|
-| 匹配范围 | 正文（`##` 段），不搜 frontmatter。frontmatter 已通过 `type` / `tags` 过滤 |
+| 匹配范围 | 正文（`##` 段），不搜 frontmatter |
 | 大小写 | 不区分 |
 | 排序 | 按匹配段的知识密度（段越长越靠前） |
 | 段界定位 | 每个匹配行定位到最近的 `##` 标题 |
 
-### 4.5 `add` — 新增知识
+### 3.7 `add`
 
 ```
-enjoyknowledge add gotchas/export.md "## Excel内存溢出
-- 现象: SXSSFWorkbook 未关闭导致 OOM
-- 方案: try-with-resources 自动关闭"
+enjoyknowledge add <path> <content>
 ```
 
-行为：
 - 文件存在 → 追加到末尾
-- 如果 frontmatter 有 `timestamp`，更新为当前日期
-- 文件不存在 → 创建（生成含 `description` 和 `timestamp` 的 frontmatter 模板），写入内容
+- 文件不存在 → 创建（生成 frontmatter 模板），写入内容
 - 目录不存在 → 自动创建
-- 追加后自动更新 AGENTS.md 中的知识摘要块
+- 追加后自动更新 AGENTS.md 中的 `ls` 摘要块
 
-### 4.6 `cat` — 查看文件
+### 3.8 `doctor`
 
-路径相对于 `.enjoyknowledge/`。补全前缀后输出文件全文。
+```
+enjoyknowledge doctor [--ci]
+```
 
-### 4.7 `fix` — 自动修复
+4 项检查：
 
-`enjoyknowledge fix` 自动修复可程序化处理的合规问题。
+| 检查 | 内容 |
+|---|---|
+| check_frontmatter | 所有 .md 有有效 YAML frontmatter |
+| check_required_fields | gotcha 有 trigger / decision 有 reversible+decided_at / rule|contract|convention|template 有 applies_to |
+| check_sot_staleness | timestamp > 180 天 → warning |
+| check_export_consistency | export 生成文件与 SoT 一致 |
 
-**可自动修复：**
+`--ci` 模式：warning 也返回非零退出码。
+
+### 3.9 `fix`
+
+```
+enjoyknowledge fix [--req <REQ-ID>]
+```
+
+可自动修复：
 
 | 问题 | 修复方式 |
 |---|---|
-| 缺 `description` | 从正文首段提取或填入模板占位 |
-| AGENTS.md 过期 | 重新生成摘要块（同步 `ls` 输出） |
-| 超出预算（>20 条目） | 将最早的 `##` 条目移到归档文件中 |
-| 待归档任务 | 将 `knowledge-tasks/<REQ-ID>/` 下可复用条目提取到 `.enjoyknowledge/` |
+| 缺 `description` | 从正文首段提取或填入占位 |
+| AGENTS.md 过期 | 重新生成 `ls` 摘要块 |
+| 超出预算（> 20 条目）| 最早条目移至归档 |
+| 待归档任务 | 提取可复用条目到 `.enjoyknowledge/` |
 
-**不可自动修复（需手动）：**
+不可自动修复：缺 frontmatter。
 
-| 问题 | 原因 |
+### 3.10 `export`
+
+```
+enjoyknowledge export --tool <cursor|claude|auto> [--dry-run]
+```
+
+| `--tool` | 目标文件 |
 |---|---|
-| 缺 frontmatter | 无法推断描述和元数据 |
+| `cursor` | `.cursor/rules/enjoyknowledge.mdc` |
+| `claude` | `.claude/skills/enjoyknowledge.md` |
+| `auto` | 自动检测当前 AI 工具 |
 
-**归档机制：**
+- `--dry-run`：预览不写文件
+- v0.2 首发 2 工具（cursor + claude），其他 7 工具架构保留
 
-归档针对已完成任务的 `knowledge-tasks/<REQ-ID>/` 目录：
-- `doctor` 检测到已完成的任务目录 → 提示归档
-- `fix` 将 `knowledge-tasks/<REQ-ID>/` 下的可复用条目提取到 `.enjoyknowledge/` 对应分类，原目录标记为已归档
-- `grep --archive` 搜索范围包含已归档的任务材料
+### 3.11 `workflow`
 
-### 4.8 AGENTS.md 生成
-
-`enjoyknowledge init` 生成 AGENTS.md，内嵌知识摘要块（`<!-- enjoyknowledge_LS_START -->` ... `<!-- enjoyknowledge_LS_END -->` 之间）。
-`enjoyknowledge add` 时自动更新此摘要块，保持与 `ls` 输出一致。
-
----
-
-## 5. 模板系统与 `init --template`
-
-### 5.1 默认模板（for Coding）
-
-`enjoyknowledge init` 默认使用 for Coding 模板，生成：
-- `.enjoyknowledge/{architecture,gotchas,patterns,business,decisions}/`
-- `knowledge-tasks/`
-- `AGENTS.md`（含知识摘要推送块）
-
-### 5.2 自定义模板
-
-```bash
-enjoyknowledge init --template legal
+```
+enjoyknowledge workflow <onboard|capture> [--kind <KIND>] [--field KEY=VALUE] [--body <BODY>] [--path <PATH>]
 ```
 
-模板加载优先级（高到低）：
-1. `.enjoyknowledge/templates/<name>/`（项目级）
-2. `~/.enjoyknowledge/templates/<name>/`（用户级）
+- `onboard`：AI 工具建立项目心智模型
+- `capture`：沉淀知识到 SoT。`--kind` 指定类型（10 类之一），`--field` 传 frontmatter 字段，`--body` 传正文内容
 
-模板目录结构约定：
+### 3.12 `promote`（v0.4）
+
 ```
-<template-dir>/
-├── .enjoyknowledge/          # 目录骨架（直接复制）
-│   ├── contracts/
-│   └── regulations/
-├── knowledge-tasks/          # 可选，任务暂存区骨架
-└── AGENTS.md.template        # AGENTS.md 模板
+enjoyknowledge promote <draft_file> --to <kind> [--id <id>] [--author <name>]
 ```
 
-引擎不写死目录名——目录名即分类，`contracts/` 下的文件属于 Contract 类，`regulations/` 下的文件属于 Regulation 类。
+- 把 `.enjoyknowledge_stage/drafts/<name>.md` 落地到 `.enjoyknowledge/<kind>/<name>.md`
+- 自动生成 4 字段 frontmatter（id / kind / created / author）
+- 默认 author = `enjoy`
+- 原 draft 保留（加 `[PROMOTED]` 标记）
+- 必须人类手动执行
 
-### 5.3 关键行为
+### 3.13 `stage clean`（v0.4）
 
-- `--link <path>` 引用外部知识库时，不创建 `.enjoyknowledge/` 目录，只在 AGENTS.md 中指向外部路径
-- `--template list` 列出所有可用模板（全局 + 项目级）并退出，不初始化
-- `init --ai auto` 自动检测当前 AI 工具（v0.2 说明：`init` 仍支持 9 工具一次性生成，**真正动态跨工具同步是 v0.2 新增的 `export --tool` 命令**）
-- 无论指定哪个 AI 工具，AGENTS.md 始终生成（作为通用标准入口）
-
----
-
-## 6. AI 工具文件生成
-
-`enjoyknowledge init --ai <tool>` 生成（v0.2 一次性，仍支持 9 工具）：
-
-> **v0.2 状态**：v0.1 的 `init --ai <tool>` 仍支持 9 工具（一次性生成 AGENTS.md + 工具入口文件）；v0.2 新增 `export --tool <tool>`（动态同步，**仅 `cursor` 和 `claude` 真支持**；其他 7 工具是**架构保留**，待 v0.3+ 实现）。`enjoyknowledge export --tool` 对非 cursor/claude 返回"暂未实现"错误。
-
-| `--ai` | 生成的工具专有文件 | 格式 |
-|---|---|---|
-| 默认（不指定） | `AGENTS.md` | Markdown（含知识摘要路由表）|
-| **`cursor`**（v0.2 export 首发）| `.cursor/rules/enjoyknowledge.mdc` | YAML frontmatter + Markdown |
-| **`claude`**（v0.2 export 首发）| `.claude/skills/enjoyknowledge.md` | Markdown |
-| `copilot`（init 仍支持，export 暂未实现）| `.github/copilot-instructions.md` | 追加 Markdown 块 |
-| `windsurf`（init 仍支持，export 暂未实现）| `.windsurf/rules/enjoyknowledge.md` | Markdown |
-| `cline`（init 仍支持，export 暂未实现）| `.clinerules/enjoyknowledge.md` | Markdown |
-| `codex`（init 仍支持，export 暂未实现）| `.codex/prompts/enjoyknowledge.md` | Markdown |
-| `trae`（init 仍支持，export 暂未实现）| `.trae/rules/enjoyknowledge.md` | Markdown |
-| `gemini`（init 仍支持，export 暂未实现）| `GEMINI.md` | 追加 Markdown 块 |
-| `generic`（init 仍支持，export 暂未实现）| `enjoyknowledge.md` (project root) | Markdown |
-| `auto` | 自动检测当前环境中的 AI 工具（init 用，export 不支持）| — |
-
----
-
-## 7. v0.4 新增命令 (极简上下文层)
-
-### 7.1 `ek init` 增强 (v0.4)
-
-`enjoyknowledge init` 在 v0.4 起除原有 `.enjoyknowledge/` 外，同时创建 `.enjoyknowledge_stage/`：
-
-| 新增内容 | 用途 |
-|---|---|
-| `.enjoyknowledge_stage/tasks/_template/` | 8 文件模板 (requirements/design/plan/changes/tests/delivery/summary/review) |
-| `.enjoyknowledge_stage/drafts/` | 待 promote 草稿 (AI 写, 人类审核后 promote) |
-| `.enjoyknowledge_stage/workflow/` | v0.2 保留工作流 YAML (init 自动复制 onboard.yaml + capture.yaml) |
-| `.enjoyknowledge_stage/.archive/` | TTL 过期目录 (默认 180 天) |
-| `.enjoyknowledge/AGENTS.md` | KB 写入规则 (人类写, AI 读) |
-| `.enjoyknowledge_stage/AGENTS.md` | 任务写入规范 (AI 读) |
-
-### 7.2 `ek promote` (v0.4 新增)
-
-```bash
-enjoyknowledge promote <draft.md> --to <kind>
 ```
-
-- **作用**：把 `.enjoyknowledge_stage/drafts/<name>.md` 落地到 `.enjoyknowledge/<kind>/<name>.md`
-- **frontmatter**：4 字段极简 (id / kind / created / author)，不附加元字段
-- **触发**：必须人类手动执行（AI 不自动 promote）
-
-### 7.3 `ek stage clean` (v0.4 新增)
-
-```bash
 enjoyknowledge stage clean [--dry-run] [--force] [--older-than <days>]
 ```
 
-- **作用**：清理 `.enjoyknowledge_stage/.archive/` 过期文件
-- **默认 TTL**：180 天
-- **`--dry-run`**：列出将清理的文件，不删除
-- **`--force`**：跳过确认
-- **`--older-than <days>`**：覆盖默认 180 天
+- 清理 `.enjoyknowledge_stage/.archive/` 过期文件
+- 默认 TTL = 180 天
+- `--dry-run`：列出将清理的文件，不删除
+- `--force`：跳过确认
+- `--older-than <days>`：覆盖默认天数
 
 ---
 
-## 8. 错误码
+## 4. AGENTS.md 维护
 
-|| 码 | 含义 |
-|---|---|---|
+`init` 生成 AGENTS.md（项目根），内嵌 `<!-- enjoyknowledge_LS_START -->` 块。`add` 时自动更新此块，保持与 `ls` 输出一致。
+
+---
+
+## 5. 模板系统
+
+```
+enjoyknowledge init --template <name>
+enjoyknowledge init --template list   # 列出可用模板
+```
+
+模板加载优先级：
+1. `.enjoyknowledge/templates/<name>/`（项目级）
+2. `~/.enjoyknowledge/templates/<name>/`（用户级）
+
+---
+
+## 6. 错误码
+
+| 码 | 含义 |
+|---|---|
 | 0 | 成功 |
 | 1 | 输入参数错误 |
 | 2 | 文件/路径不存在 |
-| 3 | 格式校验失败（frontmatter 不可解析、description 缺失等 fix 无法自动修复的问题） |
+| 3 | 格式校验失败（frontmatter 不可解析等） |
 | 4 | 文件不可读写 |
+
+---
+
+*关联文档：[DESIGN.md](./DESIGN.md) · [GLOSSARY.md](../01-philosophy/GLOSSARY.md) · [workflows.md](./architecture/workflows.md)*

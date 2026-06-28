@@ -1,5 +1,61 @@
 ﻿# enjoyknowledge 变更记录
 
+## [v0.4.2] — 2026-06-28
+
+### ek fix 保留 frontmatter 字段
+
+`enjoyknowledge fix` 修复缺 `description` 时，保留已有 frontmatter 字段不覆盖。此前 `fix` 写入新 frontmatter 会丢失用户已有的 `tags`/`timestamp` 等字段。
+
+### 文档重写
+
+重写 12 个核心文档：POSITIONING / ROADMAP / directory-design-rationale / DESIGN-PHILOSOPHY / GLOSSARY / DESIGN / INTERFACE-SPEC / rule-system / workflows / knowledge-types / for-coding-design / CHANGELOG。去掉中间设计迭代痕迹，只体现 v0.4.2 当前状态。
+
+---
+
+## [v0.4.1] — 2026-06-28
+
+### 极简上下文层落地
+
+**ek init 增强**：
+- 创建 `.enjoyknowledge_stage/{tasks,drafts,.archive}/` + `workflow/`
+- 生成 `.enjoyknowledge/AGENTS.md`（KB 写入规则）
+- 生成 `.enjoyknowledge_stage/AGENTS.md`（任务写入规范）
+- 生成 `tasks/_template/` 8 文件模板
+
+**ek promote 新增**：
+- 从 `.enjoyknowledge_stage/drafts/` 复制到 `.enjoyknowledge/<kind>/`
+- 自动生成 4 字段 frontmatter（id/kind/created/author）
+- 默认 author = `enjoy`
+- 原 draft 保留加 `[PROMOTED]` 标记
+
+**ek stage clean 新增**：
+- 默认清理 `.archive/` > 180 天文件
+- `--dry-run` / `--force` / `--older-than <days>` 3 个 flag
+
+### 砍掉的能力
+
+- C10 trust 体系（confidence/source/last_verified/feedback_count）
+- C11 lifecycle 4 状态机（draft/active/deprecated/archived）
+- C12 sync 检测（3 类冲突 + 3 级频率）
+- frontmatter 6 字段扩展
+- `ek capture --from-commit` 提议门
+- 独立 `workflow/` 目录（并入 `stage/`）
+
+### 4 极简原则
+
+1. 人类是 authority anchor
+2. 物理分离 > 状态字段
+3. AGENTS.md > frontmatter
+4. 简单 > 完整
+
+### 测试
+
+- 10 个新增集成测试（init × 5 + promote × 3 + stage clean × 4）
+- 28 个 trycmd 端到端测试
+- enjoyiot-kaiyuan 端到端 dogfooding 通过
+
+---
+
 ## [v1.1] — 2026-06-26
 
 ### 战略调整

@@ -1,220 +1,133 @@
 # for Coding 完整设计
 
-> 版本: 1.0 | 2026-06-27 | 来源: v4 讨论整合
+> v0.4.2 | 2026-06-28
 >
-> **本文件是 for Coding 领域应用层的完整设计**。Core（通用知识引擎）见 [DESIGN.md §2](../../DESIGN.md)
+> for Coding 领域应用层的完整设计。Core 通用引擎见 [DESIGN.md](../DESIGN.md)。
 
 ---
 
-## 1. 定位与 JTBD
+## 1. 定位
 
-**for Coding = "AI 编程工具的共享上下文层"**——既不是 Obsidian（个人笔记），也不是 Linear（工程流程），也不是 Copilot Workspace（AI 入口）。
+**for Coding = AI 编程工具的共享上下文层**。不是 Obsidian（个人笔记），不是 Linear（工程流程），不是 Copilot Workspace（AI 入口）。
 
-**核心 JTBD（可验证）**：
-> 让任意 AI 工具在 30 秒内读完入口文件，正确完成 `add a new API endpoint` 这类任务——不触犯已知陷阱、不打破架构约定、不选错技术栈。
+**核心 JTBD**：让任意 AI 工具在 30 秒内读完入口文件，正确完成 `add a new API endpoint` 这类任务——不触犯已知陷阱、不打破架构约定、不选错技术栈。
 
-**验证标准**：新 AI 工具未读源码前，能正确回答 10 个"该不该做 X"判断题，正确率 ≥ 90%。
+---
 
-## 2. 4 条设计哲学（不可违反）
+## 2. 设计原则
 
 | # | 原则 | 含义 |
 |---|---|---|
-| 1 | **SoT 单一 + 入口多元** | 唯一真值源是 `.enjoyknowledge/`，v0.2 首发 2 个 AI 工具（Claude + Cursor）各走各的入口 |
-| 2 | **元数据驱动** | 工作流 = YAML 文件，用户加文件 = 加工作流（不实现引擎） |
-| 3 | **显式失败** | SoT 缺失→报错，不是用空模板继续 |
-| 4 | **工具特性保留** | Cursor `.mdc` / Claude `@path` / Codex `$file` 不强制统一 |
+| 1 | **SoT 单一 + 入口多元** | `.enjoyknowledge/` 是唯一真值源，export 生成多个 AI 工具入口 |
+| 2 | **元数据驱动** | 工作流 = YAML 文件，加新工作流不需要改 Rust 代码 |
+| 3 | **显式失败** | SoT 缺失→报错，不静默降级 |
+| 4 | **物理分离** | `.enjoyknowledge_stage/`（AI 写）与 `.enjoyknowledge/`（人类写）物理目录分离 |
 
-## 3. 5 层架构
+---
+
+## 3. 架构
 
 ```
-Layer 1: v0.2 多工具入口（Claude skills + Cursor mdc；架构上保留 9 工具 adapter trait）
-   ↓ sync
-Layer 2: SoT 元数据（.enjoyknowledge/）
-   ↓ core 命令
-Layer 3: Core 引擎（Rust 实现，跨 Profile 共享）
-   ↓ 已有
-Layer 4: 文件系统（markdown + frontmatter + git）
+AI 编码工具 (Cursor / Claude Code)
+         │
+         ▼
+    AGENTS.md  ← 内嵌 enjoyknowledge ls 摘要
+         │
+         ▼
+┌─ enjoyknowledge Core CLI ───────────────────────────────┐
+│  init │ ls │ tree │ cat │ grep │ add │ doctor │ fix     │
+│  export │ workflow │ promote │ stage clean              │
+└─────────────────────────────────────────────────────────┘
+         │
+         ▼
+    for Coding 应用结构
+    项目根/
+    ├── .enjoyknowledge/           ← 长期知识 SoT（人类编辑/审核）
+    │   ├── architecture/
+    │   ├── gotchas/
+    │   ├── patterns/
+    │   ├── rules/
+    │   ├── decisions/
+    │   ├── business/
+    │   ├── contracts/
+    │   ├── conventions/
+    │   ├── context/
+    │   ├── templates/
+    │   ├── index.md
+    │   ├── log.md
+    │   └── AGENTS.md              ← KB 写入规则
+    └── .enjoyknowledge_stage/     ← 任务暂存区（AI 自动写）
+        ├── tasks/<task-id>/       # 8 文件
+        ├── drafts/                # 待 promote 草稿
+        ├── .archive/              # TTL 过期（180 天）
+        ├── workflow/              # 工作流 YAML
+        └── AGENTS.md              ← 任务写入规范
 ```
+
+---
 
 ## 4. 10 类知识目录
 
-```
-.enjoyknowledge/
-├── rules/         # 约束性 → export 到 v0.2 首发 2 工具（必含 applies_to）
-├── templates/     # 范式性 → export 到 v0.2 首发 2 工具
-├── knowledge/
-│   ├── architecture/    # 系统结构 + 约束（不是教程）
-│   ├── gotchas/         # IF-THEN 触发器（必含 trigger 字段）
-│   ├── patterns/        # 仅本项目特有
-│   ├── decisions/       # ADR（必含 reversible + 写"为什么"）
-│   ├── business/        # 业务规则（最稳定）
-│   ├── contracts/       # 跨模块接口契约
-│   ├── conventions/     # 命名/目录/commit 格式
-│   └── context/         # 运行时：env/端口/服务依赖
-├── workflows/     # YAML 元数据（v4 新增）
-└── tasks/         # 待补充知识清单
-```
-
-**知识类型依赖图**：
-```
-business/  →  约束 →  architecture/  →  产生 →  contracts/ + patterns/ + gotchas/
-                                                                       ↓ 影响
-                                                  decisions/  ←  派生
-                                                                       ↓
-                                            context/ + conventions/  ←  底层
-```
-
-## 5. 必填字段（frontmatter 软约束）
-
-> **frontmatter 不强制**——纯 markdown 也能用。完整 schema 见 [knowledge-types.md §4](./knowledge-types.md)。
-
-| 类型 | 必含字段 | 推荐字段 |
+| 目录 | 内容 | 必填字段 |
 |---|---|---|
-| **rule** | `applies_to` | `id`, `tags` |
-| **template** | `applies_to` | `id`, `tags` |
-| **gotcha** | **`trigger`** | `id`, `severity`, `tags` |
-| **decision** | **`reversible`**, `decided_at` | `id`, `alternatives` |
-| **architecture** | — | `id`, `last_reviewed`, `tags` |
-| **pattern** | — | `id`, `applies_to`, `tags` |
-| **contract** | — | `id`, `applies_to`, `breaking_change_since` |
-| **convention** | — | `id`, `enforced_by` |
-| **context** | — | `id`, `env`, `last_verified` |
-| **business** | — | `id`, `tags` |
+| `architecture/` | 系统结构、模块地图、技术栈 | — |
+| `gotchas/` | 踩坑、陷阱、workaround | `trigger` |
+| `patterns/` | 最佳实践、推荐模式 | — |
+| `rules/` | 强制规则（区别于 pattern） | `applies_to` |
+| `decisions/` | ADR（为什么这样设计） | `reversible` + `decided_at` |
+| `business/` | 业务规则 | — |
+| `contracts/` | API 契约、接口约定 | `applies_to` |
+| `conventions/` | 命名/目录/commit 格式 | `applies_to` |
+| `context/` | 项目背景、约束、运行时 | — |
+| `templates/` | 范式模板 | `applies_to` |
 
-**核心约束**：`id` 全项目唯一（路径即 ID + `id` 字段一致）。**不发明 `priority` 等新抽象**——按复杂度自然淘汰。
+---
 
-## 6. 4 个核心场景
+## 5. 4 个核心场景
 
-| # | 场景 | 触发 | 价值 | 失败模式 |
-|---|---|---|---|---|
-| 1 | **Onboard Agent** | AI 工具启动 | 30 秒建立项目心智模型 | 入口文件超限或过期 |
-| 2 | **Capture Gotcha** | 开发者发现隐性坑 | 永久消除同类 bug | 描述模糊/无 trigger |
-| 3 | **Enforce Rule** | AI 工具生成代码前 | "生成时就不违反" | 规则 > 8 条被 AI 忽略 |
-| 4 | **Doctor Check** | pre-commit/CI | 防止知识腐烂 | 假阳/假阴/被忽略 |
+| # | 场景 | 触发 | 价值 |
+|---|---|---|---|
+| 1 | **Onboard Agent** | AI 工具启动 | 30 秒建立项目心智模型 |
+| 2 | **Capture Gotcha** | 开发者发现隐性坑 | 永久消除同类 bug |
+| 3 | **Enforce Rule** | AI 生成代码前 | 生成时就不违反 |
+| 4 | **Doctor Check** | pre-commit / CI | 防止知识腐烂 |
 
-> v0.2 砍 6→4 场景：删 PR Preflight（工作流已删）+ Export to AI Tools（归到 capture 流程内）。
+---
 
-## 7. 2 个工作流（YAML 元数据驱动）
-
-```
-onboard (W1) ──── 唯一前置依赖
-    ↓
-    └──→ capture (W2) ← 每次有价值的产出
-```
-
-> v0.2 砍 5→2 工作流：只留 onboard + capture；preflight / prd-preprocess / sync 全部永久禁用（详见 workflows.md）。
-
-**主动 vs 被动**：
-- 被动（入口文件触发）：W1 onboard
-- 主动（用户/AI 显式调用）：W2/W3/W4/W5
-- 原则：**"读"走被动；"写"走主动**
-
-详细 YAML schema 见 [workflows.md](./workflows.md)。
-
-## 8. 入口文件标准格式（路由表模式）
+## 6. 路由表模式
 
 每个工具的入口文件不复制 SoT 内容，**只做路由**：
 
 ```markdown
 # enjoyknowledge knowledge base
-> Auto-generated by `enjoyknowledge export`. Do not edit manually.
+> Auto-generated by `enjoyknowledge export`.
 
 ## Quick links
-- **Index**: `.enjoyknowledge/index.md` — start here
-- **Rules**: `.enjoyknowledge/rules/` — constraints
-- **Templates**: `.enjoyknowledge/templates/` — patterns
-- **Knowledge**: `.enjoyknowledge/knowledge/` — context
-- **Workflows**: `.enjoyknowledge/workflows/` — task sequences
-
-## Top 3 things to know
-1. **Architecture**: [link to architecture/overview.md]
-2. **Critical gotchas**: [link to gotchas/ with severity:critical]
-3. **Active decisions**: [link to decisions/ with reversible:true]
+- **Index**: `.enjoyknowledge/index.md`
+- **Architecture**: `.enjoyknowledge/architecture/`
+- **Gotchas**: `.enjoyknowledge/gotchas/`
+- **Rules**: `.enjoyknowledge/rules/`
+- **Decisions**: `.enjoyknowledge/decisions/`
 
 ## How to use
-- **New to project?** → Read [overview.md] + run `enjoyknowledge onboard`
-- **Making changes?** → Run `enjoyknowledge capture` after commit
-- **Captured a gotcha?** → Use `enjoyknowledge capture "description"`
-
-## Sync status
-- Last sync: {timestamp}
-- Source SHA: {git_sha}
-- Profile: for-coding
+- **New to project?** → Read architecture overview + gotchas
+- **Making changes?** → Run `enjoyknowledge workflow capture` after commit
 ```
 
-**约束**：入口文件 ≤ 100 行（不是 30-50，因为多文件更宽容）。
-
-## 9. 强制 / 禁止 / 可选
-
-| 强制 | 禁止 | 可选 |
-|---|---|---|
-| Rule ≤ 8 条 | AGENTS.md > 50 行（**硬约束**）| 团队自定义模板 |
-| Gotcha ≤ 100 词 + trigger 字段 | "注意性能"类空洞条目 | capture 触发方式 |
-| Decision 必含 reversible 字段 | 直接删 gotcha（必须先走 doctor 确认） | tasks/ 启用 |
-| 体积 ≤ 4000 词（doctor 检测）| Rule 写代码风格（留 formatter/linter） | 跨项目知识共享 |
-| `doctor` 必接 CI 且 fail=block | AGENTS.md 写"项目 README 第二份" | AI 工具主动 capture |
-| **R-Code 同步检测**（最致命反模式）| gotcha 50+ 文件不收敛 | 知识图谱可视化 |
-
-> **关于入口文件行数约束**：AGENTS.md 必须 ≤ 50 行（路由表模式）；v0.2 首发 2 工具的入口文件（Claude `CLAUDE.md` 追加 + Cursor `.mdc` 独立）可 ≤ 100 行（多文件模式更宽容）。两处一致。
-
-## 10. MVP 边界（v0.1）
-
-### 🔴 必含 6 项
-1. `add` + 路由（自动判断 gotcha/pattern/decision/...）
-2. `search` + frontmatter filter
-3. **多工具入口生成**（v0.2 首发 2 工具 = Claude + Cursor；路由表模式）
-4. `doctor` 3 项基础（frontmatter 有效 / 体积上限 / 链接完整）
-5. 4000 词硬上限 + 100 词单条
-6. frontmatter 必填校验（含 `trigger` for gotcha, `reversible` for decision）
-
-### 🟡 应包含但可简单做 3 项
-1. v0.2 多工具 export 基础版（首发 2 工具：Claude + Cursor）
-2. `pattern` 全文搜索 + tags filter
-3. 入口文件路由表模板
-
-### 🟢 延后到 v0.2/v0.3
-1. 语义级 preflight（embedding）
-2. 跨项目知识共享
-3. AI 工具主动建议 capture
-4. 知识过期自动检测
-5. 工作流 YAML 元数据 schema 化
-
-### ⚫ 永不做 / 靠生态
-1. 在线知识库托管
-2. 协作编辑 / 实时同步
-3. **AI 自动生成 gotcha**（违反信号纯度）
-4. 知识"质量评分"
-5. **LLM 扩写 knowledge**（违反 100 词约束）
-6. **工作流引擎**（保持元数据驱动）
-
-## 11. 4 个关键风险
-
-| # | 风险 | 缓解 |
-|---|---|---|
-| R7 | 多工具入口"长得一样但实际不同"的 export bug | 不允许 generic fallback / doctor 加工具 spec 校验 |
-| R8 | 工作流 YAML 化 = 用户写 YAML = 学习成本 | 提供 5 个 starter 模板 + `workflow init` 命令 |
-| R9 | v1-v3 大量"AGENTS.md 中心"描述误导 | v4 §10 修正清单 + 本文件作单一可信源 |
-| R10 | sync vs init 命令语义冲突 | v0.1 保留 init，v0.2 deprecated，v0.3 移除 |
-
-## 12. B 站借鉴 vs 不照搬
-
-**直接借鉴**：
-- SoT 显式声明（`index.md` 首段标注）
-- `knowledge/` + `rules/` + `template/` 三层
-- 工作流按需读不同文件
-- Harness Engineering 哲学根
-
-**不照搬**：
-- 硬编码文件名到命令（v4 用 `id` + `applies_to` 路由）
-- 固定工作流集合（v4 YAML 元数据驱动）
-- 工作流 = 编译到命令的逻辑（v4 描述性元数据）
-- 不区分 v0.2 首发 2 工具（v4 保留工具特性差异）
+**约束**：AGENTS.md ≤ 50 行。路由表不复制 SoT 内容。
 
 ---
 
-**关联文档**：
-- [DESIGN.md §3 3 机制协同](../../DESIGN.md)
-- [rule-system.md](./rule-system.md)
-- [knowledge-types.md](./knowledge-types.md)
-- [workflows.md](./workflows.md)
-- [INTERFACE-SPEC.md](../../INTERFACE-SPEC.md)
+## 7. 强制 / 禁止
+
+| 强制 | 禁止 |
+|---|---|
+| Rule ≤ 8 条 | AGENTS.md > 50 行 |
+| Gotcha ≤ 100 词 + trigger 字段 | "注意性能"类空洞条目 |
+| Decision 必含 reversible + decided_at | Rule 写代码风格（留 formatter/linter） |
+| 体积 ≤ 4000 词 | AI 自动生成 gotcha |
+| `doctor` 接 CI 且 fail=block | LLM 扩写 knowledge |
+
+---
+
+*关联文档：[knowledge-types.md](./knowledge-types.md) · [rule-system.md](./rule-system.md) · [workflows.md](./workflows.md) · [INTERFACE-SPEC.md](../INTERFACE-SPEC.md)*
