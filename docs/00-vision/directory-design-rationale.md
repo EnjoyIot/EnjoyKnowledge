@@ -84,7 +84,7 @@ business/       业务规则（条件：仅业务系统）
 
 ### 4.2 `commands/` — 操作步骤
 
-**定位：** 开发者每次打开项目都要查的东西——怎么构建、怎么测试、怎么跑起来。这是 8 目录中频次最高的目录。
+**定位：** 开发者每次打开项目都要查的东西——怎么构建、怎么测试、怎么跑起来。**为什么频次最高**（直觉判断，无数据支撑）：每个新 session 第 1 件事就是 build，第 2 件事就是 test，第 3 件事就是 deploy——这 3 个动作 100% 会发生。
 
 **典型内容：** `build.md`（`cargo build` 还是 `just build`）、`test.md`（`cargo test` 还是 `just test`，需要什么环境变量）、`deploy.md`（推哪个分支触发什么）。
 
@@ -216,7 +216,7 @@ v0.2 有 10 个 legal kind（`src/cli/workflow.rs:357-368`），但只有 5 个 
 
 **策略 A：保留不动（推荐给生产项目）。** v0.3+ 的 capture 和 doctor 读取时兼容旧 5 目录结构。新 capture 写入时走 8 目录映射，但已有文件不动。doctor 对旧目录结构只 `info` 不 `error`。
 
-**策略 B：自动平移（推荐给活跃开发项目）。** 运行 `enjoyknowledge migrate --from v0.2`。执行：① 创建缺失的 3 个目录（`commands/`、`context/`、`rules/`）；② 创建缺失的 3 个 kind 目录（`contracts/`、`conventions/`、`templates/`）；③ `business/` 若为空且无 seed 文件——删除 seed 让目录变为空骨架；④ 输出平移报告。
+**策略 B：自动平移（推荐给活跃开发项目）。** 运行 `enjoyknowledge migrate --from v0.2`。执行：① 创建缺失的 3 个目录（`commands/`、`context/`、`rules/`）；② 创建缺失的 3 个 kind 目录（`contracts/`、`conventions/`、`templates/`）；③ `business/` 的 seed 文件**保留不动**（避免数据丢失），只新增 `business/000-README.md` 提示"v0.3+ 起 business/ 为可选，业务系统才填"；④ 输出平移报告。**绝不删除任何已有文件**——所有变更可逆。
 
 **策略 C：手动升级。** 用户按迁移指南手动重组目录（适合自己想做结构调整的项目）。
 
@@ -256,11 +256,7 @@ v0.2.1 用户用 `capture --kind contract` 写入的文件路径保持不变（`
 
 **风险 1：capture 命令 kind→dir 映射改动。** `src/cli/workflow.rs:381-403` 的 `default_path_for_kind` 需要更新——新增 `command` kind 的映射（`"command" → "commands/commands.md"`），确认 `context` 映射（已在代码中：`"context" → "context/context.md"`）。影响面：使用 `capture --kind` 的用户脚本。缓解：kind 枚举向后兼容（只是多了 1 个合法值 + 修正已有映射），不删除任何旧 kind。
 
-**风险 2：`business/` 可选化。** 两个方案：
-- 方案 A：始终创建空 `business/` 目录（不生成 seed）。好处是 8 目录完整，坏处是空目录对非业务项目是噪音。
-- 方案 B（推荐）：`for-coding` profile 不创建 `business/` 目录。用户需要时手动 `enjoyknowledge init --profile for-coding --with business` 或直接 `mkdir`。好处是干净，缺点是"用户可能不知道这个目录存在"——通过 `doctor` 提示解决。
-
-最终决策：方案 B。8 目录是"默认有 7 目录 + business 按需"。`contracts/`、`conventions/`、`templates/` 也采用相同策略——目录在 init 时创建，但无 seed 文件，等待用户按需填充。
+**风险 2：`business/` 可选化。** 最终决策：始终创建空 `business/` 目录（与 §4.8 一致）。无 seed 文件——通过 `business/000-README.md` 一行提示"业务系统才填"代替。`contracts/`、`conventions/`、`templates/` 同策略。**统一原则：init 输出 11 个目录，8 个有 seed，3 个空骨架**。
 
 **风险 3：`POSITIONING.md` L124 要同步改。** 该行写"10 个 CLI 命令"，需要确认 v0.3+ CLI 命令数是否变化（不变——init 输出变但 init 命令本身在）。
 
@@ -282,6 +278,6 @@ v0.2.1 用户用 `capture --kind contract` 写入的文件路径保持不变（`
 | C8.6 | 文档同步：POSITIONING / GLOSSARY / INTERFACE-SPEC / ROADMAP | 0.5h | C8.1-5 |
 | C8.7 | 废弃警告：`capture --kind contract/convention/template` 输出 `[INFO]` 提示 init 已有目录，建议先 `enjoyknowledge init --reinit` | 0.25h | C8.3 |
 | C8.8 | dogfooding 验证：在 `enjoyiot-kaiyuan` 仓库上跑 `init` + `capture` 全流程 | 0.5h | C8.1-7 |
-| **合计** | | **4h (0.5 天)** | |
+| **合计** | | **1-1.5 天** (含缓冲；claude 直觉估 0.5 天偏乐观，参考 v0.2.1 D 批次) | |
 
 > 1 天是上限，实际可能半天内完成。commit 顺序：C8.1-3 一个 commit，C8.4-5 一个 commit，C8.6-7 一个 commit，C8.8 一个 commit——共 4 个 commit 分 2 批（代码 + 文档 + 验证）。
