@@ -29,7 +29,7 @@
 
 - **阶段**: v0.2 收尾 + v0.2.1 工作流落地（设计基线 v4.2，2026-06-27；workflow 实现 2026-06-28）
 - **代码**: Rust CLI，10 命令（init/ls/tree/grep/cat/add/doctor/fix/export/workflow）—— 9 个已实现 + workflow 已实现 onboard + capture
-- **下次重点**: 任务 B（doctor 4 维落地） + A3（capture 路径大小写不一致修复）
+- **下次重点**: 任务 B（doctor 4 维落地：删 Rule-Code check + 修抽象）
 
 ## How to use this repo
 
