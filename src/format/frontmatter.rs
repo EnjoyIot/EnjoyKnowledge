@@ -18,6 +18,12 @@ pub struct Frontmatter {
     /// ISO 8601 date (YYYY-MM-DD).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timestamp: Option<String>,
+    /// Severity level (1-5) for gotchas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub severity: Option<u8>,
+    /// Status for decisions (e.g. "active", "accepted", "deprecated").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
 }
 
 /// Extract YAML frontmatter from Markdown content.

@@ -7,7 +7,7 @@
 //! - `auto` = 默认 Claude
 //!
 //! 行为：复用 [`init::ai_tools::generate_tool_files`] 的工具入口文件生成逻辑，
-//! v0.2 export 不做"动态 SoT 内容注入"（v0.3+ 工作）；MVP 阶段 = 跨工具入口文件可重生成。
+//! v0.2 export 不做"动态 `SoT` 内容注入"（v0.3+ 工作）；MVP 阶段 = 跨工具入口文件可重生成。
 
 use std::path::Path;
 
@@ -102,14 +102,14 @@ mod tests {
     #[test]
     fn parse_codex_unsupported_v0_2() {
         let err = parse_tool("codex").unwrap_err();
-        assert!(err.contains("v0.2"));
-        assert!(err.contains("暂未实现"));
+        assert!(err.to_string().contains("v0.2"));
+        assert!(err.to_string().contains("暂未实现"));
     }
 
     #[test]
     fn parse_unknown_error() {
         let err = parse_tool("notarealtool").unwrap_err();
-        assert!(err.contains("unknown AI tool"));
+        assert!(err.to_string().contains("unknown AI tool"));
     }
 
     #[test]

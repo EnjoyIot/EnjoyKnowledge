@@ -116,4 +116,10 @@ pub enum Command {
         #[arg(long)]
         dry_run: bool,
     },
+
+    /// Run a named workflow (v0.2: onboard, capture)
+    Workflow {
+        /// Workflow name (v0.2: onboard, capture)
+        workflow: String,
+    },
 }
