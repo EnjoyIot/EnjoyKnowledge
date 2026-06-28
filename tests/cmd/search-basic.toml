@@ -1,2 +1,3 @@
-﻿bin.name = "enjoyknowledge"
-cwd = "tests/fixtures/minimal-project"
+bin.name = "enjoyknowledge"
+args = ["grep", "导出"]
+fs.cwd = "../fixtures/minimal-project"

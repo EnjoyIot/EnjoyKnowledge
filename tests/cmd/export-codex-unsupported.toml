@@ -1,5 +1,5 @@
 bin.name = "enjoyknowledge"
-args = ["grep", "xyz_nonexistent_keyword_123456"]
+args = ["export", "--tool", "codex"]
 fs.cwd = "../fixtures/minimal-project"
 stderr_to_stdout = true
 status.code = 1

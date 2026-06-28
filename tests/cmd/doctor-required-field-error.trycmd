@@ -1,0 +1,6 @@
+```trycmd
+$ enjoyknowledge doctor
+? 3
+✗ gotchas/nofield.md — gotcha missing required field 'trigger'
+
+```

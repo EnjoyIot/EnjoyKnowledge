@@ -1,0 +1,6 @@
+```trycmd
+$ enjoyknowledge doctor
+⚠ .cursor/rules/enjoyknowledge.mdc — Claude export present but Cursor export missing — run `enjoyknowledge export cursor`
+[OK] all checks passed
+
+```

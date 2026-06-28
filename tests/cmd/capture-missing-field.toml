@@ -1,5 +1,6 @@
 bin.name = "enjoyknowledge"
-args = ["grep", "xyz_nonexistent_keyword_123456"]
+args = ["workflow", "capture", "--kind", "gotcha", "--body", "missing trigger"]
 fs.cwd = "../fixtures/minimal-project"
+fs.sandbox = true
 stderr_to_stdout = true
 status.code = 1

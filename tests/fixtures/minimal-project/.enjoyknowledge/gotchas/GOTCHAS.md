@@ -4,6 +4,7 @@ tags:
   - export
   - excel
   - backend
+trigger: "file export"
 timestamp: 2026-06-20
 ---
 

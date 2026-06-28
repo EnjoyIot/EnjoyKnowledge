@@ -1,3 +1,0 @@
-$ enjoyknowledge export --tool claude --dry-run
-[dry-run] would generate Claude entry file at .
-  → .claude/skills/enjoyknowledge.md

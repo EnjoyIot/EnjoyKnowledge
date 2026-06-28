@@ -1,2 +1,4 @@
-﻿bin.name = "enjoyknowledge"
-cwd = "tests/fixtures/minimal-project"
+bin.name = "enjoyknowledge"
+args = ["workflow", "capture", "--kind", "gotcha", "--field", "trigger=test", "--body", "test record"]
+fs.cwd = "../fixtures/minimal-project"
+fs.sandbox = true

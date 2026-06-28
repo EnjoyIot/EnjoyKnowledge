@@ -9,4 +9,5 @@ fn cli_tests() {
     t.register_bin("enjoyknowledge", std::path::Path::new(env!("CARGO_BIN_EXE_enjoyknowledge")));
     // Run all trycmd tests from the fixture workspace.
     t.case("tests/cmd/*.trycmd");
+    t.case("tests/cmd/*.toml");
 }

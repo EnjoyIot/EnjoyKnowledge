@@ -1,6 +1,6 @@
 //! doctor diagnostic checks for the knowledge base.
 //! v0.2: 4 checks per GLOSSARY L51 —
-//!   missing frontmatter / missing required fields / SoT staleness / export consistency.
+//!   missing frontmatter / missing required fields / `SoT` staleness / export consistency.
 use crate::knowledge::KnowledgeSource;
 use std::path::Path;
 
@@ -64,9 +64,15 @@ fn check_frontmatter(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
 fn check_required_fields(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
     let mut results = Vec::new();
     for rel in &source.all_entry_paths() {
-        let Some(kind) = kind_from_path(rel) else { continue; };
-        let Ok(content) = source.read_file(rel) else { continue; };
-        let Some(keys) = parse_raw_frontmatter_keys(&content) else { continue; };
+        let Some(kind) = kind_from_path(rel) else {
+            continue;
+        };
+        let Ok(content) = source.read_file(rel) else {
+            continue;
+        };
+        let Some(keys) = parse_raw_frontmatter_keys(&content) else {
+            continue;
+        };
 
         match kind {
             "gotcha" => {
@@ -115,10 +121,18 @@ fn check_sot_staleness(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
     let mut results = Vec::new();
     let today = chrono::Local::now().date_naive();
     for rel in &source.all_entry_paths() {
-        let Ok(content) = source.read_file(rel) else { continue; };
-        let Some(fm) = crate::format::frontmatter::parse_frontmatter(&content) else { continue; };
-        let Some(ref ts) = fm.timestamp else { continue; };
-        let Ok(date) = chrono::NaiveDate::parse_from_str(ts, "%Y-%m-%d") else { continue; };
+        let Ok(content) = source.read_file(rel) else {
+            continue;
+        };
+        let Some(fm) = crate::format::frontmatter::parse_frontmatter(&content) else {
+            continue;
+        };
+        let Some(ref ts) = fm.timestamp else {
+            continue;
+        };
+        let Ok(date) = chrono::NaiveDate::parse_from_str(ts, "%Y-%m-%d") else {
+            continue;
+        };
         let days = (today - date).num_days();
         if days > 180 {
             results.push(CheckResult {
@@ -217,7 +231,11 @@ mod tests {
     #[test]
     fn frontmatter_valid() {
         let dir = tempfile::TempDir::new().unwrap();
-        write_ek(dir.path(), "ok.md", "---\ndescription: hi\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n# Body\n");
+        write_ek(
+            dir.path(),
+            "ok.md",
+            "---\ndescription: hi\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n# Body\n",
+        );
         let source = make_source(dir.path());
         let results = check_frontmatter(&source);
         assert!(results.is_empty(), "expected no errors, got {results:?}");
@@ -257,7 +275,11 @@ mod tests {
     #[test]
     fn required_gotcha_missing_trigger_error() {
         let dir = tempfile::TempDir::new().unwrap();
-        write_ek(dir.path(), "gotchas/g.md", "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Bug\n");
+        write_ek(
+            dir.path(),
+            "gotchas/g.md",
+            "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Bug\n",
+        );
         let source = make_source(dir.path());
         let results = check_required_fields(&source);
         assert_eq!(results.len(), 1);
@@ -277,7 +299,11 @@ mod tests {
     #[test]
     fn required_rule_missing_applies_to_error() {
         let dir = tempfile::TempDir::new().unwrap();
-        write_ek(dir.path(), "rules/r.md", "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Rule\n");
+        write_ek(
+            dir.path(),
+            "rules/r.md",
+            "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Rule\n",
+        );
         let source = make_source(dir.path());
         let results = check_required_fields(&source);
         assert_eq!(results.len(), 1);
@@ -296,7 +322,11 @@ mod tests {
     #[test]
     fn required_decision_missing_both() {
         let dir = tempfile::TempDir::new().unwrap();
-        write_ek(dir.path(), "decisions/d.md", "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Decision\n");
+        write_ek(
+            dir.path(),
+            "decisions/d.md",
+            "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Decision\n",
+        );
         let source = make_source(dir.path());
         let results = check_required_fields(&source);
         assert_eq!(results.len(), 2);
@@ -305,7 +335,11 @@ mod tests {
     #[test]
     fn required_unknown_kind_skipped() {
         let dir = tempfile::TempDir::new().unwrap();
-        write_ek(dir.path(), "patterns/p.md", "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Pattern\n");
+        write_ek(
+            dir.path(),
+            "patterns/p.md",
+            "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Pattern\n",
+        );
         let source = make_source(dir.path());
         let results = check_required_fields(&source);
         assert!(results.is_empty(), "unknown kind should be skipped, got {results:?}");
@@ -326,7 +360,11 @@ mod tests {
     fn sot_staleness_recent_ok() {
         let dir = tempfile::TempDir::new().unwrap();
         let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-        write_ek(dir.path(), "recent.md", &format!("---\ndescription: x\ntags: [a]\ntimestamp: {today}\n---\n\n## Recent\n"));
+        write_ek(
+            dir.path(),
+            "recent.md",
+            &format!("---\ndescription: x\ntags: [a]\ntimestamp: {today}\n---\n\n## Recent\n"),
+        );
         let source = make_source(dir.path());
         let results = check_sot_staleness(&source);
         assert!(results.is_empty(), "recent timestamp should be OK, got {results:?}");
@@ -335,7 +373,11 @@ mod tests {
     #[test]
     fn sot_staleness_old_warns() {
         let dir = tempfile::TempDir::new().unwrap();
-        write_ek(dir.path(), "old.md", "---\ndescription: x\ntags: [a]\ntimestamp: 2025-01-15\n---\n\n## Old entry\n");
+        write_ek(
+            dir.path(),
+            "old.md",
+            "---\ndescription: x\ntags: [a]\ntimestamp: 2025-01-15\n---\n\n## Old entry\n",
+        );
         let source = make_source(dir.path());
         let results = check_sot_staleness(&source);
         assert_eq!(results.len(), 1);
@@ -380,7 +422,10 @@ mod tests {
         let dir = tempfile::TempDir::new().unwrap();
         let source = make_source(dir.path());
         let results = check_export_consistency(&source, dir.path());
-        assert!(results.is_empty(), "both missing = OK (user hasn't enabled multi-tool), got {results:?}");
+        assert!(
+            results.is_empty(),
+            "both missing = OK (user hasn't enabled multi-tool), got {results:?}"
+        );
     }
 
     #[test]

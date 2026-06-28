@@ -1,3 +1,4 @@
 bin.name = "enjoyknowledge"
-args = ["grep", "--tags", "export", "导出"]
+args = ["workflow", "onboard"]
 fs.cwd = "../fixtures/minimal-project"
+fs.sandbox = true
