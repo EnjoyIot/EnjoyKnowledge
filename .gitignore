@@ -40,3 +40,4 @@ venv/
 
 /target
 
+.claude-task-*.log
