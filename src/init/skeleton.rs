@@ -214,7 +214,8 @@ pub fn generate_stage_agents_md(project_root: &Path) -> anyhow::Result<()> {
 /// Update `.gitignore` to exclude stage working files.
 pub fn update_gitignore(project_root: &Path) -> anyhow::Result<()> {
     let gi = project_root.join(".gitignore");
-    let rules = "\n# enjoyknowledge stage (v0.4+)\n.enjoyknowledge_stage/tasks/*/changes.md\n.session/\n";
+    let rules =
+        "\n# enjoyknowledge stage (v0.4+)\n.enjoyknowledge_stage/tasks/*/changes.md\n.session/\n";
 
     if gi.exists() {
         let existing = std::fs::read_to_string(&gi)?;
@@ -709,19 +710,17 @@ mod tests {
 
         // First run creates templates
         generate_stage_skeleton(root).unwrap();
-        let first_size = std::fs::read_to_string(
-            root.join(".enjoyknowledge_stage/tasks/_template/summary.md"),
-        )
-        .unwrap()
-        .len();
+        let first_size =
+            std::fs::read_to_string(root.join(".enjoyknowledge_stage/tasks/_template/summary.md"))
+                .unwrap()
+                .len();
 
         // Second run should not overwrite existing templates
         generate_stage_skeleton(root).unwrap();
-        let second_size = std::fs::read_to_string(
-            root.join(".enjoyknowledge_stage/tasks/_template/summary.md"),
-        )
-        .unwrap()
-        .len();
+        let second_size =
+            std::fs::read_to_string(root.join(".enjoyknowledge_stage/tasks/_template/summary.md"))
+                .unwrap()
+                .len();
 
         assert_eq!(first_size, second_size);
     }
@@ -734,8 +733,7 @@ mod tests {
 
         generate_ek_agents_md(root).unwrap();
 
-        let content =
-            std::fs::read_to_string(root.join(".enjoyknowledge/AGENTS.md")).unwrap();
+        let content = std::fs::read_to_string(root.join(".enjoyknowledge/AGENTS.md")).unwrap();
         assert!(content.contains("EnjoyKnowledge KB Index"));
         assert!(content.contains("<!-- enjoyknowledge_KB_INDEX -->"));
         assert!(content.contains("architecture"));

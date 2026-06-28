@@ -180,8 +180,7 @@ fn init_generates_ek_agents_md() {
     let root = tmp.path();
     init_project(root);
 
-    let content =
-        std::fs::read_to_string(root.join(".enjoyknowledge/AGENTS.md")).unwrap();
+    let content = std::fs::read_to_string(root.join(".enjoyknowledge/AGENTS.md")).unwrap();
     assert!(content.contains("EnjoyKnowledge KB Index"));
     assert!(content.contains("NEVER write to"));
 }
@@ -192,8 +191,7 @@ fn init_generates_stage_agents_md() {
     let root = tmp.path();
     init_project(root);
 
-    let content =
-        std::fs::read_to_string(root.join(".enjoyknowledge_stage/AGENTS.md")).unwrap();
+    let content = std::fs::read_to_string(root.join(".enjoyknowledge_stage/AGENTS.md")).unwrap();
     assert!(content.contains("Stage Writing Spec"));
     assert!(content.contains("Hard Gate Protocol"));
 }
@@ -250,7 +248,7 @@ fn promote_draft_to_gotcha() {
     .unwrap();
 
     enjoyknowledge()
-        .args(["promote", "utf8-windows.md", "--to", "gotcha", "--author", "jay"])
+        .args(["promote", "utf8-windows.md", "--to", "gotcha", "--author", "enjoy"])
         .current_dir(root)
         .assert()
         .success();
@@ -260,7 +258,7 @@ fn promote_draft_to_gotcha() {
     let content = std::fs::read_to_string(target).unwrap();
     assert!(content.contains("id: utf8-windows"));
     assert!(content.contains("kind: gotcha"));
-    assert!(content.contains("author: jay"));
+    assert!(content.contains("author: enjoy"));
     assert!(content.contains("Windows UTF-8 encoding"));
 }
 
@@ -270,22 +268,17 @@ fn promote_adds_promoted_marker() {
     let root = tmp.path();
     init_project(root);
 
-    std::fs::write(
-        root.join(".enjoyknowledge_stage/drafts/my-draft.md"),
-        "## My Draft\n- test\n",
-    )
-    .unwrap();
+    std::fs::write(root.join(".enjoyknowledge_stage/drafts/my-draft.md"), "## My Draft\n- test\n")
+        .unwrap();
 
     enjoyknowledge()
-        .args(["promote", "my-draft.md", "--to", "architecture", "--author", "jay"])
+        .args(["promote", "my-draft.md", "--to", "architecture", "--author", "enjoy"])
         .current_dir(root)
         .assert()
         .success();
 
-    let draft = std::fs::read_to_string(
-        root.join(".enjoyknowledge_stage/drafts/my-draft.md"),
-    )
-    .unwrap();
+    let draft =
+        std::fs::read_to_string(root.join(".enjoyknowledge_stage/drafts/my-draft.md")).unwrap();
     assert!(draft.contains("[PROMOTED]"));
 }
 
@@ -310,11 +303,7 @@ fn stage_clean_no_archive_is_noop() {
     let root = tmp.path();
     init_project(root);
 
-    enjoyknowledge()
-        .args(["stage", "clean", "--force"])
-        .current_dir(root)
-        .assert()
-        .success();
+    enjoyknowledge().args(["stage", "clean", "--force"]).current_dir(root).assert().success();
 }
 
 #[test]

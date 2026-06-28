@@ -152,7 +152,7 @@ pub enum Command {
         #[arg(long, value_name = "ID")]
         id: Option<String>,
 
-        /// Author name (defaults to 'unknown')
+        /// Author name (defaults to 'enjoy')
         #[arg(long, value_name = "NAME")]
         author: Option<String>,
     },

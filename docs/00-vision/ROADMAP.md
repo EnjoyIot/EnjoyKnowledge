@@ -178,7 +178,7 @@ CLI 核心       打磨稳定      for Coding 场景深化   团队规模化    
 - [x] 单元测试全绿
 - [x] enjoyiot-kaiyuan 端到端 dogfooding 通过
 
-### v0.4 哲学（Jay 6 次反馈）
+### v0.4 哲学（创始团队 6 次反馈）
 - 人类是 authority anchor（KB 内容人类手动 + 显式让 AI 写）
 - 简单 > 完整（砍 C10 trust / C11 lifecycle / C12 sync）
 - 物理分离 > 状态字段（stage/ vs .enjoyknowledge/）
@@ -197,7 +197,7 @@ CLI 核心       打磨稳定      for Coding 场景深化   团队规模化    
 - 设计依据：`docs/00-vision/v0.4-final-design.md`（why-workspace 同名）
 - 调研附录：`docs/00-vision/archive/v0.4-research-full.md`（v0.5+ 参考）
 
-### v0.4 极简原则 (Jay 6 次反馈沉淀)
+### v0.4 极简原则 (创始团队 6 次反馈沉淀)
 1. **人类是 authority anchor**——KB 里所有内容都是人类手动 / 显式让 AI 写
 2. **物理分离 > 状态字段**——`.enjoyknowledge_stage/` (AI 写) vs `.enjoyknowledge/` (人类写)
 3. **AGENTS.md > frontmatter**——AI 读 markdown 内容比 YAML 字段更直接

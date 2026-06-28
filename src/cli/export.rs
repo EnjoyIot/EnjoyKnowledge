@@ -128,43 +128,38 @@ mod tests {
 
     #[test]
     fn multi_tool_parse_individual() {
-        let tools: Vec<AiTool> = "claude"
-            .split(',')
-            .map(|s| parse_tool(s.trim()).unwrap())
-            .collect();
+        let tools: Vec<AiTool> =
+            "claude".split(',').map(|s| parse_tool(s.trim()).unwrap()).collect();
         assert_eq!(tools, vec![AiTool::Claude]);
     }
 
     #[test]
     fn multi_tool_parse_two() {
-        let tools: Vec<AiTool> = "claude,cursor"
-            .split(',')
-            .map(|s| parse_tool(s.trim()).unwrap())
-            .collect();
+        let tools: Vec<AiTool> =
+            "claude,cursor".split(',').map(|s| parse_tool(s.trim()).unwrap()).collect();
         assert_eq!(tools, vec![AiTool::Claude, AiTool::Cursor]);
     }
 
     #[test]
     fn multi_tool_parse_auto_means_claude() {
-        let tools: Vec<AiTool> = "auto"
-            .split(',')
-            .map(|s| parse_tool(s.trim()).unwrap())
-            .collect();
+        let tools: Vec<AiTool> = "auto".split(',').map(|s| parse_tool(s.trim()).unwrap()).collect();
         assert_eq!(tools, vec![AiTool::Claude]);
     }
 
     #[test]
     fn multi_tool_parse_with_whitespace() {
-        let tools: Vec<AiTool> = " claude , cursor "
-            .split(',')
-            .map(|s| parse_tool(s.trim()).unwrap())
-            .collect();
+        let tools: Vec<AiTool> =
+            " claude , cursor ".split(',').map(|s| parse_tool(s.trim()).unwrap()).collect();
         assert_eq!(tools, vec![AiTool::Claude, AiTool::Cursor]);
     }
 
     #[test]
     fn multi_tool_parse_unsupported_errors() {
-        let err = "codex".split(',').map(|s| parse_tool(s.trim())).collect::<anyhow::Result<Vec<_>>>().unwrap_err();
+        let err = "codex"
+            .split(',')
+            .map(|s| parse_tool(s.trim()))
+            .collect::<anyhow::Result<Vec<_>>>()
+            .unwrap_err();
         assert!(err.to_string().contains("暂未实现"));
     }
 

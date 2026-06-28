@@ -95,7 +95,7 @@ ules/ 及三层防护说明
 
 ## [v1.3] — 2026-06-27（v0.2 收尾）
 
-### 砍功能 4 项（双 AI 验证 + Jay 决策）
+### 砍功能 4 项（双 AI 验证 + 创始团队决策）
 
 基于 codex + claude 双 AI 独立评审 + GitHub API 90+ 竞品 + Reddit r/ClaudeCode/r/cursor/r/vibecoding 痛点社区证据 + 4 轮市场调研（MARKET-RESEARCH-2026Q2），砍 v0.2 scope 到最小可 ship 版本：
 
@@ -103,7 +103,7 @@ ules/ 及三层防护说明
    - 1 工具会"杀 thesis"（定位塌缩到"Cursor 辅助工具"）
    - 2 工具证明跨工具概念
    - 架构保留 9 工具 adapter trait，v0.3+ 渐进
-   - 首发 Claude（r/ClaudeCode 90+ 评论"AGENTS.MD standard"+ 适配更简单 CLAUDE.md 追加 vs .mdc frontmatter + Jay 工具栈）
+   - 首发 Claude（r/ClaudeCode 90+ 评论"AGENTS.MD standard"+ 适配更简单 CLAUDE.md 追加 vs .mdc frontmatter + 项目维护者工具栈）
 
 2. **5 工作流 → 2 工作流**（onboard + capture）
    - workflows.md §4.2 preflight.yaml 整段删（46 行）

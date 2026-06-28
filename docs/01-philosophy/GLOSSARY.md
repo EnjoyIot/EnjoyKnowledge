@@ -154,7 +154,7 @@ v0.4 新命令。`enjoyknowledge stage clean [--dry-run] [--force] [--older-than
 v0.4 stage 任务模板。`tasks/<task-id>/` 下 AI 自动维护 8 个文件：**requirements.md** (P1 需求分析，硬门 1) / **design.md** (P2 方案设计，硬门 2) / **plan.md** (P2b 实施计划) / **changes.md** (P3 编码变更，append-only) / **tests.md** (P4 测试报告) / **delivery.md** (P5 交付，硬门 3) / **summary.md** (跨阶段总览) / **review.md** (人类 review checklist，AI 预填 + 人类勾选)。**3 硬门**：P1 需求 / P2 设计 / P5 交付必须人类批准；P3 编码 + P4 测试无硬门（软门：mid-checkpoint）。**写入时机 = 渐进式累积**：需求 → 方案 → 编码 → 测试 → 交付，每节点触发对应文件追加写入（**不是完成时一次写**）。
 
 ### 极简上下文层
-v0.4 核心定位。在 v0.2 "一份 markdown 多个 AI 工具"之上，加 1 层"任务工作区"。**4 极简原则**（Jay 6 次反馈沉淀）：(1) 人类是 authority anchor；(2) 物理分离 > 状态字段；(3) AGENTS.md > frontmatter；(4) 简单 > 完整。**砍掉的能力**：C10 trust 体系 / C11 lifecycle 4 状态机 / C12 sync 检测 / frontmatter 6 字段扩展 / `ek capture --from-commit` / 独立 `workflow/` 目录。详见 [POSITIONING.md §5 v0.4 极简上下文层](../00-vision/POSITIONING.md) + [v0.4-final-design.md](C:/Users/jay/Documents/why-workspace/v0.4-final-design.md)。
+v0.4 核心定位。在 v0.2 "一份 markdown 多个 AI 工具"之上，加 1 层"任务工作区"。**4 极简原则**（创始团队 6 次反馈沉淀）：(1) 人类是 authority anchor；(2) 物理分离 > 状态字段；(3) AGENTS.md > frontmatter；(4) 简单 > 完整。**砍掉的能力**：C10 trust 体系 / C11 lifecycle 4 状态机 / C12 sync 检测 / frontmatter 6 字段扩展 / `ek capture --from-commit` / 独立 `workflow/` 目录。详见 [POSITIONING.md §5 v0.4 极简上下文层](../00-vision/POSITIONING.md) + [v0.4-final-design.md](../00-vision/archive/v0.4-research-full.md)。
 
 ### sync
 ~~5 个核心工作流之一（W5）~~ **v0.2 重命名为 `export`**（1 工具时 sync 撒谎，export 诚实单向导出）。详见 [export](#export) + workflows.md §4.3。

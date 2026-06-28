@@ -461,10 +461,31 @@ fn build_capture_frontmatter(kind: &str, fields: &HashMap<String, String>, body:
         if last == b' ' || last == b'\t' {
             return true;
         }
-        value.contains(|c: char| matches!(
-            c, ':' | '#' | '{' | '}' | '[' | ']' | ',' | '&' | '*' | '?' | '|'
-             | '-' | '<' | '>' | '=' | '!' | '%' | '@' | '`' | '"' | '\''
-        ))
+        value.contains(|c: char| {
+            matches!(
+                c,
+                ':' | '#'
+                    | '{'
+                    | '}'
+                    | '['
+                    | ']'
+                    | ','
+                    | '&'
+                    | '*'
+                    | '?'
+                    | '|'
+                    | '-'
+                    | '<'
+                    | '>'
+                    | '='
+                    | '!'
+                    | '%'
+                    | '@'
+                    | '`'
+                    | '"'
+                    | '\''
+            )
+        })
     }
 
     /// Escape a value so it's a valid YAML plain scalar or double-quoted string.
@@ -488,7 +509,10 @@ fn build_capture_frontmatter(kind: &str, fields: &HashMap<String, String>, body:
     // Write kind-specific fields first, then any extra fields
     for req in required_fields(kind) {
         if let Some(val) = fields.get(*req) {
-            let _ = std::fmt::Write::write_fmt(&mut yaml, format_args!("{req}: {}\n", yaml_escape(val)));
+            let _ = std::fmt::Write::write_fmt(
+                &mut yaml,
+                format_args!("{req}: {}\n", yaml_escape(val)),
+            );
         }
     }
 
@@ -496,7 +520,8 @@ fn build_capture_frontmatter(kind: &str, fields: &HashMap<String, String>, body:
     let required: Vec<&str> = required_fields(kind).to_vec();
     for (k, v) in fields {
         if !required.contains(&k.as_str()) {
-            let _ = std::fmt::Write::write_fmt(&mut yaml, format_args!("{k}: {}\n", yaml_escape(v)));
+            let _ =
+                std::fmt::Write::write_fmt(&mut yaml, format_args!("{k}: {}\n", yaml_escape(v)));
         }
     }
 
@@ -1097,7 +1122,8 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let ek = setup_ek_dir(tmp.path());
         // Simulate a previously-corrupted file with trailing `---`
-        let corrupted_content = "---\ndescription: bad\ntimestamp: 2026-01-01\n---\n\n## Entry\nBody.\n\n---\n";
+        let corrupted_content =
+            "---\ndescription: bad\ntimestamp: 2026-01-01\n---\n\n## Entry\nBody.\n\n---\n";
         fs::create_dir_all(ek.join("gotchas")).unwrap();
         fs::write(ek.join("gotchas/gotchas.md"), corrupted_content).unwrap();
         fs::write(
@@ -1157,10 +1183,7 @@ mod tests {
         let yaml = build_capture_frontmatter("rule", &fields, "## Rule\nContent.");
         let parsed: serde_yaml::Value =
             serde_yaml::from_str(&yaml).expect("frontmatter should parse with quotes");
-        assert_eq!(
-            parsed["applies_to"].as_str().unwrap(),
-            r#"he said "hello""#
-        );
+        assert_eq!(parsed["applies_to"].as_str().unwrap(), r#"he said "hello""#);
     }
 
     /// Values containing `:` must be quoted so the colon isn't

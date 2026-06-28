@@ -52,7 +52,7 @@ tags: [rust, error-handling]        # 选填
 
 ## 5. v0.2 2 工具 export 行为（首发 Claude + Cursor）
 
-> **v0.2 决定** = 2 工具（codex + claude 双 AI 一致：1 工具 = 杀 thesis；2 工具证明跨工具）。**首发 Claude**（社区更活跃 + 适配更简单 + Jay 工具栈）；架构上保留 9 工具 adapter trait，v0.3+ 渐进。
+> **v0.2 决定** = 2 工具（codex + claude 双 AI 一致：1 工具 = 杀 thesis；2 工具证明跨工具）。**首发 Claude**（社区更活跃 + 适配更简单 + 项目维护者工具栈）；架构上保留 9 工具 adapter trait，v0.3+ 渐进。
 
 | 工具 | 同步目标 | 文件格式 | export 后内容示例（首 3 行）|
 |---|---|---|---|

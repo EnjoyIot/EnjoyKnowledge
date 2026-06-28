@@ -13,10 +13,7 @@ pub fn run(
     older_than_days: Option<u64>,
 ) -> anyhow::Result<()> {
     let ttl_days = older_than_days.unwrap_or(180);
-    let archive_dir = project_root
-        .join(STAGE_DIR)
-        .join(".archive")
-        .join("tasks");
+    let archive_dir = project_root.join(STAGE_DIR).join(".archive").join("tasks");
 
     if !archive_dir.exists() {
         eprintln!("enjoyknowledge: no archived tasks to clean");
@@ -49,7 +46,9 @@ pub fn run(
     }
 
     if to_delete.is_empty() {
-        println!("enjoyknowledge: no archived tasks older than {ttl_days} days ({total_dirs} total)");
+        println!(
+            "enjoyknowledge: no archived tasks older than {ttl_days} days ({total_dirs} total)"
+        );
         return Ok(());
     }
 
@@ -80,9 +79,8 @@ pub fn run(
 
     for (name, _) in &to_delete {
         let task_path = archive_dir.join(name);
-        std::fs::remove_dir_all(&task_path).map_err(|e| {
-            anyhow::anyhow!("failed to remove {name}: {e}")
-        })?;
+        std::fs::remove_dir_all(&task_path)
+            .map_err(|e| anyhow::anyhow!("failed to remove {name}: {e}"))?;
     }
 
     println!("enjoyknowledge: cleaned {count} archived task(s) older than {ttl_days} days");
@@ -92,10 +90,8 @@ pub fn run(
 /// Find the newest modified time of any file in a directory tree.
 fn find_newest_mtime(dir: &Path) -> Option<SystemTime> {
     let mut newest: Option<SystemTime> = None;
-    for entry in walkdir::WalkDir::new(dir)
-        .max_depth(10)
-        .into_iter()
-        .filter_map(std::result::Result::ok)
+    for entry in
+        walkdir::WalkDir::new(dir).max_depth(10).into_iter().filter_map(std::result::Result::ok)
     {
         if entry.file_type().is_file() {
             if let Ok(meta) = entry.metadata() {
@@ -114,10 +110,7 @@ fn find_newest_mtime(dir: &Path) -> Option<SystemTime> {
 
 /// Calculate approximate age in days from a `SystemTime`.
 fn age_days(t: SystemTime) -> u64 {
-    SystemTime::now()
-        .duration_since(t)
-        .map(|d| d.as_secs() / 86400)
-        .unwrap_or(0)
+    SystemTime::now().duration_since(t).map(|d| d.as_secs() / 86400).unwrap_or(0)
 }
 
 #[cfg(test)]
