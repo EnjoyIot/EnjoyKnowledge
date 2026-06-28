@@ -1,5 +1,87 @@
 ﻿# enjoyknowledge 变更记录
 
+## [v0.4.9] — 2026-06-29
+
+### 7 个硬编码全部抽离到 fixture 文件
+
+**抽离方式**：`include_str!`，跟 v0.4.4/v0.4.5 模式 100% 复用。
+
+**7 个 fixture 新建**：
+- `tests/fixtures/skills/coding.md` — SKILLS_CODING_MD_CONTENT
+- `tests/fixtures/skills/research.md` — SKILLS_RESEARCH_MD_CONTENT
+- `tests/fixtures/skills/review.md` — SKILLS_REVIEW_MD_CONTENT
+- `tests/fixtures/skills/design.md` — SKILLS_DESIGN_MD_CONTENT
+- `tests/fixtures/skills/README.md` — SKILLS_README_MD_CONTENT
+- `tests/fixtures/agents/stage.md` — STAGE_AGENTS_MD_CONTENT
+- `tests/fixtures/agents/ek.md` — EK_AGENTS_MD_CONTENT
+
+**skeleton.rs 改动**：
+- 7 个 MD_CONTENT 硬编码 → `include_str!`（编译期嵌入 = 0 运行时影响）
+- `ek_agents_md_content()` 函数 → `const EK_AGENTS_MD_CONTENT`
+
+**哲学**：让用户能改 fixture .md = 重新编译 = 生效。
+
+**测试**：+2 新测试（`v0_4_9_md_content_uses_include_str` + `v0_4_9_user_can_modify_md_content_via_fixture`）
+
+**0 行为改动**：跟 v0.4.8 100% 兼容。
+
+## [v0.4.8] — 2026-06-28
+
+### skills/ 流程类 skill：4 个工作流抽离
+
+**5 个文件创建**：
+
+`.enjoyknowledge/skills/` 新增 4 个工作流 + 1 个索引：
+- `coding.md` — 编码工作流（Hermes skill 格式：接任务 → drafts → promote）
+- `research.md` — 调研工作流（ek ls/tree/cat/grep）
+- `review.md` — 复盘工作流（onboard → drafts → promote → doctor）
+- `design.md` — 设计工作流（ek kind add/rm/list）
+- `README.md` — 4 个工作流索引 + 怎么用 + 自定义
+
+**init 行为**：
+- 新增 `generate_skills_skeleton()` — 创建 skills/ 目录 + 5 个默认文件
+- 存在则跳过（v0.4.4 / v0.4.6 / v0.4.7 模式）
+- 0 新格式（Hermes skill 格式 = v0.4.6 已有）
+
+**多 AI 工具**：
+- AI 工具通过 AGENTS.md briefly 提到（v0.4.7 已实现）→ 引导读 skills/
+- 项目内子目录 = 不一定全部 AI 工具自动加载，但 AGENTS.md 提供入口
+
+**测试**：
+- 新增 6 个集成测试：4 flow frontmatter + 1 创建 + 1 不覆盖
+- 更新 1 个 trycmd 快照（onboard-ok.stdout：6→11）
+
+**不改的部分**：
+- AGENTS.md 不改（v0.4.7 已对）
+- init 行为不改（存在则跳过）
+- stage AGENTS.md 不改（v0.4.7 已对）
+
+## [v0.4.7] — 2026-06-28
+
+### AGENTS.md 默认内容重写：静态目录说明 + briefly 提到流程
+
+**2 个 AGENTS.md 默认内容重写**：
+
+**`.enjoyknowledge/AGENTS.md`（ek AGENTS.md）**：
+- 重写为**静态目录说明**：目录树（11 kind + _meta/）、读写原则、常见操作表
+- Briefly 提到流程（1-2 句）：`skills/` 目录引用 + `v0.4.8 候选`
+- 移除 metadata.hermes 专属字段（多 AI 工具通用）
+- 移除 KB_INDEX 标记和英文命令表（中文静态说明更清晰）
+
+**`.enjoyknowledge_stage/AGENTS.md`（stage AGENTS.md）**：
+- 重写为**任务执行流程**：4 步任务流（接任务→写 drafts → promote → 沉淀）
+- 目录说明（drafts/ + tasks/ + .archive/）+ ek 命令表
+- Briefly 提到流程（1-2 句）：`skills/` 目录引用 + `v0.4.8 候选`
+
+**不改的部分**：
+- `generate_agents_md`（根目录 AGENTS.md）永远覆盖——AI 工具入口不能"用户拥有"
+- init 行为不变——AGENTS.md 存在则跳过（v0.4.4 / v0.4.6 模式）
+- `sync_agents_md_summary` 不变——依赖根目录 AGENTS.md 的 LS_START/LS_END 标记
+
+**测试**：
+- 新增 3 个集成测试：不覆盖 + 默认模板 + 任务执行
+- 更新 4 个 fixture 文件 + 4 个现有测试断言
+
 ## [v0.4.6] — 2026-06-28
 
 ### ek AGENTS.md 100% 对齐 stage（不覆盖 + Hermes skill 格式）

@@ -8,6 +8,9 @@ use std::path::Path;
 /// Canonical directory name for the stage (AI task staging area).
 pub const STAGE_DIR: &str = ".enjoyknowledge_stage";
 
+/// v0.4.8: Skills directory inside .enjoyknowledge/ for workflow skill files.
+pub const SKILLS_DIR: &str = "skills";
+
 /// Default stage-directory specification — embedded at compile-time.
 const STAGE_DEFAULTS_MD_DEFAULT: &str = include_str!("../../tests/fixtures/stage-defaults.md");
 
@@ -291,9 +294,7 @@ pub fn generate_ek_agents_md(project_root: &Path) -> anyhow::Result<()> {
 
     let path = ek.join("AGENTS.md");
     if !path.exists() {
-        let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-        let content = ek_agents_md_content(&today);
-        std::fs::write(&path, content)?;
+        std::fs::write(&path, EK_AGENTS_MD_CONTENT)?;
     }
     Ok(())
 }
@@ -309,6 +310,31 @@ pub fn generate_stage_agents_md(project_root: &Path) -> anyhow::Result<()> {
     if !path.exists() {
         std::fs::write(&path, STAGE_AGENTS_MD_CONTENT)?;
     }
+    Ok(())
+}
+
+/// Generate `.enjoyknowledge/skills/` — 4 workflow skills + 1 README index.
+///
+/// v0.4.8: Does NOT overwrite existing skill files (user-owned).
+pub fn generate_skills_skeleton(project_root: &Path) -> anyhow::Result<()> {
+    let skills_dir = project_root.join(EK_DIR).join(SKILLS_DIR);
+    std::fs::create_dir_all(&skills_dir)?;
+
+    let files: &[(&str, &str)] = &[
+        ("coding.md", SKILLS_CODING_MD_CONTENT),
+        ("research.md", SKILLS_RESEARCH_MD_CONTENT),
+        ("review.md", SKILLS_REVIEW_MD_CONTENT),
+        ("design.md", SKILLS_DESIGN_MD_CONTENT),
+        ("README.md", SKILLS_README_MD_CONTENT),
+    ];
+
+    for (name, content) in files {
+        let path = skills_dir.join(name);
+        if !path.exists() {
+            std::fs::write(&path, *content)?;
+        }
+    }
+
     Ok(())
 }
 
@@ -329,165 +355,26 @@ pub fn update_gitignore(project_root: &Path) -> anyhow::Result<()> {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// v0.4: AGENTS.md content + 8 stage template content
+// v0.4.8: Skills workflow files (4 flow + 1 index)
 // ════════════════════════════════════════════════════════════════════════════
 
-fn ek_agents_md_content(today: &str) -> String {
-    format!(
-        r#"---
-name: enjoyknowledge-kb
-description: "Knowledge base index for AI tools. Use when reading project knowledge, listing KB files, or grepping inside knowledge sections. Triggers on '读 KB' / '查项目知识' / 'enjoyknowledge ls/grep/cat' / 'project context' / 'onboard'. Reads at startup alongside AGENTS.md and .enjoyknowledge_stage/AGENTS.md."
-version: 1.0.0
-metadata:
-  hermes:
-    tags: [knowledge-base, kb, ai-context, indexing]
-    related_skills: [enjoyknowledge, enjoyknowledge-stage]
----
+const SKILLS_CODING_MD_CONTENT: &str = include_str!("../../tests/fixtures/skills/coding.md");
 
-# enjoyknowledge KB — Knowledge Base Index (v0.4.6+)
+const SKILLS_RESEARCH_MD_CONTENT: &str = include_str!("../../tests/fixtures/skills/research.md");
 
-## Overview
+const SKILLS_REVIEW_MD_CONTENT: &str = include_str!("../../tests/fixtures/skills/review.md");
 
-This file tells AI tools **how to use `.enjoyknowledge/`** for project context.
-**User-editable**: edit this file directly to change KB conventions.
-`ek init` will **never overwrite** this file (it's user-owned).
+const SKILLS_DESIGN_MD_CONTENT: &str = include_str!("../../tests/fixtures/skills/design.md");
 
-## KB Index
+const SKILLS_README_MD_CONTENT: &str = include_str!("../../tests/fixtures/skills/README.md");
 
-<!-- enjoyknowledge_KB_INDEX -->
-| kind | dir | required | summary |
-|------|-----|----------|---------|
-| gotcha | gotcha/ | trigger, applies_to, severity, reversible | Pitfall / anti-pattern |
-| decision | decision/ | reversible, decided_at | Decision with reversibility |
-| pattern | pattern/ | applies_to | Reusable code/design pattern |
-| rule | rule/ | applies_to | Project-wide rule |
-| business | business/ | applies_to | Domain concept |
-| architecture | architecture/ | applies_to | System / module architecture |
-| contract | contract/ | applies_to | API / data contract |
-| convention | convention/ | applies_to | Team / project convention |
-| context | context/ | applies_to | Runtime context |
-| template | template/ | applies_to | Reusable template |
-| command | command/ | applies_to | CLI command documentation |
-<!-- /enjoyknowledge_KB_INDEX -->
+const EK_AGENTS_MD_CONTENT: &str = include_str!("../../tests/fixtures/agents/ek.md");
 
-## AI Read Rules
+const STAGE_AGENTS_MD_CONTENT: &str = include_str!("../../tests/fixtures/agents/stage.md");
 
-**On startup and before any coding task**, read:
-1. This file (KB index) — know what knowledge exists
-2. `ek cat <path>` — read a knowledge file (path auto-prefixed with `.enjoyknowledge/`)
-3. `ek grep <pattern>` — search within knowledge sections
-
-## AI Write Rules
-
-**NEVER write to `.enjoyknowledge/` directly** unless the human explicitly asks:
-- `ek add <path> <content>` — append a knowledge entry
-- AI drafts go to `.enjoyknowledge_stage/drafts/`, promoted by human via `ek promote`
-
-## Custom Kind Directories (用户可加)
-
-If user added custom kinds in `_meta/kinds.md`:
-- `ek kind list` — see all kinds
-- `ek kind add <name>` — add new kind directory
-- `ek kind rm <name>` — remove kind directory
-
-## Commands
-
-| Command | Why |
-|---------|-----|
-| `ek ls` | List files with descriptions |
-| `ek grep <pattern>` | Search inside `##` sections |
-| `ek cat <path>` | Read a knowledge file |
-| `ek add <path> <content>` | Record a new entry |
-| `ek tree` | Recursive directory tree |
-| `ek doctor` | Health check |
-| `ek fix` | Auto-fix common issues |
-| `ek promote <draft> --to <kind>` | Promote a draft to KB |
-| `ek kind add/rm/list` | Manage knowledge kinds |
-| `ek stage clean` | Clean old archived tasks |
-| `ek onboard` | Establish project mental model |
-
----
-*User-owned: edit this file to customize KB conventions. `ek init` will not overwrite.*
-*Generated by `ek init` v0.4.6. See `.enjoyknowledge_stage/AGENTS.md` for stage writing conventions.*
-timestamp: {today}
-"#
-    )
-}
-
-const STAGE_AGENTS_MD_CONTENT: &str = r#"---
-name: enjoyknowledge-stage
-description: "Stage writing conventions for AI tools during coding tasks. Use when starting a new task, deciding what to write, or reviewing the project. Triggers on '做任务' / 'stage 写什么' / '改 stage AGENTS.md' / 'extend stage' / 'add stage dir' / 'task phase P1-P5'."
-version: 1.0.0
-metadata:
-  hermes:
-    tags: [stage, task, coding, ai-context]
-    related_skills: [enjoyknowledge]
----
-
-# enjoyknowledge Stage — Task Writing Spec (v0.4.4+)
-
-## Overview
-
-This file tells AI tools **how to use `.enjoyknowledge_stage/`** during coding tasks.
-**User-editable**: edit this file directly to change stage conventions.
-`ek init` will **never overwrite** this file (it's user-owned).
-
-## Inputs (what user provides)
-
-- Task ID (e.g., `2026-06-28-add-kind-registry`)
-- Task description (1-3 sentences)
-
-## Workflow (5 Phases x 3 Hard Gates)
-
-### P1 Requirements
-- Write to: `tasks/<task-id>/requirements.md`
-- EARS format (Event -> Action -> Response -> State)
-- Hard Gate 1: human approval
-
-### P2 Design
-- Write to: `tasks/<task-id>/design.md`
-- Hard Gate 2: human approval
-
-### P2b Plan
-- Write to: `tasks/<task-id>/plan.md`
-
-### P3 Coding
-- Write to: `tasks/<task-id>/changes.md` (append-only)
-- One line per file edit (old -> new summary)
-
-### P4 Testing
-- Write to: `tasks/<task-id>/tests.md`
-- Before first test run + after each run
-
-### P5 Delivery
-- Write to: `tasks/<task-id>/delivery.md`
-- Hard Gate 3: human approval
-- After: `ek promote <draft> --to <kind>`
-
-## Custom Directories (user-editable)
-
-If user added custom directories in `_meta/stage-defaults.md`:
-- `notes/<file>.md` — user notes
-- `experiments/<file>.md` — experiment records
-- ...
-
-AI should use these directories according to user's stage AGENTS.md updates.
-
-## Promote Workflow
-
-1. AI writes draft to `.enjoyknowledge_stage/drafts/<id>.md`
-2. Human reviews + runs `ek promote <draft> --to <kind>`
-3. Draft gets `[PROMOTED]` marker
-
-## Hard Gate Protocol
-
-```
-P1 req -[H1]-> P2 design -[H2]-> P3 coding -> P4 test -> P5 delivery -[H3]-> promote
-```
-
----
-*User-owned: edit this file to customize stage conventions. `ek init` will not overwrite.*
-"#;
+// ════════════════════════════════════════════════════════════════════════════
+// v0.4: AGENTS.md content + 8 stage template content
+// ════════════════════════════════════════════════════════════════════════════
 
 const STAGE_TEMPLATE_SUMMARY: &str = r"---
 task: <task-id>
@@ -832,12 +719,11 @@ mod tests {
         generate_ek_agents_md(root).unwrap();
 
         let content = std::fs::read_to_string(root.join(".enjoyknowledge/AGENTS.md")).unwrap();
-        assert!(content.contains("enjoyknowledge KB"));
-        assert!(content.contains("<!-- enjoyknowledge_KB_INDEX -->"));
-        assert!(content.contains("architecture"));
-        assert!(content.contains("gotcha"));
-        assert!(content.contains("rule"));
-        assert!(content.contains("NEVER write to `.enjoyknowledge/` directly"));
+        assert!(content.contains("enjoyknowledge 知识库"));
+        assert!(content.contains("architecture/"));
+        assert!(content.contains("gotcha/"));
+        assert!(content.contains("rule/"));
+        assert!(content.contains("读写原则"));
     }
 
     #[test]
@@ -864,10 +750,10 @@ mod tests {
 
         let content =
             std::fs::read_to_string(root.join(".enjoyknowledge_stage/AGENTS.md")).unwrap();
-        assert!(content.contains("enjoyknowledge Stage"));
-        assert!(content.contains("Workflow (5 Phases"));
-        assert!(content.contains("Hard Gate Protocol"));
-        assert!(content.contains("changes.md"));
+        assert!(content.contains("enjoyknowledge 任务执行"));
+        assert!(content.contains("任务执行流程"));
+        assert!(content.contains("drafts/"));
+        assert!(content.contains("ek promote"));
     }
 
     #[test]
@@ -991,5 +877,79 @@ mod tests {
         let second = std::fs::read_to_string(root.join(".gitignore")).unwrap();
 
         assert_eq!(first, second);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // v0.4.9: Extraction verification tests
+    // ════════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn v0_4_9_md_content_uses_include_str() {
+        // Verify all 7 MD_CONTENT constants are non-empty (compile-time embedded via include_str!)
+        assert!(!SKILLS_CODING_MD_CONTENT.is_empty());
+        assert!(SKILLS_CODING_MD_CONTENT.contains("enjoyknowledge-flow-coding"));
+        assert!(SKILLS_CODING_MD_CONTENT.contains("编码工作流"));
+
+        assert!(!SKILLS_RESEARCH_MD_CONTENT.is_empty());
+        assert!(SKILLS_RESEARCH_MD_CONTENT.contains("enjoyknowledge-flow-research"));
+        assert!(SKILLS_RESEARCH_MD_CONTENT.contains("调研工作流"));
+
+        assert!(!SKILLS_REVIEW_MD_CONTENT.is_empty());
+        assert!(SKILLS_REVIEW_MD_CONTENT.contains("enjoyknowledge-flow-review"));
+        assert!(SKILLS_REVIEW_MD_CONTENT.contains("复盘工作流"));
+
+        assert!(!SKILLS_DESIGN_MD_CONTENT.is_empty());
+        assert!(SKILLS_DESIGN_MD_CONTENT.contains("enjoyknowledge-flow-design"));
+        assert!(SKILLS_DESIGN_MD_CONTENT.contains("设计工作流"));
+
+        assert!(!SKILLS_README_MD_CONTENT.is_empty());
+        assert!(SKILLS_README_MD_CONTENT.contains("enjoyknowledge-skills-index"));
+        assert!(SKILLS_README_MD_CONTENT.contains("4 个工作流"));
+
+        assert!(!EK_AGENTS_MD_CONTENT.is_empty());
+        assert!(EK_AGENTS_MD_CONTENT.contains("enjoyknowledge-kb"));
+        assert!(EK_AGENTS_MD_CONTENT.contains("知识库根"));
+
+        assert!(!STAGE_AGENTS_MD_CONTENT.is_empty());
+        assert!(STAGE_AGENTS_MD_CONTENT.contains("enjoyknowledge-stage"));
+        assert!(STAGE_AGENTS_MD_CONTENT.contains("任务执行区"));
+    }
+
+    #[test]
+    fn v0_4_9_user_can_modify_md_content_via_fixture() {
+        // Verify all 7 fixture files exist and are readable
+        // (include_str! loads at compile time, so these file reads mirror what the constants contain)
+        let skills_dir =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/skills");
+        let agents_dir =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/agents");
+
+        let coding = std::fs::read_to_string(skills_dir.join("coding.md")).unwrap();
+        assert!(coding.contains("enjoyknowledge-flow-coding"));
+        assert_eq!(coding, SKILLS_CODING_MD_CONTENT);
+
+        let research = std::fs::read_to_string(skills_dir.join("research.md")).unwrap();
+        assert!(research.contains("enjoyknowledge-flow-research"));
+        assert_eq!(research, SKILLS_RESEARCH_MD_CONTENT);
+
+        let review = std::fs::read_to_string(skills_dir.join("review.md")).unwrap();
+        assert!(review.contains("enjoyknowledge-flow-review"));
+        assert_eq!(review, SKILLS_REVIEW_MD_CONTENT);
+
+        let design = std::fs::read_to_string(skills_dir.join("design.md")).unwrap();
+        assert!(design.contains("enjoyknowledge-flow-design"));
+        assert_eq!(design, SKILLS_DESIGN_MD_CONTENT);
+
+        let readme = std::fs::read_to_string(skills_dir.join("README.md")).unwrap();
+        assert!(readme.contains("enjoyknowledge-skills-index"));
+        assert_eq!(readme, SKILLS_README_MD_CONTENT);
+
+        let stage_agents = std::fs::read_to_string(agents_dir.join("stage.md")).unwrap();
+        assert!(stage_agents.contains("enjoyknowledge-stage"));
+        assert_eq!(stage_agents, STAGE_AGENTS_MD_CONTENT);
+
+        let ek_agents = std::fs::read_to_string(agents_dir.join("ek.md")).unwrap();
+        assert!(ek_agents.contains("enjoyknowledge-kb"));
+        assert_eq!(ek_agents, EK_AGENTS_MD_CONTENT);
     }
 }
