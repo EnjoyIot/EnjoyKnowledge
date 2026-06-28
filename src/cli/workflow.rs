@@ -78,7 +78,9 @@ pub fn run(
             let input = CaptureInput {
                 kind: kind.ok_or_else(|| anyhow::anyhow!("capture requires --kind"))?,
                 fields: fields.into_iter().collect(),
-                body: body.ok_or_else(|| anyhow::anyhow!("capture requires --body"))?,
+                body: unescape_body(
+                    &body.ok_or_else(|| anyhow::anyhow!("capture requires --body"))?,
+                ),
                 path,
             };
             let output = run_capture(project_root, &input)?;
@@ -398,6 +400,29 @@ fn default_path_for_kind(kind: &str) -> String {
         _ => "knowledge.md",
     };
     format!("{dir}/{file}")
+}
+
+/// Convert literal `\n` and `\t` in CLI `--body` string to real newlines/tabs.
+fn unescape_body(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    let mut chars = s.chars();
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            match chars.next() {
+                Some('n') => result.push('\n'),
+                Some('t') => result.push('\t'),
+                Some('\\') => result.push('\\'),
+                Some(other) => {
+                    result.push('\\');
+                    result.push(other);
+                }
+                None => result.push('\\'),
+            }
+        } else {
+            result.push(c);
+        }
+    }
+    result
 }
 
 /// Validate that `kind` is one of the 10 recognised knowledge types.
@@ -901,5 +926,28 @@ mod tests {
         let output = run_capture(tmp.path(), &input).unwrap();
         assert_eq!(output.written_path, "gotchas/custom-file.md");
         assert!(ek.join("gotchas/custom-file.md").exists());
+    }
+
+    // ── unescape_body ──────────────────────────────────────────────────
+
+    #[test]
+    fn unescape_newline() {
+        assert_eq!(unescape_body(r"line1\nline2"), "line1\nline2");
+    }
+
+    #[test]
+    fn unescape_tab() {
+        assert_eq!(unescape_body(r"col1\tcol2"), "col1\tcol2");
+    }
+
+    #[test]
+    fn unescape_plain_text_unchanged() {
+        let plain = "just plain text with no escapes";
+        assert_eq!(unescape_body(plain), plain);
+    }
+
+    #[test]
+    fn unescape_multiple_escapes() {
+        assert_eq!(unescape_body(r"a\nb\nc\td"), "a\nb\nc\td");
     }
 }
