@@ -1,0 +1,30 @@
+Done. Commit `4a768bf` — `feat(cli): v0.2 workflow run onboard`.
+
+## What was implemented
+
+**New file**: `src/cli/workflow.rs` — 292 lines
+- `run()` dispatcher matching `"onboard"` to `run_onboard()`, `"capture"` → v0.3+ error, unknown → error
+- `run_onboard()` — checks `.enjoyknowledge/` exists, reads AGENTS.md, locates POSITIONING/DESIGN-PHILOSOPHY/DESIGN files, collects critical gotchas (severity 4–5) and active decisions, counts total knowledge files
+- `OnboardOutput`, `GotchaEntry`, `DecisionEntry` structs
+- Human-readable output via `print_onboard_output()`
+
+**Modified files**:
+- `src/cli/args.rs` — added `Workflow { workflow: String }` variant after `Export`
+- `src/cli/mod.rs` — added `pub mod workflow;`
+- `src/main.rs` — added `Command::Workflow` dispatch branch
+- `src/format/frontmatter.rs` — added `severity: Option<u8>` and `status: Option<String>` fields
+- `src/cli/export.rs` — fixed pre-existing `anyhow::Error::contains()` compilation errors (3 places) + `doc_markdown` lint
+
+**New test file**: `tests/cmd/workflow-onboard.trycmd`
+
+## Verification
+
+| Check | Status |
+|---|---|
+| `cargo fmt --check` | pass |
+| `cargo clippy --all-targets -- -D warnings` | pass |
+| `cargo test --all-features` | 24 unit + 8 integration + trycmd = all pass |
+| `workflow --help` | shows workflow + onboard |
+| `workflow onboard` (manual) | AGENTS.md ✓, gotchas ✓, decisions ✓, file count ✓ |
+| Unit tests | 5 tests (struct, missing dir, file detection, severity filter, decision status) |
+| Trycmd | 1 test (init → workflow onboard) |

@@ -104,6 +104,8 @@ timestamp: 2026-06-21     # 推荐，ISO 8601 日期
 | `enjoyknowledge add <path> <content>` | 新增/追加知识 | 确认消息（stderr） |
 | `enjoyknowledge doctor [--ci]` | 合规检查 | 问题清单；`--ci` 模式 warning 也返回非零 |
 | `enjoyknowledge fix` | 自动修复 | 修复结果 |
+| `enjoyknowledge export --tool <cursor\|claude\|auto> [--dry-run]` | 生成 AI 工具入口文件 | `.cursor/rules/*.mdc` 或 `.claude/skills/*.md`（v0.2 首发 2 工具）|
+| `enjoyknowledge workflow <onboard\|capture>` | 运行 v0.2 核心工作流 | onboard：项目心智模型；capture：知识捕获（v0.2.1 实现）|
 
 ### 4.2 `ls` — 核心入口
 

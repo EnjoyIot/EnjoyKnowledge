@@ -121,7 +121,7 @@ Layer 1: 文件系统
 ## 5. MVP 路径（v0.1 当前 → v0.2 收缩）
 
 ### 5.1 v0.1 已交付（Core CLI）
-`init` / `ls` / `tree` / `grep` / `cat` / `add` / `doctor` / `fix` / `export` —— 8 个 CLI 命令 + profile 系统（v0.2 新增 `export`）
+`init` / `ls` / `tree` / `grep` / `cat` / `add` / `doctor` / `fix` / `export` / `workflow` —— 10 个 CLI 命令 + profile 系统（v0.2 新增 `export` + `workflow`；`workflow` 下含 `onboard` / `capture` 2 个工作流）
 
 ### 5.2 v0.2 砍功能后的 scope（基于 codex + claude 双 AI 验证 + Jay 决策）
 **砍**（v4.2 收敛原则）：
