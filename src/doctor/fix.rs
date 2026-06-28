@@ -10,30 +10,39 @@ use crate::doctor::checks;
 use crate::knowledge::{FilesystemSource, KnowledgeSource};
 use std::path::Path;
 
-/// Fill missing description field while preserving all other frontmatter fields.
-/// Returns the new content, or the original unchanged if description already exists.
+/// Fill a missing `description` field in frontmatter while preserving all other fields.
+/// Returns the new content, or the original if description already exists.
 fn fill_missing_description(content: &str, desc: &str) -> String {
     let body_start = crate::format::document::find_body_start(content);
-    let fm_block = &content[..body_start];
+    let leading_ws_len = content.len() - content.trim_start().len();
 
+    // No frontmatter at all → generate one
+    if body_start == leading_ws_len {
+        let fm = crate::format::frontmatter::generate_frontmatter(desc);
+        return format!("{fm}{}", &content[leading_ws_len..]);
+    }
+
+    let fm_block = &content[..body_start];
+    let body = &content[body_start..];
+
+    // Already has description → unchanged
     if fm_block.lines().any(|l| l.trim_start().starts_with("description:")) {
         return content.to_string();
     }
 
-    let body = &content[body_start..];
+    // Detect newline style from existing frontmatter
+    let nl = if fm_block.contains("\r\n") { "\r\n" } else { "\n" };
+    let leading_ws = &content[..leading_ws_len];
 
-    let fm_inner_start = if fm_block.starts_with("---\r\n") {
-        5
-    } else if fm_block.starts_with("---\n") {
-        4
-    } else {
-        return content.to_string();
-    };
+    // Locate opening "---" within fm_block and skip "---<nl>"
+    let open_offset = fm_block.find("---").unwrap_or(0);
+    let fm_inner = &fm_block[open_offset + 3 + nl.len()..];
 
-    let fm_inner = &fm_block[fm_inner_start..];
-    if let Some(close_start) = fm_inner.rfind("---") {
-        let inner_content = fm_inner[..close_start].trim_end();
-        format!("---\n{inner_content}\ndescription: {desc}\n---\n\n{body}")
+    // Locate closing "<nl>---" within fm_inner
+    let close_marker = format!("{nl}---");
+    if let Some(close_start) = fm_inner.rfind(&close_marker) {
+        let inner = &fm_inner[..close_start];
+        format!("{leading_ws}---{nl}{inner}{nl}description: {desc}{nl}---{nl}{body}")
     } else {
         content.to_string()
     }
