@@ -160,3 +160,28 @@ ules/ 及三层防护说明
 - 实施 `enjoyknowledge export --tool claude` + `--tool cursor` 命令（Rust + clap）
 - AGENTS.md 路由表模式生成
 - capture 工作流的 SoT 写入 + 必填字段校验
+
+---
+
+## [v1.4] — 2026-06-28（v0.2.1 收尾 + 行为反转记录）
+
+### v0.2.1 实施（15 commits）
+
+v0.2 收缩后首轮落地，覆盖 6 条命令线：
+
+- **export MVP**（`3470412`）：首发 2 工具导出 `--tool cursor` + `--tool claude`，AGENTS.md 路由表模式生成
+- **workflow onboard**（`4a768bf` → `cd9eea2`）：`enjoyknowledge workflow run onboard` 命令实现
+- **workflow capture**（`bdcd81f`）：`enjoyknowledge workflow run capture` 命令实现
+- **capture 路径修复**（`7454797` → `b5d2d15`）：v0.2.1 capture 路径大小写不一致修复
+- **doctor 4 项重写**（`3156695` → `d476e5f`）：4 项健康检查重写，删死代码 + 同步 INTERFACE-SPEC §7
+- **doctor 抽象修复**（`b7a84f5`）：check_agents_md / check_pending_archive 走 FilesystemSource
+- **UTF-8 修复 + WINDSULF 拼写**（`0a30738`）：修 UTF-8 mojibake + WINDSULF → WINDSURF
+
+**v0.2.1 共 15 commits（2026-06-27 ~ 2026-06-28）**
+
+### AiTool::from_str 行为反转记录
+
+- **v0.1 早期**：`AiTool::from_str` 未知字符串默认返回 `Some(AiTool::Auto)`（宽松默认）
+- **v0.1.1**：改为 `_ => None`（严格模式，未知字符串显式失败）—— **此行为反转未记录 CHANGELOG**
+- **v0.2.1（当前）**：保持 `_ => None`，10 个合法值（auto / cursor / claude / copilot / windsurf / cline / codex / trae / gemini / generic），大小写不敏感
+- **补测**：C2 任务补 17 个单元测试覆盖所有 variant + 大小写 + 未知字符串 + 回归保护

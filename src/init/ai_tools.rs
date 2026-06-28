@@ -253,3 +253,110 @@ const GEMINI_BLOCK: &str = r"
 This project uses enjoyknowledge to manage shared AI coding context.
 Run `enjoyknowledge grep <query>` to search relevant knowledge before starting work.
 ";
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── Variant mapping: every tool name → correct variant ──
+
+    #[test]
+    fn from_str_cursor() {
+        assert_eq!(AiTool::from_str("cursor"), Some(AiTool::Cursor));
+    }
+
+    #[test]
+    fn from_str_claude() {
+        assert_eq!(AiTool::from_str("claude"), Some(AiTool::Claude));
+    }
+
+    #[test]
+    fn from_str_copilot() {
+        assert_eq!(AiTool::from_str("copilot"), Some(AiTool::Copilot));
+    }
+
+    #[test]
+    fn from_str_windsurf() {
+        assert_eq!(AiTool::from_str("windsurf"), Some(AiTool::Windsurf));
+    }
+
+    #[test]
+    fn from_str_cline() {
+        assert_eq!(AiTool::from_str("cline"), Some(AiTool::Cline));
+    }
+
+    #[test]
+    fn from_str_codex() {
+        assert_eq!(AiTool::from_str("codex"), Some(AiTool::Codex));
+    }
+
+    #[test]
+    fn from_str_trae() {
+        assert_eq!(AiTool::from_str("trae"), Some(AiTool::Trae));
+    }
+
+    #[test]
+    fn from_str_gemini() {
+        assert_eq!(AiTool::from_str("gemini"), Some(AiTool::Gemini));
+    }
+
+    #[test]
+    fn from_str_generic() {
+        assert_eq!(AiTool::from_str("generic"), Some(AiTool::Generic));
+    }
+
+    #[test]
+    fn from_str_auto() {
+        assert_eq!(AiTool::from_str("auto"), Some(AiTool::Auto));
+    }
+
+    // ── Case insensitivity ──
+
+    #[test]
+    fn from_str_case_all_upper() {
+        assert_eq!(AiTool::from_str("CURSOR"), Some(AiTool::Cursor));
+    }
+
+    #[test]
+    fn from_str_case_mixed_pascal() {
+        assert_eq!(AiTool::from_str("Cursor"), Some(AiTool::Cursor));
+    }
+
+    #[test]
+    fn from_str_case_mixed_random() {
+        assert_eq!(AiTool::from_str("cUrSoR"), Some(AiTool::Cursor));
+    }
+
+    // ── Unknown / invalid input → None ──
+
+    #[test]
+    fn from_str_unknown_tool() {
+        assert_eq!(AiTool::from_str("notarealtool"), None);
+    }
+
+    #[test]
+    fn from_str_empty_string() {
+        assert_eq!(AiTool::from_str(""), None);
+    }
+
+    #[test]
+    fn from_str_whitespace_not_valid() {
+        // " auto" with leading space is not a valid tool name
+        assert_eq!(AiTool::from_str(" auto"), None);
+    }
+
+    // ── Regression: C1 fix must not break windsurf lookup ──
+
+    #[test]
+    fn from_str_windsurf_still_works_after_c1_fix() {
+        assert_eq!(AiTool::from_str("windsurf"), Some(AiTool::Windsurf));
+    }
+
+    // ── Auto is Auto, not a fallback to another tool ──
+
+    #[test]
+    fn from_str_auto_is_not_cursor() {
+        assert_eq!(AiTool::from_str("auto"), Some(AiTool::Auto));
+        assert_ne!(AiTool::from_str("auto"), Some(AiTool::Cursor));
+    }
+}
