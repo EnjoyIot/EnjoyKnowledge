@@ -385,17 +385,17 @@ fn default_path_for_kind(kind: &str) -> String {
         _ => kind, // architecture, business, contract(s), convention(s), context, template(s)
     };
     let file = match kind {
-        "gotcha" => "GOTCHAS.md",
-        "decision" => "DECISIONS.md",
-        "rule" => "RULES.md",
-        "pattern" => "PATTERNS.md",
-        "architecture" => "ARCHITECTURE.md",
-        "business" => "BUSINESS.md",
-        "contract" => "CONTRACTS.md",
-        "convention" => "CONVENTIONS.md",
-        "context" => "CONTEXT.md",
-        "template" => "TEMPLATES.md",
-        _ => "KNOWLEDGE.md",
+        "gotcha" => "gotchas.md",
+        "decision" => "decisions.md",
+        "rule" => "rules.md",
+        "pattern" => "patterns.md",
+        "architecture" => "architecture.md",
+        "business" => "business.md",
+        "contract" => "contracts.md",
+        "convention" => "conventions.md",
+        "context" => "context.md",
+        "template" => "templates.md",
+        _ => "knowledge.md",
     };
     format!("{dir}/{file}")
 }
@@ -743,6 +743,8 @@ mod tests {
 
         let output = run_capture(tmp.path(), &input).unwrap();
         assert!(output.written_path.contains("gotchas"));
+        // Confirm lowercase filename — prevents case-inconsistency regressions
+        assert!(output.written_path.ends_with("gotchas.md"));
         assert!(output.index_updated);
 
         // Verify file was created
@@ -753,6 +755,50 @@ mod tests {
         assert!(content.contains("## Test Gotcha"));
     }
 
+    /// Capture auto-routing produces lowercase paths for all 4 default-routing kinds.
+    #[test]
+    fn capture_auto_route_uses_lowercase_paths() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ek = setup_ek_dir(tmp.path());
+        fs::write(
+            ek.join("index.md"),
+            "---\ndescription: index\ntimestamp: 2026-01-01\n---\n\n# Index\n",
+        )
+        .unwrap();
+
+        for (kind, expected_path) in [
+            ("gotcha", "gotchas/gotchas.md"),
+            ("decision", "decisions/decisions.md"),
+            ("rule", "rules/rules.md"),
+            ("pattern", "patterns/patterns.md"),
+        ] {
+            let input = CaptureInput {
+                kind: kind.to_string(),
+                fields: {
+                    let mut m = HashMap::new();
+                    match kind {
+                        "gotcha" => { m.insert("trigger".to_string(), "t".to_string()); }
+                        "decision" => {
+                            m.insert("reversible".to_string(), "yes".to_string());
+                            m.insert("decided_at".to_string(), "2026-01-01".to_string());
+                        }
+                        "rule" => { m.insert("applies_to".to_string(), "all".to_string()); }
+                        _ => {}
+                    }
+                    m
+                },
+                body: format!("## {}\nTest body.", kind),
+                path: None,
+            };
+            let output = run_capture(tmp.path(), &input).unwrap();
+            assert_eq!(
+                output.written_path, expected_path,
+                "kind '{kind}' should route to '{expected_path}', got '{}'",
+                output.written_path
+            );
+        }
+    }
+
     // ── capture: append to existing file ───────────────────────────────
 
     #[test]
@@ -760,7 +806,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let ek = setup_ek_dir(tmp.path());
         // Create existing gotcha file
-        let existing_path = "gotchas/GOTCHAS.md";
+        let existing_path = "gotchas/gotchas.md";
         fs::create_dir_all(ek.join("gotchas")).unwrap();
         fs::write(
             ek.join(existing_path),
@@ -822,7 +868,7 @@ mod tests {
 
         let index_content = fs::read_to_string(ek.join("index.md")).unwrap();
         assert!(index_content.contains("[Error Flow Pattern]"));
-        assert!(index_content.contains("patterns/PATTERNS.md"));
+        assert!(index_content.contains("patterns/patterns.md"));
     }
 
     // ── capture: custom path ───────────────────────────────────────────
