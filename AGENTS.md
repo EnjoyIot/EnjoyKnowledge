@@ -27,9 +27,9 @@
 
 ## Current status
 
-- **阶段**: v0.2 收尾 + v0.2.1 工作流落地（设计基线 v4.2，2026-06-27；workflow 实现 2026-06-28）
-- **代码**: Rust CLI，10 命令（init/ls/tree/grep/cat/add/doctor/fix/export/workflow）—— 9 个已实现 + workflow 已实现 onboard + capture
-- **下次重点**: 任务 B1（doctor 真实砍 5→4 维，**前提：B1 待拍板砍哪个**） + C（修老债 P0-P3）
+- **阶段**: v0.2 收尾 + v0.2.1 工作流落地 + doctor 4 项重写（设计基线 v4.2，2026-06-27；workflow 实现 2026-06-28）
+- **代码**: Rust CLI，10 命令（init/ls/tree/grep/cat/add/doctor/fix/export/workflow）—— 9 个已实现 + workflow 已实现 onboard + capture + doctor 4 项新 check
+- **下次重点**: 任务 C（修老债 P0-P3：UTF-8 编码 / from_str 测试 / ls.rs 拆分）
 
 ## How to use this repo
 

@@ -301,11 +301,10 @@ enjoyknowledge init --template legal
 
 | 检查项 | 说明 |
 |---|---|
-| 缺 frontmatter | 每个 `.md` 有可解析 YAML frontmatter |
-| 缺 description | 强烈推荐有 |
-| 超出预算 | 单文件超过 20 条 `##` 条目时建议拆分 |
-| AGENTS.md 过期 | `ls` 输出与 AGENTS.md 摘要不一致 |
-| 待归档任务 | `knowledge-tasks/` 下已完成未归档的任务目录 |
+| 缺 frontmatter | 每个 `.md` 有可解析 YAML frontmatter（**v0.2**：不可解析 = Error）|
+| 缺必填字段 | 按 kind 校验：gotcha 必填 `trigger` / rule 必填 `applies_to` / decision 必填 `reversible` + `decided_at` 等（**v0.2 新增**）|
+| SoT 过期 | timestamp > 180 天 = Warning（**v0.2 新增**，建议 review）|
+| 多工具 export 一致性 | `.claude/skills/` 和 `.cursor/rules/` 有一个没生成 = Warning（**v0.2 新增**）|
 
 ### `doctor --ci`
 

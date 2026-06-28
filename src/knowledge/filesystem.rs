@@ -329,32 +329,4 @@ impl KnowledgeSource for FilesystemSource {
     fn all_entry_paths(&self) -> Vec<String> {
         self.walk_md_files(None).into_iter().map(|(_, rel)| rel).collect()
     }
-
-    fn read_agents_md(&self) -> Option<String> {
-        let path = self.project_root.join("AGENTS.md");
-        std::fs::read_to_string(path).ok()
-    }
-
-    fn list_knowledge_tasks(&self) -> Vec<(String, String)> {
-        let tasks_dir = self.project_root.join("knowledge-tasks");
-        if !tasks_dir.exists() {
-            return Vec::new();
-        }
-        walkdir::WalkDir::new(&tasks_dir)
-            .max_depth(3)
-            .into_iter()
-            .filter_map(std::result::Result::ok)
-            .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
-            .filter_map(|e| {
-                let rel = e
-                    .path()
-                    .strip_prefix(&self.project_root)
-                    .ok()?
-                    .to_string_lossy()
-                    .replace('\\', "/");
-                let content = std::fs::read_to_string(e.path()).ok()?;
-                Some((rel, content))
-            })
-            .collect()
-    }
 }

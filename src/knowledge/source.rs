@@ -22,11 +22,4 @@ pub trait KnowledgeSource {
     /// Return relative paths of all Markdown knowledge files.
     /// Used by doctor checks for comprehensive diagnostics.
     fn all_entry_paths(&self) -> Vec<String>;
-
-    /// Read the project's AGENTS.md content, if it exists.
-    fn read_agents_md(&self) -> Option<String>;
-
-    /// List knowledge-tasks .md files with their content.
-    /// Returns (`relative_path`, content) pairs.
-    fn list_knowledge_tasks(&self) -> Vec<(String, String)>;
 }
