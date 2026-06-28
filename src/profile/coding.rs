@@ -80,6 +80,7 @@ Describe how the system is deployed (monolith, microservices, etc.):
 
 const SEED_GOTCHAS: &str = r"---
 description: Gotchas, tricky bugs, edge cases, and workarounds discovered during development
+trigger: TODO - describe the triggering condition
 timestamp: __TIMESTAMP__
 ---
 
@@ -131,6 +132,8 @@ timestamp: __TIMESTAMP__
 
 const SEED_DECISIONS: &str = r"---
 description: Architecture Decision Records (ADR) -- key technical decisions and their rationale
+reversible: true
+decided_at: __TIMESTAMP__
 timestamp: __TIMESTAMP__
 ---
 

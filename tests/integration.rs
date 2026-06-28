@@ -123,12 +123,11 @@ fn doctor_ci_exits_nonzero_on_warnings() {
     let root = tmp.path();
     init_project(root);
 
-    // Create a file with missing description to trigger a warning
-    let ek = root.join(".enjoyknowledge").join("gotchas");
-    std::fs::create_dir_all(&ek).unwrap();
+    // Create a stale file (timestamp > 180 days) to trigger a staleness Warning
+    let ek = root.join(".enjoyknowledge");
     std::fs::write(
-        ek.join("test.md"),
-        "---\ntitle: Test Gotcha\ntimestamp: 2026-06-23\n---\n\n## Test\n- A simple gotcha\n",
+        ek.join("old.md"),
+        "---\ndescription: Old entry\ntags: [test]\ntimestamp: 2025-01-15\n---\n\n## Old\n- content\n",
     )
     .unwrap();
 

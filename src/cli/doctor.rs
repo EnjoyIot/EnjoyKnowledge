@@ -10,8 +10,8 @@ pub fn run_doctor(root: &Path, ci: bool) -> anyhow::Result<()> {
 
     let mut exit_code = 0i32;
 
-    // Run all 5 checks
-    for result in doctor::checks::run_all(&source) {
+    // Run all 4 v0.2 checks (GLOSSARY L51)
+    for result in doctor::checks::run_all(&source, root) {
         let prefix = match result.severity {
             doctor::checks::Severity::Error => {
                 exit_code = 3;
