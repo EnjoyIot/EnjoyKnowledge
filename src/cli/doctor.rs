@@ -11,7 +11,7 @@ pub fn run_doctor(root: &Path, ci: bool) -> anyhow::Result<()> {
     let mut exit_code = 0i32;
 
     // Run all 5 checks
-    for result in doctor::checks::run_all(&source, root) {
+    for result in doctor::checks::run_all(&source) {
         let prefix = match result.severity {
             doctor::checks::Severity::Error => {
                 exit_code = 3;

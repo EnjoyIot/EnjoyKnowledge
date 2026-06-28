@@ -16,7 +16,7 @@ pub fn run_fix(
     project_root: &Path,
     req: Option<&str>,
 ) -> anyhow::Result<()> {
-    let violations = checks::run_all(source, project_root);
+    let violations = checks::run_all(source);
 
     if violations.is_empty() {
         eprintln!("enjoyknowledge: nothing to fix — all checks pass");

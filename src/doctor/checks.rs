@@ -1,6 +1,5 @@
 //! doctor diagnostic checks for the knowledge base.
 use crate::knowledge::KnowledgeSource;
-use std::path::Path;
 
 /// Severity of a check finding.
 #[derive(Debug, Clone)]
@@ -20,14 +19,14 @@ pub struct CheckResult {
 }
 
 /// Run all health checks against the knowledge base.
-pub fn run_all(source: &dyn KnowledgeSource, project_root: &Path) -> Vec<CheckResult> {
+pub fn run_all(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
     let mut results = Vec::new();
 
     results.extend(check_frontmatter(source));
     results.extend(check_budget(source));
     results.extend(check_missing_description(source));
-    results.extend(check_agents_md(project_root));
-    results.extend(check_pending_archive(project_root));
+    results.extend(check_agents_md(source));
+    results.extend(check_pending_archive(source));
 
     results
 }
@@ -99,17 +98,16 @@ fn check_missing_description(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
 }
 
 /// Check 4: AGENTS.md includes the enjoyknowledge block.
-fn check_agents_md(project_root: &Path) -> Vec<CheckResult> {
-    let agents_path = project_root.join("AGENTS.md");
-    if !agents_path.exists() {
-        return vec![CheckResult {
-            file: "AGENTS.md".to_string(),
-            issue: "AGENTS.md not found — run `enjoyknowledge init` to create".to_string(),
-            severity: Severity::Warning,
-        }];
-    }
-    match std::fs::read_to_string(&agents_path) {
-        Ok(content) => {
+fn check_agents_md(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
+    match source.read_agents_md() {
+        None => {
+            return vec![CheckResult {
+                file: "AGENTS.md".to_string(),
+                issue: "AGENTS.md not found — run `enjoyknowledge init` to create".to_string(),
+                severity: Severity::Warning,
+            }];
+        }
+        Some(content) => {
             if !content.contains("enjoyknowledge") {
                 return vec![CheckResult {
                     file: "AGENTS.md".to_string(),
@@ -118,47 +116,113 @@ fn check_agents_md(project_root: &Path) -> Vec<CheckResult> {
                 }];
             }
         }
-        Err(_) => {
-            return vec![CheckResult {
-                file: "AGENTS.md".to_string(),
-                issue: "unreadable file".to_string(),
-                severity: Severity::Error,
-            }];
-        }
     }
     Vec::new()
 }
 
 /// Check 5: Completed tasks in knowledge-tasks/ that are pending archive.
-fn check_pending_archive(project_root: &Path) -> Vec<CheckResult> {
+fn check_pending_archive(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
     let mut results = Vec::new();
-    let tasks_dir = project_root.join("knowledge-tasks");
-    if !tasks_dir.exists() {
-        return results;
-    }
 
-    let walker = walkdir::WalkDir::new(&tasks_dir)
-        .max_depth(3)
-        .into_iter()
-        .filter_map(std::result::Result::ok)
-        .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"));
-
-    for entry in walker {
-        let rel = entry
-            .path()
-            .strip_prefix(project_root)
-            .unwrap_or_else(|_| entry.path())
-            .to_string_lossy()
-            .replace('\\', "/");
-        if let Ok(content) = std::fs::read_to_string(entry.path()) {
-            if content.contains("status: completed") && !rel.contains("archive") {
-                results.push(CheckResult {
-                    file: rel,
-                    issue: "pending archive (completed task not in archive)".to_string(),
-                    severity: Severity::Warning,
-                });
-            }
+    for (rel, content) in source.list_knowledge_tasks() {
+        if content.contains("status: completed") && !rel.contains("archive") {
+            results.push(CheckResult {
+                file: rel,
+                issue: "pending archive (completed task not in archive)".to_string(),
+                severity: Severity::Warning,
+            });
         }
     }
     results
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::knowledge::FilesystemSource;
+
+    fn make_source(project_root: &std::path::Path) -> FilesystemSource {
+        let ek = project_root.join(".enjoyknowledge");
+        std::fs::create_dir_all(&ek).unwrap();
+        FilesystemSource::new(ek, project_root)
+    }
+
+    // ── check_agents_md ──
+
+    #[test]
+    fn agents_md_absent() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let source = make_source(dir.path());
+        let results = check_agents_md(&source);
+        assert_eq!(results.len(), 1);
+        assert!(results[0].issue.contains("not found"));
+    }
+
+    #[test]
+    fn agents_md_missing_enjoyknowledge_section() {
+        let dir = tempfile::TempDir::new().unwrap();
+        std::fs::write(dir.path().join("AGENTS.md"), "# Project\n\njust random content\n").unwrap();
+        let source = make_source(dir.path());
+        let results = check_agents_md(&source);
+        assert_eq!(results.len(), 1);
+        assert!(results[0].issue.contains("missing enjoyknowledge"));
+    }
+
+    #[test]
+    fn agents_md_has_enjoyknowledge_section() {
+        let dir = tempfile::TempDir::new().unwrap();
+        std::fs::write(dir.path().join("AGENTS.md"), "# Project\n\nenjoyknowledge setup here\n")
+            .unwrap();
+        let source = make_source(dir.path());
+        let results = check_agents_md(&source);
+        assert!(results.is_empty());
+    }
+
+    // ── check_pending_archive ──
+
+    #[test]
+    fn pending_archive_completed_task() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let task_dir = dir.path().join("knowledge-tasks").join("test-req");
+        std::fs::create_dir_all(&task_dir).unwrap();
+        std::fs::write(task_dir.join("notes.md"), "status: completed\n\n## Done\nall good.\n")
+            .unwrap();
+        let source = make_source(dir.path());
+        let results = check_pending_archive(&source);
+        assert_eq!(results.len(), 1);
+        assert!(results[0].issue.contains("pending archive"));
+        assert!(results[0].file.contains("test-req"));
+    }
+
+    #[test]
+    fn pending_archive_not_completed() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let task_dir = dir.path().join("knowledge-tasks").join("test-req");
+        std::fs::create_dir_all(&task_dir).unwrap();
+        std::fs::write(task_dir.join("notes.md"), "status: in-progress\n\n## Doing\nworking.\n")
+            .unwrap();
+        let source = make_source(dir.path());
+        let results = check_pending_archive(&source);
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn pending_archive_skips_archived() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let task_dir = dir.path().join("knowledge-tasks").join(".archive").join("old-req");
+        std::fs::create_dir_all(&task_dir).unwrap();
+        std::fs::write(task_dir.join("notes.md"), "status: completed\n\n## Archived entry\n")
+            .unwrap();
+        let source = make_source(dir.path());
+        let results = check_pending_archive(&source);
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn pending_archive_no_knowledge_tasks_dir() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let source = make_source(dir.path());
+        let results = check_pending_archive(&source);
+        assert!(results.is_empty());
+    }
 }

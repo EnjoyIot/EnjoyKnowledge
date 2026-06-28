@@ -777,17 +777,21 @@ mod tests {
                 fields: {
                     let mut m = HashMap::new();
                     match kind {
-                        "gotcha" => { m.insert("trigger".to_string(), "t".to_string()); }
+                        "gotcha" => {
+                            m.insert("trigger".to_string(), "t".to_string());
+                        }
                         "decision" => {
                             m.insert("reversible".to_string(), "yes".to_string());
                             m.insert("decided_at".to_string(), "2026-01-01".to_string());
                         }
-                        "rule" => { m.insert("applies_to".to_string(), "all".to_string()); }
+                        "rule" => {
+                            m.insert("applies_to".to_string(), "all".to_string());
+                        }
                         _ => {}
                     }
                     m
                 },
-                body: format!("## {}\nTest body.", kind),
+                body: format!("## {kind}\nTest body."),
                 path: None,
             };
             let output = run_capture(tmp.path(), &input).unwrap();
