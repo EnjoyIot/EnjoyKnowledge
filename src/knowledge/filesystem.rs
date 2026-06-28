@@ -20,7 +20,7 @@ impl FilesystemSource {
         Self { root: root.into(), project_root: project_root.into() }
     }
 
-    // 鈹€鈹€ helpers 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    // ====== helpers ======
 
     /// Build a case-insensitive regex from a literal query string.
     fn build_pattern(query: &str) -> Regex {
@@ -143,7 +143,7 @@ impl KnowledgeSource for FilesystemSource {
         Ok(entries)
     }
 
-    // 鈹€鈹€ tree_entries 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    // ====== tree_entries ======
     fn tree_entries(&self, bare: bool) -> anyhow::Result<Vec<KnowledgeEntry>> {
         let all_files = self.walk_md_files(None);
         #[allow(clippy::type_complexity)]
@@ -199,13 +199,13 @@ impl KnowledgeSource for FilesystemSource {
         Ok(entries)
     }
 
-    // 鈹€鈹€ read_file 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    // ====== read_file ======
     fn read_file(&self, path: &str) -> anyhow::Result<String> {
         let full = self.root.join(path);
         Ok(std::fs::read_to_string(full)?)
     }
 
-    // 鈹€鈹€ search 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    // ====== search ======
     fn search(&self, query: &SearchQuery) -> anyhow::Result<Vec<SearchResult>> {
         let pattern = Self::build_pattern(&query.pattern);
         let mut results: Vec<SearchResult> = Vec::new();
@@ -262,7 +262,7 @@ impl KnowledgeSource for FilesystemSource {
                             continue;
                         }
                     } else if !query.type_filter.is_empty() || !query.tags.is_empty() {
-                        // No frontmatter but filters active 鈫?skip
+                        // No frontmatter but filters active -> skip
                         continue;
                     }
                 }
@@ -302,7 +302,7 @@ impl KnowledgeSource for FilesystemSource {
         Ok(results)
     }
 
-    // 鈹€鈹€ add_entry 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    // ====== add_entry ======
     fn add_entry(&self, path: &str, content: &str) -> anyhow::Result<()> {
         let full = self.root.join(path);
 
