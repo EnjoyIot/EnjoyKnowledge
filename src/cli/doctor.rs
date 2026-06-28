@@ -1,4 +1,4 @@
-//! `enjoyknowledge doctor` / `fix` �?diagnose and auto-repair the knowledge base.
+//! `enjoyknowledge doctor` / `fix` — diagnose and auto-repair the knowledge base.
 use crate::doctor;
 use crate::knowledge::FilesystemSource;
 use crate::EK_DIR;
@@ -24,7 +24,7 @@ pub fn run_doctor(root: &Path, ci: bool) -> anyhow::Result<()> {
                 "\u{26a0}"
             }
         };
-        println!("{prefix} {} �?{}", result.file, result.issue);
+        println!("{prefix} {} — {}", result.file, result.issue);
     }
 
     if exit_code == 0 {

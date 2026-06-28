@@ -7,7 +7,7 @@ use std::path::Path;
 /// Generate the `.enjoyknowledge/` skeleton and `knowledge-tasks/` under `project_root`.
 ///
 /// The skeleton shape is determined by `profile.directories()` and
-/// `profile.seed_files()`, so different contexts (coding, design, research, �?
+/// `profile.seed_files()`, so different contexts (coding, design, research, …)
 /// produce different directory trees.
 pub fn generate_skeleton(project_root: &Path, profile: &dyn Profile) -> anyhow::Result<()> {
     let ek = project_root.join(EK_DIR);
@@ -132,7 +132,7 @@ Above is the current knowledge base contents. Before starting any coding task, c
 
 | Command | Why |
 |---|---|
-| `enjoyknowledge ls` | List files with descriptions �?know what exists without opening files |
+| `enjoyknowledge ls` | List files with descriptions — know what exists without opening files |
 | `enjoyknowledge grep <pattern>` | Search inside `##` sections, not raw line numbers |
 | `enjoyknowledge cat <path>` | Read a knowledge file (path auto-prefixed with `.enjoyknowledge/`) |
 | `enjoyknowledge add <path> "<content>"` | Record a new entry (auto-generates OKF frontmatter) |
