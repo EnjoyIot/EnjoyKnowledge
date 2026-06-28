@@ -24,6 +24,13 @@
 - **stage/AGENTS.md 加 Draft frontmatter 必填规范** — AI 写 `stage/drafts/<id>.md` 时必填 kind-specific 字段（gotcha.trigger / rule.applies_to / decision.reversible+decided_at），promote 后 `ek doctor` 直接通过
   - 之前：AI 写 gotcha draft 缺 trigger → `ek promote`（4 字段基础）→ `ek doctor` 报 "gotcha missing required field 'trigger'"
   - 之后：stage/AGENTS.md 明确列出 3 类必填 + 例子 + "AI must fill these when writing drafts" 强提示
-  - 原因：R6 教训链 v9 "看起来错 ≠ 真错" — promote 强加 `trigger: "manual"` 默认值会污染灵魂字段，**规范放在文档层比工具层更对**
+  - 原因：R6 教训链 v9 "看起来错≠真错" — promote 强加 `trigger: "manual"` 默认值会污染灵魂字段，**规范放在文档层比工具层更对**
+
+### Fixed (v0.4.2)
+- **`ek fix` Fix 1 步骤保留 frontmatter 字段** — 之前 `ek fix` 调 `generate_frontmatter(description)` 只输出 2 字段（description + timestamp），**完全覆盖 promote 写的 4 字段**（id/kind/created/author）。改为**字段合并**（追加缺失 description，保留所有已有字段）。
+  - 之前：v0.4.1 enjoyiot-kaiyuan 真实工作流触发 — `ek promote` → `ek fix` → 4 字段全丢 → 必须手动回退
+  - 之后：v0.4.2 真实 dogfooding 验证 — promote 4 字段保留 + description 用 `## heading` 自动推
+  - 原因：R6 教训链 v12.1 "R3 评估问题要看代码" + v12.2 "字段合并 vs 字段重写"
+  - 测试：3 新单元测试（4 字段保留 / 已有 description 跳过 / trigger+applies_to 多字段保留）
 
 [Unreleased]: https://github.com/enjoyknowledge/enjoyknowledge/compare/v0.1.0...HEAD
