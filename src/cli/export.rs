@@ -40,42 +40,45 @@ fn parse_tool(tool_arg: &str) -> anyhow::Result<AiTool> {
     Ok(tool)
 }
 
-/// 运行 export 命令。
+/// 运行 export 命令。v0.2.1 支持逗号分隔多工具（如 `claude,cursor`）。
 ///
 /// # Arguments
 /// - `project_root`: 项目根路径（通常是 `.`）
-/// - `tool_arg`: `--tool` 参数（cursor / claude / auto / 其他 7 工具）
+/// - `tool_arg`: `--tool` 参数（cursor / claude / auto / 逗号分隔组合）
 /// - `dry_run`: true = 只打印不写
 pub fn run(project_root: &Path, tool_arg: &str, dry_run: bool) -> anyhow::Result<()> {
-    let tool = parse_tool(tool_arg)?;
+    let tools: Vec<AiTool> = tool_arg
+        .split(',')
+        .map(|s| parse_tool(s.trim()))
+        .collect::<anyhow::Result<Vec<_>>>()?;
 
-    if dry_run {
-        println!(
-            "[dry-run] would generate {} entry file at {}",
-            tool.label(),
-            project_root.display()
-        );
-        match tool {
-            AiTool::Cursor => {
-                println!("  → .cursor/rules/enjoyknowledge.mdc");
-            }
-            AiTool::Claude => {
-                println!("  → .claude/skills/enjoyknowledge.md");
-            }
-            _ => unreachable!("parse_tool 已过滤"),
+    // Deduplicate while preserving order
+    let mut seen = std::collections::HashSet::new();
+    let tools: Vec<_> = tools.into_iter().filter(|t| seen.insert(t.clone())).collect();
+
+    for tool in &tools {
+        if dry_run {
+            println!(
+                "[dry-run] would generate {} entry file at {}",
+                tool.label(),
+                project_root.display()
+            );
+            let target = match tool {
+                AiTool::Cursor => ".cursor/rules/enjoyknowledge.mdc",
+                AiTool::Claude => ".claude/skills/enjoyknowledge.md",
+                _ => unreachable!("parse_tool 已过滤"),
+            };
+            println!("  → {target}");
+        } else {
+            generate_tool_files(project_root, *tool)?;
+            let target = match tool {
+                AiTool::Cursor => ".cursor/rules/enjoyknowledge.mdc",
+                AiTool::Claude => ".claude/skills/enjoyknowledge.md",
+                _ => unreachable!("parse_tool 已过滤"),
+            };
+            println!("✓ Generated {} entry file: {}", tool.label(), target);
         }
-        return Ok(());
     }
-
-    generate_tool_files(project_root, tool)?;
-
-    let target = match tool {
-        AiTool::Cursor => ".cursor/rules/enjoyknowledge.mdc",
-        AiTool::Claude => ".claude/skills/enjoyknowledge.md",
-        _ => unreachable!("parse_tool 已过滤"),
-    };
-
-    println!("✓ Generated {} entry file: {}", tool.label(), target);
 
     Ok(())
 }
@@ -117,5 +120,49 @@ mod tests {
         assert_eq!(SUPPORTED_TOOLS.len(), 2);
         assert!(SUPPORTED_TOOLS.contains(&AiTool::Cursor));
         assert!(SUPPORTED_TOOLS.contains(&AiTool::Claude));
+    }
+
+    // ── multi-tool (comma-separated) ────────────────────────────────────
+
+    #[test]
+    fn multi_tool_parse_individual() {
+        let tools: Vec<AiTool> = "claude"
+            .split(',')
+            .map(|s| parse_tool(s.trim()).unwrap())
+            .collect();
+        assert_eq!(tools, vec![AiTool::Claude]);
+    }
+
+    #[test]
+    fn multi_tool_parse_two() {
+        let tools: Vec<AiTool> = "claude,cursor"
+            .split(',')
+            .map(|s| parse_tool(s.trim()).unwrap())
+            .collect();
+        assert_eq!(tools, vec![AiTool::Claude, AiTool::Cursor]);
+    }
+
+    #[test]
+    fn multi_tool_parse_auto_means_claude() {
+        let tools: Vec<AiTool> = "auto"
+            .split(',')
+            .map(|s| parse_tool(s.trim()).unwrap())
+            .collect();
+        assert_eq!(tools, vec![AiTool::Claude]);
+    }
+
+    #[test]
+    fn multi_tool_parse_with_whitespace() {
+        let tools: Vec<AiTool> = " claude , cursor "
+            .split(',')
+            .map(|s| parse_tool(s.trim()).unwrap())
+            .collect();
+        assert_eq!(tools, vec![AiTool::Claude, AiTool::Cursor]);
+    }
+
+    #[test]
+    fn multi_tool_parse_unsupported_errors() {
+        let err = "codex".split(',').map(|s| parse_tool(s.trim())).collect::<anyhow::Result<Vec<_>>>().unwrap_err();
+        assert!(err.to_string().contains("暂未实现"));
     }
 }

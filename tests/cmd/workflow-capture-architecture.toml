@@ -1,4 +1,4 @@
 bin.name = "enjoyknowledge"
-args = ["export", "--tool", "claude"]
+args = ["workflow", "capture", "--kind", "architecture", "--body", "Y"]
 fs.cwd = "../fixtures/minimal-project"
 fs.sandbox = true

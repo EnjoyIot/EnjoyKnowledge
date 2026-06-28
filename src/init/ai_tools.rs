@@ -14,7 +14,7 @@
 use std::path::Path;
 
 /// Supported AI coding tools.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AiTool {
     Auto,
     Cursor,

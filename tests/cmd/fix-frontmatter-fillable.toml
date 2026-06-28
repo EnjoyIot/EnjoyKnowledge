@@ -1,0 +1,4 @@
+bin.name = "enjoyknowledge"
+args = ["fix"]
+fs.cwd = "../fixtures/fix-missing-desc"
+fs.sandbox = true

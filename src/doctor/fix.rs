@@ -10,6 +10,23 @@ use crate::doctor::checks;
 use crate::knowledge::{FilesystemSource, KnowledgeSource};
 use std::path::Path;
 
+/// v0.2.1 diagnostic: scan for files with valid frontmatter but missing description.
+/// This runs independently of `checks::run_all` because v0.2 checks don't yet
+/// produce "missing description" diagnostics (v0.3 refactor will unify this).
+fn scan_missing_descriptions(source: &FilesystemSource) -> Vec<String> {
+    let mut files = Vec::new();
+    for rel in &source.all_entry_paths() {
+        if let Ok(content) = source.read_file(rel) {
+            if let Some(fm) = crate::format::frontmatter::parse_frontmatter(&content) {
+                if fm.description.is_none() || fm.description.as_deref() == Some("") {
+                    files.push(rel.clone());
+                }
+            }
+        }
+    }
+    files
+}
+
 /// Run auto-fix for the knowledge base, optionally scoped to a specific task.
 pub fn run_fix(
     source: &FilesystemSource,
@@ -18,14 +35,18 @@ pub fn run_fix(
 ) -> anyhow::Result<()> {
     let violations = checks::run_all(source, project_root);
 
-    if violations.is_empty() {
+    // v0.2.1: also scan for missing descriptions independently (v0.2 checks don't
+    // produce "missing description" diagnostics yet — v0.3 refactor will unify).
+    let missing_desc_from_scan = scan_missing_descriptions(source);
+
+    if violations.is_empty() && missing_desc_from_scan.is_empty() {
         eprintln!("enjoyknowledge: nothing to fix — all checks pass");
         return Ok(());
     }
 
     // Group violations by category
     let mut budget_files: Vec<String> = Vec::new();
-    let mut missing_desc: Vec<String> = Vec::new();
+    let mut missing_desc: Vec<String> = missing_desc_from_scan;
     let mut has_agents_issue = false;
     let mut has_pending_archive = false;
 
@@ -40,6 +61,10 @@ pub fn run_fix(
             has_pending_archive = true;
         }
     }
+
+    // Deduplicate missing_desc
+    missing_desc.sort();
+    missing_desc.dedup();
 
     // Fix 1: Fill missing descriptions
     for rel in &missing_desc {
