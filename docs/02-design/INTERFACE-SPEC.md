@@ -19,20 +19,26 @@
 
 ## 2. 目录结构
 
-### 2.1 for Coding 默认结构
+### 2.1 for Coding 默认结构 (v0.4)
 
 ```
 <项目根目录>/
-├── AGENTS.md               # 必需，AI 入口（内含知识摘要推送块）
-├── .enjoyknowledge/
-│   ├── architecture/       # 架构知识
-│   ├── gotchas/            # 踩坑记录
-│   ├── patterns/           # 最佳实践
-│   ├── business/           # 业务规则
-│   ├── decisions/          # 架构决策记录
-│   ├── index.md            # OKF 保留，目录的目录
-└── knowledge-tasks/        # 可选，任务过程材料；审核后再迁入 .enjoyknowledge/
-    └── <REQ-ID>/
+├── AGENTS.md                      # 必需，AI 入口（内嵌 ls 摘要）
+├── .enjoyknowledge/               # 长期知识 SoT（人类编辑 / 审核）
+│   ├── architecture/              # 架构知识
+│   ├── gotchas/                   # 踩坑记录
+│   ├── patterns/                  # 最佳实践
+│   ├── business/                  # 业务规则
+│   ├── decisions/                 # 架构决策记录
+│   ├── index.md                   # OKF 保留，目录的目录
+│   ├── log.md
+│   └── AGENTS.md                  # KB 写入规则 (人类写, AI 读)
+└── .enjoyknowledge_stage/         # 短期任务工作区 (AI 自动写, 人类审核)
+    ├── tasks/<task-id>/           # 8 文件: requirements/design/plan/changes/tests/delivery/summary/review
+    ├── drafts/                    # 待 promote 草稿
+    ├── workflow/                  # 工作流定义 (v0.2 保留)
+    ├── .archive/                  # TTL 过期 (默认 180 天)
+    └── AGENTS.md                  # 任务写入规范 (AI 读)
 ```
 
 ### 2.2 规则
@@ -42,8 +48,10 @@
 | 深度 | `.enjoyknowledge/` 内不超过 2 层：`category/file.md` |
 | 目录名即分类 | 文件所在目录名决定了它的概念类型，无需在 frontmatter 中重复声明 |
 | 文件名自解释 | 文件名表达主题，无需在文件名中重复目录名 |
-| 应用目录 | `architecture/`、`gotchas/`、`knowledge-tasks/` 等属于 for Coding，不属于 Core 强制目录 |
-| 任务暂存区 | `knowledge-tasks/<REQ-ID>/` 与 `.enjoyknowledge/` 并列，不进入长期知识索引，审核后再迁入 |
+| 应用目录 | `architecture/`、`gotchas/`、`.enjoyknowledge_stage/` 等属于 for Coding，不属于 Core 强制目录 |
+| 任务暂存区 | `.enjoyknowledge_stage/tasks/<task-id>/` 与 `.enjoyknowledge/` 并列，不进入长期知识索引，审核后再迁入 |
+| 物理分离 | v0.4 起：`.enjoyknowledge_stage/`（AI 写）与 `.enjoyknowledge/`（人类写）严格物理分离，不靠 frontmatter 字段区分 |
+| frontmatter 极简 | v0.4 起：KB 文件 frontmatter 仅 4 字段（id / kind / created / author），不附加 trust/lifecycle/scope 等元字段 |
 
 ---
 
@@ -295,29 +303,49 @@ enjoyknowledge init --template legal
 
 ---
 
-## 7. doctor 检查
+## 7. v0.4 新增命令 (极简上下文层)
 
-`enjoyknowledge doctor` 是知识文件的 linter。
+### 7.1 `ek init` 增强 (v0.4)
 
-| 检查项 | 说明 |
+`enjoyknowledge init` 在 v0.4 起除原有 `.enjoyknowledge/` 外，同时创建 `.enjoyknowledge_stage/`：
+
+| 新增内容 | 用途 |
 |---|---|
-| 缺 frontmatter | 每个 `.md` 有可解析 YAML frontmatter（**v0.2**：不可解析 = Error）|
-| 缺必填字段 | 按 kind 校验：gotcha 必填 `trigger` / rule 必填 `applies_to` / decision 必填 `reversible` + `decided_at` 等（**v0.2 新增**）|
-| SoT 过期 | timestamp > 180 天 = Warning（**v0.2 新增**，建议 review）|
-| 多工具 export 一致性 | `.claude/skills/` 和 `.cursor/rules/` 有一个没生成 = Warning（**v0.2 新增**）|
+| `.enjoyknowledge_stage/tasks/_template/` | 8 文件模板 (requirements/design/plan/changes/tests/delivery/summary/review) |
+| `.enjoyknowledge_stage/drafts/` | 待 promote 草稿 (AI 写, 人类审核后 promote) |
+| `.enjoyknowledge_stage/workflow/` | v0.2 保留工作流 YAML (init 自动复制 onboard.yaml + capture.yaml) |
+| `.enjoyknowledge_stage/.archive/` | TTL 过期目录 (默认 180 天) |
+| `.enjoyknowledge/AGENTS.md` | KB 写入规则 (人类写, AI 读) |
+| `.enjoyknowledge_stage/AGENTS.md` | 任务写入规范 (AI 读) |
 
-### `doctor --ci`
+### 7.2 `ek promote` (v0.4 新增)
 
-`enjoyknowledge doctor --ci` 用于 CI 流水线：
-- 任何 warning 也触发非零退出码（非 CI 模式下 warning 不阻塞）
-- 退出码 3 表示格式问题（含 warning）
+```bash
+enjoyknowledge promote <draft.md> --to <kind>
+```
+
+- **作用**：把 `.enjoyknowledge_stage/drafts/<name>.md` 落地到 `.enjoyknowledge/<kind>/<name>.md`
+- **frontmatter**：4 字段极简 (id / kind / created / author)，不附加元字段
+- **触发**：必须人类手动执行（AI 不自动 promote）
+
+### 7.3 `ek stage clean` (v0.4 新增)
+
+```bash
+enjoyknowledge stage clean [--dry-run] [--force] [--older-than <days>]
+```
+
+- **作用**：清理 `.enjoyknowledge_stage/.archive/` 过期文件
+- **默认 TTL**：180 天
+- **`--dry-run`**：列出将清理的文件，不删除
+- **`--force`**：跳过确认
+- **`--older-than <days>`**：覆盖默认 180 天
 
 ---
 
 ## 8. 错误码
 
-| 码 | 含义 |
-|---|---|
+|| 码 | 含义 |
+|---|---|---|
 | 0 | 成功 |
 | 1 | 输入参数错误 |
 | 2 | 文件/路径不存在 |

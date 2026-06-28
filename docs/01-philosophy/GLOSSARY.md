@@ -141,6 +141,21 @@ AGENTS.md 的核心内容（v4 引入）。**不复制 SoT 内容，只放链接
 ### SoT
 Source of Truth。`v0.4.2`（2026-06-08）后：3 表 SN 软连接 + `pipeline_node` 是 SoT 主体（litree 经验）。enjoyknowledge v4 把这概念借来——**唯一真值源 = `.enjoyknowledge/` 下的 markdown 文件**；v0.2 首发 2 工具（Claude + Cursor）的入口文件都是 export 出来的副本，不是 SoT。**"Rule-Code 同步检测"（致命反模式）**：SoT 缺失时不能静默降级，必须显式失败。
 
+### stage / .enjoyknowledge_stage/
+v0.4 极简上下文层。`.enjoyknowledge_stage/` 是项目根下的**物理暂存区**（与 `.enjoyknowledge/` 并列），用于 AI 工具在开发任务过程中**自动写入**过程材料。**3 子目录**：`tasks/<task-id>/`（8 文件结构：requirements/design/plan/changes/tests/delivery/summary/review）/ `drafts/`（待 promote 草稿）/ `.archive/`（TTL 过期）。**写入规则**（`.enjoyknowledge_stage/AGENTS.md` 描述）：AI 可自由写 stage/，但**不直接写** `.enjoyknowledge/*.md`（除非人类显式说"帮我加"）。**不自动 promote**（必须人类操作 `ek promote`）。**对比知识-tasks/**：v0.2 的 `knowledge-tasks/` 已被 v0.4 替换为 `.enjoyknowledge_stage/`（明确归属 + 隐藏目录 + AGENTS.md 指令）。
+
+### promote
+v0.4 新命令。`enjoyknowledge promote <draft.md> --to <kind>`：把 `.enjoyknowledge_stage/drafts/<name>.md` 落地到 `.enjoyknowledge/<kind>/<name>.md`，**自动添加 4 字段 frontmatter**（id/kind/created/author）。**硬规则**：必须人类手动执行，AI 不自动 promote。**用途**：AI 写的草稿在 stage/ 累积，人类审核后通过 promote 沉淀到 KB。详见 [INTERFACE-SPEC.md §7.2](../02-design/INTERFACE-SPEC.md)。
+
+### stage-clean
+v0.4 新命令。`enjoyknowledge stage clean [--dry-run] [--force] [--older-than <days>]`：清理 `.enjoyknowledge_stage/.archive/` 过期文件。**默认 TTL 180 天**（与 doctor 报告 SoT 过期一致）。**`--dry-run`** 列出将清理文件不删除；**`--force`** 跳过确认；**`--older-than`** 覆盖默认天数。详见 [INTERFACE-SPEC.md §7.3](../02-design/INTERFACE-SPEC.md)。
+
+### 8 文件结构
+v0.4 stage 任务模板。`tasks/<task-id>/` 下 AI 自动维护 8 个文件：**requirements.md** (P1 需求分析，硬门 1) / **design.md** (P2 方案设计，硬门 2) / **plan.md** (P2b 实施计划) / **changes.md** (P3 编码变更，append-only) / **tests.md** (P4 测试报告) / **delivery.md** (P5 交付，硬门 3) / **summary.md** (跨阶段总览) / **review.md** (人类 review checklist，AI 预填 + 人类勾选)。**3 硬门**：P1 需求 / P2 设计 / P5 交付必须人类批准；P3 编码 + P4 测试无硬门（软门：mid-checkpoint）。**写入时机 = 渐进式累积**：需求 → 方案 → 编码 → 测试 → 交付，每节点触发对应文件追加写入（**不是完成时一次写**）。
+
+### 极简上下文层
+v0.4 核心定位。在 v0.2 "一份 markdown 多个 AI 工具"之上，加 1 层"任务工作区"。**4 极简原则**（Jay 6 次反馈沉淀）：(1) 人类是 authority anchor；(2) 物理分离 > 状态字段；(3) AGENTS.md > frontmatter；(4) 简单 > 完整。**砍掉的能力**：C10 trust 体系 / C11 lifecycle 4 状态机 / C12 sync 检测 / frontmatter 6 字段扩展 / `ek capture --from-commit` / 独立 `workflow/` 目录。详见 [POSITIONING.md §5 v0.4 极简上下文层](../00-vision/POSITIONING.md) + [v0.4-final-design.md](C:/Users/jay/Documents/why-workspace/v0.4-final-design.md)。
+
 ### sync
 ~~5 个核心工作流之一（W5）~~ **v0.2 重命名为 `export`**（1 工具时 sync 撒谎，export 诚实单向导出）。详见 [export](#export) + workflows.md §4.3。
 
@@ -190,6 +205,8 @@ enjoyknowledge Core 的 CLI 命令集：`add`（带 schema 校验的创建）/ `
 ---
 
 ## 变更记录
+
+- **2026-06-28 v0.4 同步**：加 5 个新词条——`stage` (`.enjoyknowledge_stage/`) / `promote` (v0.4 新命令) / `stage-clean` (v0.4 新命令) / `8 文件结构` (stage 任务模板) / `极简上下文层` (v0.4 核心定位 + 4 原则 + 砍掉的能力)。**对应 ROADMAP v0.4 段** + **POSITIONING §5 v0.4 极简上下文层**。**取代 v0.2 词条**：`knowledge-tasks/` → `stage` (v0.4 物理分离 + 隐藏 + AGENTS.md 指令)。
 
 - **2026-06-27 v4.2 修订（part 2）**：v0.2 砍 5→2 工作流（onboard + capture，删 preflight/prd-preprocess）—— workflows.md §4.2 preflight 整段删 + §4.5 prd-preprocess 整段删，§4.3→§4.2 / §4.4→§4.3 章节号顺移，GLOSSARY.md 对应 3 处章节号引用同步改。preflight + prd-preprocess 词条改"v4.2 永久禁用"（保留历史描述）。workflows 词条 5 YAML → 2 YAML。
 - **2026-06-27 v4 重写**：删 v3 残留（AGENTS.md 推送块 / 3 层分离 / `.enjoyknowledge/` 默认目录硬编码 / OKF 保留名 / 推送通道 vs 拉取通道二分）；加 v4 概念（路由表 / 5 工作流 / 9 工具 / SoT / frontmatter schema / `trigger` 灵魂字段 / 路由表 / managed section）。

@@ -180,4 +180,40 @@ Layer 1: 文件系统
 
 ---
 
-*文档版本: v4.2 | 最后更新: 2026-06-27 | 调研依据: GitHub API 90+ 竞品 + Reddit r/ClaudeCode/r/cursor/r/vibecoding/r/GithubCopilot 社区证据 + codex + claude 双 AI 砍功能验证*
+## 5. v0.4 极简上下文层 (2026-06-28 完工)
+
+v0.4 在 v0.2 "一份 markdown 多个 AI 工具"的基础上，加 1 层"任务工作区"：
+
+```
+项目根/
+├── .enjoyknowledge/         ← 长期知识 SoT (人类写, AI 只读)
+└── .enjoyknowledge_stage/   ← 任务暂存区 (AI 自动写, 人类审核)
+    ├── tasks/<task-id>/     # 8 文件结构: requirements/design/plan/changes/tests/delivery/summary/review
+    ├── drafts/              # AI 写的草稿, 人类 `ek promote` 后才落地到 KB
+    └── .archive/            # TTL 过期 (180 天)
+```
+
+**3 个新能力**：
+1. `ek init` 增强：创建 `.enjoyknowledge_stage/` + 8 文件模板 + 2 个 AGENTS.md
+2. `ek promote <draft> --to <kind>`：把 stage 草稿落地到 KB (4 字段 frontmatter)
+3. `ek stage clean`：TTL 清理 `.archive/` (默认 180 天)
+
+**4 极简原则** (Jay 6 次反馈沉淀)：
+1. **人类是 authority anchor**——KB 所有内容都是人类手动 / 显式让 AI 写
+2. **物理分离 > 状态字段**——`stage/` vs `KB/` 用物理目录区分，不靠 frontmatter `stage:` 字段
+3. **AGENTS.md > frontmatter**——AI 读 markdown 内容比 YAML 字段更直接
+4. **简单 > 完整**——能用的工具 > 完美的设计 (砍 C10 trust / C11 lifecycle / C12 sync)
+
+**砍掉的能力** (调研 → 反思 → 砍)：
+- ❌ C10 trust 体系 (confidence/source/last_verified/feedback_count)
+- ❌ C11 lifecycle 4 状态机 (draft/active/deprecated/archived)
+- ❌ C12 sync 检测 (3 类冲突 + 3 级频率)
+- ❌ frontmatter 6 字段扩展 (保持 v0.2 4 字段极简)
+- ❌ `ek capture --from-commit` 提议门
+- ❌ 独立 `workflow/` 目录 (并入 `stage/`)
+
+**调研依据**：`docs/00-vision/v0.4-final-design.md` (why-workspace 同名) + 调研附录 `docs/00-vision/archive/v0.4-research-full.md` (5 支柱 + STAGE 共 10 份双 AI 调研报告, 保留 v0.5+ 参考)。
+
+---
+
+*文档版本: v4.3 | 最后更新: 2026-06-28 | 调研依据: GitHub API 90+ 竞品 + Reddit r/ClaudeCode/r/cursor/r/vibecoding/r/GithubCopilot 社区证据 + codex + claude 双 AI 砍功能验证 + v0.4 5 支柱双 AI 调研*

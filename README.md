@@ -63,21 +63,27 @@ AI 编码工具 (Cursor/Copilot/Claude Code)
          │
          ▼
 ┌─ enjoyknowledge Core CLI ───────────────┐
-│  init │ ls │ grep │ cat │ add │ doctor │
+│  init │ ls │ grep │ cat │ add │ doctor │ promote │ stage-clean │
 └────────────────────────────────────┘
          │
          ▼
-    for Coding 应用结构
+    for Coding 应用结构 (v0.4)
     项目根目录/
-    ├── .enjoyknowledge/
-    │   ├── architecture/
-    │   ├── gotchas/
-    │   ├── patterns/
-    │   ├── business/
-    │   ├── decisions/
+    ├── .enjoyknowledge/           ← 长期知识 SoT (人类编辑/审核)
+    │   ├── architecture/          # 架构知识
+    │   ├── gotchas/               # 踩坑记录
+    │   ├── patterns/              # 最佳实践
+    │   ├── business/              # 业务规则
+    │   ├── decisions/             # 架构决策记录
     │   ├── index.md
-    │   └── log.md
-    └── knowledge-tasks/  ← 短期任务工作区，审核后再沉淀
+    │   ├── log.md
+    │   └── AGENTS.md              ← AI 入口 (人类写, AI 读)
+    └── .enjoyknowledge_stage/     ← 短期任务工作区 (AI 自动写, 人类审核)
+        ├── tasks/<task-id>/       # 8 文件: requirements/design/plan/changes/tests/delivery/summary/review
+        ├── drafts/                # 待 promote 草稿
+        ├── workflow/              # 工作流定义 (v0.2 保留)
+        ├── .archive/              # TTL 过期 (默认 180 天)
+        └── AGENTS.md              ← AI 任务写入规范 (AI 读)
 ```
 
 ## 文档
