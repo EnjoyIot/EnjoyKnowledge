@@ -1,7 +1,11 @@
 //! `enjoyknowledge workflow` — run named workflows (v0.2: onboard, capture).
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use crate::format::frontmatter::parse_frontmatter;
+use crate::knowledge::filesystem::FilesystemSource;
+use crate::knowledge::KnowledgeSource;
+use crate::EK_DIR;
 
 /// Structured output from the onboard workflow.
 #[derive(Debug)]
@@ -32,8 +36,38 @@ pub struct DecisionEntry {
     pub snippet: String,
 }
 
+/// Structured input for the capture workflow.
+#[derive(Debug)]
+pub struct CaptureInput {
+    /// Knowledge kind: gotcha / decision / pattern / rule / business / architecture /
+    /// contract / convention / context / template
+    pub kind: String,
+    /// Required frontmatter fields indexed by kind (e.g. `trigger`, `applies_to`, `reversible`, `decided_at`).
+    pub fields: HashMap<String, String>,
+    /// Markdown body (## sections + text).
+    pub body: String,
+    /// Target file path under `.enjoyknowledge/`; auto-derived from kind when omitted.
+    pub path: Option<String>,
+}
+
+/// Structured output from the capture workflow.
+#[derive(Debug)]
+pub struct CaptureOutput {
+    /// Relative path under `.enjoyknowledge/` where the entry was written.
+    pub written_path: String,
+    /// Whether `.enjoyknowledge/index.md` was updated.
+    pub index_updated: bool,
+}
+
 /// Run a named workflow.
-pub fn run(workflow: &str, project_root: &Path) -> anyhow::Result<()> {
+pub fn run(
+    workflow: &str,
+    project_root: &Path,
+    kind: Option<String>,
+    fields: Vec<(String, String)>,
+    body: Option<String>,
+    path: Option<String>,
+) -> anyhow::Result<()> {
     match workflow {
         "onboard" => {
             let output = run_onboard(project_root)?;
@@ -41,7 +75,15 @@ pub fn run(workflow: &str, project_root: &Path) -> anyhow::Result<()> {
             Ok(())
         }
         "capture" => {
-            anyhow::bail!("workflow 'capture' 暂未实现（v0.3+）")
+            let input = CaptureInput {
+                kind: kind.ok_or_else(|| anyhow::anyhow!("capture requires --kind"))?,
+                fields: fields.into_iter().collect(),
+                body: body.ok_or_else(|| anyhow::anyhow!("capture requires --body"))?,
+                path,
+            };
+            let output = run_capture(project_root, &input)?;
+            print_capture_output(&output);
+            Ok(())
         }
         _ => {
             anyhow::bail!("unknown workflow '{workflow}' (v0.2: onboard, capture)")
@@ -307,6 +349,191 @@ fn print_onboard_output(output: &OnboardOutput) {
     println!("total knowledge files: {}", output.total_knowledge_files);
 }
 
+// ── capture ─────────────────────────────────────────────────────────────────
+
+/// Valid knowledge kinds for capture.
+const VALID_KINDS: &[&str] = &[
+    "gotcha",
+    "decision",
+    "pattern",
+    "rule",
+    "business",
+    "architecture",
+    "contract",
+    "convention",
+    "context",
+    "template",
+];
+
+/// Required frontmatter fields per kind.
+fn required_fields(kind: &str) -> &[&str] {
+    match kind {
+        "gotcha" => &["trigger"],
+        "decision" => &["reversible", "decided_at"],
+        "rule" | "contract" | "convention" | "template" => &["applies_to"],
+        _ => &[],
+    }
+}
+
+/// Default file path under `.enjoyknowledge/` for a given kind.
+fn default_path_for_kind(kind: &str) -> String {
+    let dir = match kind {
+        "gotcha" => "gotchas",
+        "decision" => "decisions",
+        "rule" => "rules",
+        "pattern" => "patterns",
+        _ => kind, // architecture, business, contract(s), convention(s), context, template(s)
+    };
+    let file = match kind {
+        "gotcha" => "GOTCHAS.md",
+        "decision" => "DECISIONS.md",
+        "rule" => "RULES.md",
+        "pattern" => "PATTERNS.md",
+        "architecture" => "ARCHITECTURE.md",
+        "business" => "BUSINESS.md",
+        "contract" => "CONTRACTS.md",
+        "convention" => "CONVENTIONS.md",
+        "context" => "CONTEXT.md",
+        "template" => "TEMPLATES.md",
+        _ => "KNOWLEDGE.md",
+    };
+    format!("{dir}/{file}")
+}
+
+/// Validate that `kind` is one of the 10 recognised knowledge types.
+fn validate_kind(kind: &str) -> anyhow::Result<()> {
+    if VALID_KINDS.contains(&kind) {
+        Ok(())
+    } else {
+        anyhow::bail!("unknown kind '{kind}'. Valid kinds: {}", VALID_KINDS.join(", "))
+    }
+}
+
+/// Validate that all required fields for the given kind are present.
+fn validate_required_fields(kind: &str, fields: &HashMap<String, String>) -> anyhow::Result<()> {
+    for req in required_fields(kind) {
+        if !fields.contains_key(*req) {
+            anyhow::bail!(
+                "kind '{kind}' requires field '{req}' (missing). Use --field {req}=VALUE"
+            );
+        }
+    }
+    Ok(())
+}
+
+/// Build YAML frontmatter for a capture entry.
+fn build_capture_frontmatter(kind: &str, fields: &HashMap<String, String>, body: &str) -> String {
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let description = body.lines().find(|l| l.starts_with("## ")).map_or_else(
+        || format!("{kind} entry"),
+        |l| l.trim_start_matches("## ").trim().to_string(),
+    );
+
+    let mut fm = format!("---\ndescription: {description}\ntimestamp: {today}\n");
+
+    // Write kind-specific fields first, then any extra fields
+    for req in required_fields(kind) {
+        if let Some(val) = fields.get(*req) {
+            let _ = std::fmt::Write::write_fmt(&mut fm, format_args!("{req}: {val}\n"));
+        }
+    }
+
+    // Write remaining non-required fields (e.g. severity for gotchas, status for decisions)
+    let required: Vec<&str> = required_fields(kind).to_vec();
+    for (k, v) in fields {
+        if !required.contains(&k.as_str()) {
+            let _ = std::fmt::Write::write_fmt(&mut fm, format_args!("{k}: {v}\n"));
+        }
+    }
+
+    fm.push_str("---\n");
+    fm
+}
+
+/// Write the capture entry to disk via `FilesystemSource`.
+fn write_entry(
+    source: &FilesystemSource,
+    path: &str,
+    kind: &str,
+    fields: &HashMap<String, String>,
+    body: &str,
+) -> anyhow::Result<()> {
+    let full = source.root.join(path);
+
+    if full.exists() {
+        // Append body (without frontmatter) and refresh timestamp.
+        source.add_entry(path, body)?;
+    } else {
+        // New file: full frontmatter + body.
+        let fm = build_capture_frontmatter(kind, fields, body);
+        if let Some(parent) = full.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(&full, format!("{fm}\n{body}\n"))?;
+    }
+
+    Ok(())
+}
+
+/// Append a TOC entry to `.enjoyknowledge/index.md`.
+fn update_index(ek_dir: &Path, written_path: &str, body: &str) -> anyhow::Result<bool> {
+    let index_path = ek_dir.join("index.md");
+    if !index_path.exists() {
+        return Ok(false);
+    }
+
+    let title = body
+        .lines()
+        .find(|l| l.starts_with("## "))
+        .map_or_else(|| "Untitled".to_string(), |l| l.trim_start_matches("## ").trim().to_string());
+
+    let entry = format!("- [{title}]({written_path})");
+
+    let mut content = std::fs::read_to_string(&index_path)?;
+    // Only append if the path isn't already referenced
+    if content.contains(&format!("]({written_path})")) {
+        return Ok(false);
+    }
+
+    content.push('\n');
+    content.push_str(&entry);
+    content.push('\n');
+    std::fs::write(&index_path, content)?;
+    Ok(true)
+}
+
+/// Execute the capture workflow: classify → validate → write → index.
+pub fn run_capture(project_root: &Path, input: &CaptureInput) -> anyhow::Result<CaptureOutput> {
+    // 1. Validate kind
+    validate_kind(&input.kind)?;
+
+    // 2. Validate required fields
+    validate_required_fields(&input.kind, &input.fields)?;
+
+    // 3. Determine target path
+    let target_path = input.path.clone().unwrap_or_else(|| default_path_for_kind(&input.kind));
+
+    // 4. Write entry
+    let ek_dir = project_root.join(EK_DIR);
+    let source = FilesystemSource::new(&ek_dir, project_root);
+    write_entry(&source, &target_path, &input.kind, &input.fields, &input.body)?;
+
+    // 5. Update index.md
+    let index_updated = update_index(&ek_dir, &target_path, &input.body)?;
+
+    Ok(CaptureOutput { written_path: target_path, index_updated })
+}
+
+fn print_capture_output(output: &CaptureOutput) {
+    println!("== capture: knowledge recorded ==");
+    println!();
+    println!("written:  .enjoyknowledge/{}", output.written_path);
+    println!(
+        "index:    {}",
+        if output.index_updated { "updated" } else { "unchanged (already referenced)" }
+    );
+}
+
 // ── tests ──────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
@@ -436,5 +663,193 @@ mod tests {
 
         let output = run_onboard(tmp.path()).unwrap();
         assert_eq!(output.active_decisions.len(), 1);
+    }
+
+    // ── capture: kind validation ─────────────────────────────────────
+
+    #[test]
+    fn capture_validates_10_kinds() {
+        for kind in VALID_KINDS {
+            assert!(validate_kind(kind).is_ok(), "kind '{kind}' should be valid");
+        }
+    }
+
+    #[test]
+    fn capture_rejects_invalid_kind() {
+        let err = validate_kind("unknown_type").unwrap_err();
+        assert!(err.to_string().contains("unknown kind"));
+        assert!(err.to_string().contains("gotcha"));
+    }
+
+    // ── capture: required-field validation ─────────────────────────────
+
+    #[test]
+    fn capture_gotcha_requires_trigger() {
+        let fields: HashMap<String, String> = HashMap::new();
+        let err = validate_required_fields("gotcha", &fields).unwrap_err();
+        assert!(err.to_string().contains("trigger"));
+    }
+
+    #[test]
+    fn capture_rule_requires_applies_to() {
+        let fields: HashMap<String, String> = HashMap::new();
+        let err = validate_required_fields("rule", &fields).unwrap_err();
+        assert!(err.to_string().contains("applies_to"));
+    }
+
+    #[test]
+    fn capture_decision_requires_reversible_and_decided_at() {
+        // Missing both
+        let fields: HashMap<String, String> = HashMap::new();
+        let err = validate_required_fields("decision", &fields).unwrap_err();
+        assert!(err.to_string().contains("reversible"));
+
+        // Missing decided_at only
+        let mut fields = HashMap::new();
+        fields.insert("reversible".to_string(), "true".to_string());
+        let err = validate_required_fields("decision", &fields).unwrap_err();
+        assert!(err.to_string().contains("decided_at"));
+    }
+
+    #[test]
+    fn capture_architecture_no_required_fields() {
+        let fields: HashMap<String, String> = HashMap::new();
+        assert!(validate_required_fields("architecture", &fields).is_ok());
+    }
+
+    // ── capture: write new file ────────────────────────────────────────
+
+    #[test]
+    fn capture_creates_new_file_with_frontmatter() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ek = setup_ek_dir(tmp.path());
+        // Also create an index.md
+        fs::write(
+            ek.join("index.md"),
+            "---\ndescription: index\ntimestamp: 2026-01-01\n---\n\n# Index\n",
+        )
+        .unwrap();
+
+        let input = CaptureInput {
+            kind: "gotcha".to_string(),
+            fields: {
+                let mut m = HashMap::new();
+                m.insert("trigger".to_string(), "test trigger".to_string());
+                m
+            },
+            body: "## Test Gotcha\nThis is a test gotcha entry.".to_string(),
+            path: None,
+        };
+
+        let output = run_capture(tmp.path(), &input).unwrap();
+        assert!(output.written_path.contains("gotchas"));
+        assert!(output.index_updated);
+
+        // Verify file was created
+        let full = ek.join(&output.written_path);
+        let content = fs::read_to_string(&full).unwrap();
+        assert!(content.contains("description: Test Gotcha"));
+        assert!(content.contains("trigger: test trigger"));
+        assert!(content.contains("## Test Gotcha"));
+    }
+
+    // ── capture: append to existing file ───────────────────────────────
+
+    #[test]
+    fn capture_appends_to_existing_file() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ek = setup_ek_dir(tmp.path());
+        // Create existing gotcha file
+        let existing_path = "gotchas/GOTCHAS.md";
+        fs::create_dir_all(ek.join("gotchas")).unwrap();
+        fs::write(
+            ek.join(existing_path),
+            "---\ndescription: existing\ntimestamp: 2026-01-01\n---\n\n## Existing Entry\nOld content.\n",
+        )
+        .unwrap();
+        // Also need index.md
+        fs::write(
+            ek.join("index.md"),
+            "---\ndescription: index\ntimestamp: 2026-01-01\n---\n\n# Index\n",
+        )
+        .unwrap();
+
+        let input = CaptureInput {
+            kind: "gotcha".to_string(),
+            fields: {
+                let mut m = HashMap::new();
+                m.insert("trigger".to_string(), "another trigger".to_string());
+                m
+            },
+            body: "## New Gotcha\nNew content here.".to_string(),
+            path: None,
+        };
+
+        let output = run_capture(tmp.path(), &input).unwrap();
+        assert_eq!(output.written_path, existing_path);
+
+        let content = fs::read_to_string(ek.join(existing_path)).unwrap();
+        // Original entry still present
+        assert!(content.contains("## Existing Entry"));
+        // New entry appended
+        assert!(content.contains("## New Gotcha"));
+        // Frontmatter should still have description from original
+        assert!(content.contains("description: existing"));
+    }
+
+    // ── capture: index update ──────────────────────────────────────────
+
+    #[test]
+    fn capture_updates_index_md() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ek = setup_ek_dir(tmp.path());
+        fs::create_dir_all(ek.join("patterns")).unwrap();
+        fs::write(
+            ek.join("index.md"),
+            "---\ndescription: index\ntimestamp: 2026-01-01\n---\n\n# Index\n",
+        )
+        .unwrap();
+
+        let input = CaptureInput {
+            kind: "pattern".to_string(),
+            fields: HashMap::new(),
+            body: "## Error Flow Pattern\nUse Result<T, AppError>.".to_string(),
+            path: None,
+        };
+
+        let output = run_capture(tmp.path(), &input).unwrap();
+        assert!(output.index_updated);
+
+        let index_content = fs::read_to_string(ek.join("index.md")).unwrap();
+        assert!(index_content.contains("[Error Flow Pattern]"));
+        assert!(index_content.contains("patterns/PATTERNS.md"));
+    }
+
+    // ── capture: custom path ───────────────────────────────────────────
+
+    #[test]
+    fn capture_uses_custom_path() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ek = setup_ek_dir(tmp.path());
+        fs::write(
+            ek.join("index.md"),
+            "---\ndescription: index\ntimestamp: 2026-01-01\n---\n\n# Index\n",
+        )
+        .unwrap();
+
+        let input = CaptureInput {
+            kind: "gotcha".to_string(),
+            fields: {
+                let mut m = HashMap::new();
+                m.insert("trigger".to_string(), "custom trigger".to_string());
+                m
+            },
+            body: "## Custom Path Entry\nCustom content.".to_string(),
+            path: Some("gotchas/custom-file.md".to_string()),
+        };
+
+        let output = run_capture(tmp.path(), &input).unwrap();
+        assert_eq!(output.written_path, "gotchas/custom-file.md");
+        assert!(ek.join("gotchas/custom-file.md").exists());
     }
 }

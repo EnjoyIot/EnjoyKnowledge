@@ -72,8 +72,8 @@ fn main() -> anyhow::Result<()> {
         Command::Export { tool, dry_run } => {
             cli::export::run(Path::new("."), &tool, dry_run)?;
         }
-        Command::Workflow { workflow } => {
-            cli::workflow::run(&workflow, Path::new("."))?;
+        Command::Workflow { workflow, kind, field, body, path } => {
+            cli::workflow::run(&workflow, Path::new("."), kind, field, body, path)?;
         }
     }
 

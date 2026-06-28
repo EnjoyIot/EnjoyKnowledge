@@ -1,0 +1,8 @@
+$ enjoyknowledge init
+[..]
+
+$ enjoyknowledge workflow capture --kind gotcha --body "## 缺 trigger"
+? failed
+[..]trigger[..]
+
+[exit code]: 1

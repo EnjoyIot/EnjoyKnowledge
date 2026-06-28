@@ -121,5 +121,27 @@ pub enum Command {
     Workflow {
         /// Workflow name (v0.2: onboard, capture)
         workflow: String,
+
+        /// Knowledge kind (capture only): gotcha/decision/pattern/rule/business/architecture/contract/convention/context/template
+        #[arg(long, value_name = "KIND")]
+        kind: Option<String>,
+
+        /// Frontmatter field as KEY=VALUE (capture only, repeatable)
+        #[arg(long = "field", value_name = "KEY=VALUE", value_parser = parse_field)]
+        field: Vec<(String, String)>,
+
+        /// Markdown body content (capture only: ## sections + text)
+        #[arg(long, value_name = "BODY")]
+        body: Option<String>,
+
+        /// Target file path under .enjoyknowledge/ (capture only; auto-derived from kind when omitted)
+        #[arg(long, value_name = "PATH")]
+        path: Option<String>,
     },
+}
+
+/// Parse a `KEY=VALUE` string for `--field`.
+fn parse_field(s: &str) -> Result<(String, String), String> {
+    let (k, v) = s.split_once('=').ok_or_else(|| format!("expected KEY=VALUE, got '{s}'"))?;
+    Ok((k.trim().to_string(), v.trim().to_string()))
 }
