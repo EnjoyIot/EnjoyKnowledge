@@ -1,4 +1,0 @@
-bin.name = "enjoyknowledge"
-args = ["workflow", "capture", "--kind", "gotcha", "--field", "trigger=X", "--body", "Y"]
-fs.cwd = "../fixtures/minimal-project"
-fs.sandbox = true

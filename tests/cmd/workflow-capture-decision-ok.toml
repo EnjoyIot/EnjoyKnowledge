@@ -1,4 +1,0 @@
-bin.name = "enjoyknowledge"
-args = ["workflow", "capture", "--kind", "decision", "--field", "reversible=true", "--field", "decided_at=2026-06-28", "--body", "X"]
-fs.cwd = "../fixtures/minimal-project"
-fs.sandbox = true

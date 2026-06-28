@@ -5,6 +5,7 @@ mod core;
 mod doctor;
 mod format;
 mod init;
+mod kinds;
 mod knowledge;
 mod profile;
 mod template;
@@ -72,8 +73,8 @@ fn main() -> anyhow::Result<()> {
         Command::Export { tool, dry_run } => {
             cli::export::run(Path::new("."), &tool, dry_run)?;
         }
-        Command::Workflow { workflow, kind, field, body, path } => {
-            cli::workflow::run(&workflow, Path::new("."), kind, field, body, path)?;
+        Command::Onboard => {
+            cli::onboard::run(Path::new("."))?;
         }
         Command::Promote { draft_file, to, id, author } => {
             cli::promote::run(Path::new("."), &draft_file, &to, id.as_deref(), author.as_deref())?;

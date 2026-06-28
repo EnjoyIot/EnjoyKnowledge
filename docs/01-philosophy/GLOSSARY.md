@@ -35,27 +35,36 @@ Core CLI 命令集：`init` / `ls` / `tree` / `cat` / `grep` / `add` / `doctor` 
 
 ---
 
-## 知识分类（10 类）
+## 知识分类（11 类）
 
 | kind | 目录 | 本质 | 必填 frontmatter 字段 |
 |---|---|---|---|
-| gotcha | gotchas/ | 踩坑记录 | `trigger` |
-| decision | decisions/ | 架构决策 | `reversible` + `decided_at` |
-| pattern | patterns/ | 最佳实践 | — |
-| rule | rules/ | 强制规则 | `applies_to` |
+| gotcha | gotcha/ | 踩坑记录 | `trigger` |
+| decision | decision/ | 架构决策 | `reversible` + `decided_at` |
+| pattern | pattern/ | 最佳实践 | — |
+| rule | rule/ | 强制规则 | `applies_to` |
 | business | business/ | 业务规则 | — |
 | architecture | architecture/ | 系统结构 | — |
-| contract | contracts/ | 接口契约 | `applies_to` |
-| convention | conventions/ | 命名/格式约定 | `applies_to` |
+| contract | contract/ | 接口契约 | `applies_to` |
+| convention | convention/ | 命名/格式约定 | `applies_to` |
 | context | context/ | 项目背景/运行时 | — |
-| template | templates/ | 范式模板 | `applies_to` |
+| template | template/ | 范式模板 | `applies_to` |
+| command | command/ | CLI 命令文档 | `applies_to` |
+
+### kind 注册表（kinds.md）
+
+`.enjoyknowledge/_meta/kinds.md` — Markdown 表格格式的 kind 清单，`kinds::dir_for()` 的唯一真相源。人类可读可编辑，doctor 校验一致性。
+
+**关键规则**：
+- **kind = dir**：`kinds::dir_for("gotcha")` = `"gotcha"`（无 "s" 派生）
+- **单一源**：所有 kind→dir 映射从 kinds.md 派生，消除硬编码
 
 ---
 
 ## 工作流
 
 ### onboard
-AI 工具首次进入仓库时建立项目心智模型。触发：AI 工具启动 / `enjoyknowledge workflow onboard`。详见 [workflows.md](../02-design/architecture/workflows.md)。
+AI 工具首次进入仓库时建立项目心智模型。触发：`enjoyknowledge onboard`。详见 [workflows.md](../02-design/architecture/workflows.md)。
 
 ### capture
 把对话中发现的隐性知识沉淀到 SoT。触发：用户/AI 主动 / `enjoyknowledge workflow capture`。详见 [workflows.md](../02-design/architecture/workflows.md)。

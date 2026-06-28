@@ -61,7 +61,7 @@ AI 读文档最贵的不是文本本身，是"打开一看发现不相关"的往
 v0.4 经过 6 次反馈迭代，沉淀出 4 条极简原则：
 
 1. **人类是 authority anchor** — KB 里所有内容都是人类手动 / 显式让 AI 写
-2. **物理分离 > 状态字段** — `stage/` vs `KB/` 用物理目录区分，不靠 frontmatter 字段
+2. **物理分离 > 状态字段** — `stage/` vs `KB/` 用物理目录区分，不靠 frontmatter 字段。v0.4.3 引入 `_meta/kinds.md` 作为 kind 注册表，Markdown 格式，人类可读可编辑。
 3. **AGENTS.md > frontmatter** — AI 读 markdown 内容比 YAML 字段更直接
 4. **简单 > 完整** — 能用的工具 > 完美的设计
 
@@ -73,6 +73,7 @@ v0.4 经过 6 次反馈迭代，沉淀出 4 条极简原则：
 - frontmatter 6 字段扩展
 - `ek capture --from-commit`
 - 独立 `workflow/` 目录
+- `ek workflow capture` 子命令（用 `ek promote` + AI draft 替代）
 
 ---
 

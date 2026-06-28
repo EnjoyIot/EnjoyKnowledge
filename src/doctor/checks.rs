@@ -21,13 +21,14 @@ pub struct CheckResult {
     pub severity: Severity,
 }
 
-/// Run all 4 v0.2 health checks against the knowledge base (GLOSSARY L51).
+/// Run all v0.4.3 health checks against the knowledge base.
 pub fn run_all(source: &dyn KnowledgeSource, project_root: &Path) -> Vec<CheckResult> {
     let mut results = Vec::new();
     results.extend(check_frontmatter(source));
     results.extend(check_required_fields(source));
     results.extend(check_sot_staleness(source));
     results.extend(check_export_consistency(source, project_root));
+    results.extend(check_kinds_md(project_root));
     results
 }
 
@@ -174,6 +175,65 @@ fn check_export_consistency(
     results
 }
 
+// ── Check 5: kinds.md schema validation ─────────────────────────────────────
+
+fn check_kinds_md(project_root: &Path) -> Vec<CheckResult> {
+    let mut results = Vec::new();
+    let kinds_md_path = project_root.join(".enjoyknowledge/_meta/kinds.md");
+
+    if !kinds_md_path.exists() {
+        results.push(CheckResult {
+            file: ".enjoyknowledge/_meta/kinds.md".to_string(),
+            issue: "kinds.md missing — run `ek init` to regenerate".to_string(),
+            severity: Severity::Error,
+        });
+        return results;
+    }
+
+    let Ok(content) = std::fs::read_to_string(&kinds_md_path) else {
+        results.push(CheckResult {
+            file: ".enjoyknowledge/_meta/kinds.md".to_string(),
+            issue: "kinds.md unreadable".to_string(),
+            severity: Severity::Error,
+        });
+        return results;
+    };
+
+    // Parse user's kinds.md
+    let user_kinds = crate::kinds::parse_kinds_md_for_doctor(&content);
+    if user_kinds.is_empty() {
+        results.push(CheckResult {
+            file: ".enjoyknowledge/_meta/kinds.md".to_string(),
+            issue: "kinds.md has no valid kind rows".to_string(),
+            severity: Severity::Error,
+        });
+        return results;
+    }
+
+    // Cross-check against code registry
+    let code_kinds: Vec<&str> = crate::kinds::all().iter().map(|k| k.name.as_str()).collect();
+    for ck in &code_kinds {
+        if !user_kinds.iter().any(|u| u == *ck) {
+            results.push(CheckResult {
+                file: ".enjoyknowledge/_meta/kinds.md".to_string(),
+                issue: format!("kind '{ck}' is in code registry but missing from kinds.md"),
+                severity: Severity::Warning,
+            });
+        }
+    }
+    for uk in &user_kinds {
+        if !code_kinds.contains(&uk.as_str()) {
+            results.push(CheckResult {
+                file: ".enjoyknowledge/_meta/kinds.md".to_string(),
+                issue: format!("kind '{uk}' is in kinds.md but not in code registry"),
+                severity: Severity::Warning,
+            });
+        }
+    }
+
+    results
+}
+
 // ── helpers ─────────────────────────────────────────────────────────────────
 
 /// Determine knowledge kind from the file's top-level directory.
@@ -181,12 +241,12 @@ fn check_export_consistency(
 fn kind_from_path(path: &str) -> Option<&'static str> {
     let top_dir = path.split('/').next()?;
     match top_dir {
-        "gotchas" => Some("gotcha"),
-        "rules" => Some("rule"),
-        "decisions" => Some("decision"),
-        "contracts" => Some("contract"),
-        "conventions" => Some("convention"),
-        "templates" => Some("template"),
+        "gotcha" => Some("gotcha"),
+        "rule" => Some("rule"),
+        "decision" => Some("decision"),
+        "contract" => Some("contract"),
+        "convention" => Some("convention"),
+        "template" => Some("template"),
         _ => None,
     }
 }
@@ -214,6 +274,13 @@ mod tests {
     fn make_source(project_root: &Path) -> FilesystemSource {
         let ek = project_root.join(".enjoyknowledge");
         std::fs::create_dir_all(&ek).unwrap();
+        // v0.4.3: _meta/kinds.md is required by check_kinds_md
+        let meta = ek.join("_meta");
+        std::fs::create_dir_all(&meta).unwrap();
+        let kinds_md = meta.join("kinds.md");
+        if !kinds_md.exists() {
+            std::fs::write(&kinds_md, crate::kinds::init_default_kinds()).unwrap();
+        }
         FilesystemSource::new(ek, project_root)
     }
 
@@ -266,7 +333,7 @@ mod tests {
     #[test]
     fn required_gotcha_with_trigger_ok() {
         let dir = tempfile::TempDir::new().unwrap();
-        write_ek(dir.path(), "gotchas/g.md", "---\ndescription: x\ntags: [a]\ntrigger: \"file save\"\ntimestamp: 2026-06-28\n---\n\n## Save bug\n");
+        write_ek(dir.path(), "gotcha/g.md", "---\ndescription: x\ntags: [a]\ntrigger: \"file save\"\ntimestamp: 2026-06-28\n---\n\n## Save bug\n");
         let source = make_source(dir.path());
         let results = check_required_fields(&source);
         assert!(results.is_empty(), "expected no errors, got {results:?}");
@@ -277,7 +344,7 @@ mod tests {
         let dir = tempfile::TempDir::new().unwrap();
         write_ek(
             dir.path(),
-            "gotchas/g.md",
+            "gotcha/g.md",
             "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Bug\n",
         );
         let source = make_source(dir.path());
@@ -290,7 +357,7 @@ mod tests {
     #[test]
     fn required_rule_with_applies_to_ok() {
         let dir = tempfile::TempDir::new().unwrap();
-        write_ek(dir.path(), "rules/r.md", "---\ndescription: x\ntags: [a]\napplies_to: \"*.rs\"\ntimestamp: 2026-06-28\n---\n\n## Rule\n");
+        write_ek(dir.path(), "rule/r.md", "---\ndescription: x\ntags: [a]\napplies_to: \"*.rs\"\ntimestamp: 2026-06-28\n---\n\n## Rule\n");
         let source = make_source(dir.path());
         let results = check_required_fields(&source);
         assert!(results.is_empty(), "expected no errors, got {results:?}");
@@ -301,7 +368,7 @@ mod tests {
         let dir = tempfile::TempDir::new().unwrap();
         write_ek(
             dir.path(),
-            "rules/r.md",
+            "rule/r.md",
             "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Rule\n",
         );
         let source = make_source(dir.path());
@@ -313,7 +380,7 @@ mod tests {
     #[test]
     fn required_decision_both_fields_ok() {
         let dir = tempfile::TempDir::new().unwrap();
-        write_ek(dir.path(), "decisions/d.md", "---\ndescription: x\ntags: [a]\nreversible: true\ndecided_at: 2026-06-28\ntimestamp: 2026-06-28\n---\n\n## Decision\n");
+        write_ek(dir.path(), "decision/d.md", "---\ndescription: x\ntags: [a]\nreversible: true\ndecided_at: 2026-06-28\ntimestamp: 2026-06-28\n---\n\n## Decision\n");
         let source = make_source(dir.path());
         let results = check_required_fields(&source);
         assert!(results.is_empty(), "expected no errors, got {results:?}");
@@ -324,7 +391,7 @@ mod tests {
         let dir = tempfile::TempDir::new().unwrap();
         write_ek(
             dir.path(),
-            "decisions/d.md",
+            "decision/d.md",
             "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Decision\n",
         );
         let source = make_source(dir.path());
@@ -337,7 +404,7 @@ mod tests {
         let dir = tempfile::TempDir::new().unwrap();
         write_ek(
             dir.path(),
-            "patterns/p.md",
+            "unknown/p.md",
             "---\ndescription: x\ntags: [a]\ntimestamp: 2026-06-28\n---\n\n## Pattern\n",
         );
         let source = make_source(dir.path());

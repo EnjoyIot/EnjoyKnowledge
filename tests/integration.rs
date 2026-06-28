@@ -24,10 +24,10 @@ fn init_creates_directory_structure() {
 
     assert!(root.join(".enjoyknowledge").exists());
     assert!(root.join(".enjoyknowledge/architecture").exists());
-    assert!(root.join(".enjoyknowledge/gotchas").exists());
-    assert!(root.join(".enjoyknowledge/patterns").exists());
+    assert!(root.join(".enjoyknowledge/gotcha").exists());
+    assert!(root.join(".enjoyknowledge/pattern").exists());
     assert!(root.join(".enjoyknowledge/business").exists());
-    assert!(root.join(".enjoyknowledge/decisions").exists());
+    assert!(root.join(".enjoyknowledge/decision").exists());
     assert!(root.join("knowledge-tasks").exists());
     assert!(root.join("AGENTS.md").exists());
 }
@@ -42,7 +42,7 @@ fn add_and_grep_roundtrip() {
 
     // Add a knowledge entry
     enjoyknowledge()
-        .args(["add", "gotchas/export.md", "## export timeout\n- API times out over 100k rows"])
+        .args(["add", "gotcha/export.md", "## export timeout\n- API times out over 100k rows"])
         .current_dir(root)
         .assert()
         .success();
@@ -71,12 +71,12 @@ fn add_creates_file_under_category() {
     init_project(root);
 
     enjoyknowledge()
-        .args(["add", "gotchas/export.md", "## Excel OOM\n- SXSSFWorkbook unclosed causes OOM"])
+        .args(["add", "gotcha/export.md", "## Excel OOM\n- SXSSFWorkbook unclosed causes OOM"])
         .current_dir(root)
         .assert()
         .success();
 
-    assert!(root.join(".enjoyknowledge/gotchas/export.md").exists());
+    assert!(root.join(".enjoyknowledge/gotcha/export.md").exists());
 }
 
 // ---- Phase 3: doctor ----
@@ -206,15 +206,15 @@ fn init_creates_11_kind_directories() {
     for kind in &[
         "architecture",
         "business",
-        "commands",
+        "command",
         "context",
-        "decisions",
-        "gotchas",
-        "patterns",
-        "rules",
-        "contracts",
-        "conventions",
-        "templates",
+        "decision",
+        "gotcha",
+        "pattern",
+        "rule",
+        "contract",
+        "convention",
+        "template",
     ] {
         assert!(ek.join(kind).exists(), "missing kind dir: {kind}");
     }
@@ -253,7 +253,7 @@ fn promote_draft_to_gotcha() {
         .assert()
         .success();
 
-    let target = root.join(".enjoyknowledge/gotchas/utf8-windows.md");
+    let target = root.join(".enjoyknowledge/gotcha/utf8-windows.md");
     assert!(target.exists());
     let content = std::fs::read_to_string(target).unwrap();
     assert!(content.contains("id: utf8-windows"));

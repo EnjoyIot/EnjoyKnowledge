@@ -6,7 +6,7 @@ pub mod export;
 pub mod grep;
 pub mod init;
 pub mod ls;
+pub mod onboard;
 pub mod promote;
 pub mod stage_clean;
 pub mod tree;
-pub mod workflow;

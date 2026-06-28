@@ -1,4 +1,4 @@
 bin.name = "enjoyknowledge"
-args = ["workflow", "onboard"]
+args = ["onboard"]
 fs.sandbox = true
 status.code = 1

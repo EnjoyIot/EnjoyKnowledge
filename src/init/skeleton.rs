@@ -1,4 +1,5 @@
 use crate::core::Profile;
+use crate::kinds;
 /// Directory skeleton generation.
 use crate::EK_DIR;
 use std::fmt::Write;
@@ -32,6 +33,14 @@ pub fn generate_skeleton(project_root: &Path, profile: &dyn Profile) -> anyhow::
             let resolved = content.replace("__TIMESTAMP__", &today);
             std::fs::write(&full, resolved)?;
         }
+    }
+
+    // v0.4.3: Write _meta/kinds.md (kind registry seed)
+    let meta_dir = ek.join("_meta");
+    std::fs::create_dir_all(&meta_dir)?;
+    let kinds_md_path = meta_dir.join("kinds.md");
+    if !kinds_md_path.exists() {
+        std::fs::write(&kinds_md_path, kinds::init_default_kinds())?;
     }
 
     // knowledge-tasks/ at project root level
@@ -250,15 +259,15 @@ This project uses [enjoyknowledge](https://enjoyknowledge.dev) for shared AI con
 |------|-----------|-------------|
 | architecture | `architecture/` | System design, module map, data flow |
 | business | `business/` | Domain rules, compliance, billing logic |
-| commands | `commands/` | CLI commands, scripts, one-liners |
+| command | `command/` | CLI commands, scripts, one-liners |
 | context | `context/` | Stakeholders, constraints, deadlines |
-| decisions | `decisions/` | Architecture Decision Records (ADR) |
-| gotchas | `gotchas/` | Tricky bugs, edge cases, workarounds |
-| patterns | `patterns/` | Reusable solutions, best practices |
-| rules | `rules/` | Coding rules, lint policies |
-| contracts | `contracts/` | API contracts, data schemas |
-| conventions | `conventions/` | Team conventions, workflow norms |
-| templates | `templates/` | Reusable file/component templates |
+| decision | `decision/` | Architecture Decision Records (ADR) |
+| gotcha | `gotcha/` | Tricky bugs, edge cases, workarounds |
+| pattern | `pattern/` | Reusable solutions, best practices |
+| rule | `rule/` | Coding rules, lint policies |
+| contract | `contract/` | API contracts, data schemas |
+| convention | `convention/` | Team conventions, workflow norms |
+| template | `template/` | Reusable file/component templates |
 <!-- /enjoyknowledge_KB_INDEX -->
 
 ## AI Read Rules
@@ -737,8 +746,8 @@ mod tests {
         assert!(content.contains("EnjoyKnowledge KB Index"));
         assert!(content.contains("<!-- enjoyknowledge_KB_INDEX -->"));
         assert!(content.contains("architecture"));
-        assert!(content.contains("gotchas"));
-        assert!(content.contains("rules"));
+        assert!(content.contains("gotcha"));
+        assert!(content.contains("rule"));
         assert!(content.contains("NEVER write to `.enjoyknowledge/` directly"));
     }
 

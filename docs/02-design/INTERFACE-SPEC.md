@@ -1,6 +1,6 @@
 # enjoyknowledge 接口规范
 
-> v0.4.2 | 2026-06-28
+> v0.4.3 | 2026-06-28
 >
 > CLI 行为合约。第三方适配器、工具生成器、AI 工具集成的唯一参考。
 
@@ -14,25 +14,25 @@
 <项目根>/
 ├── AGENTS.md                      # AI 入口（内嵌 ls 摘要）
 ├── .enjoyknowledge/               # 长期知识 SoT（人类编辑/审核）
-│   ├── architecture/              # 架构知识
-│   ├── gotchas/                   # 踩坑记录
-│   ├── patterns/                  # 最佳实践
-│   ├── rules/                     # 强制规则
-│   ├── decisions/                 # 架构决策
-│   ├── business/                  # 业务规则
-│   ├── contracts/                 # 接口契约
-│   ├── conventions/               # 命名/格式约定
-│   ├── context/                   # 项目背景/运行时
-│   ├── templates/                 # 范式模板
-│   ├── index.md                   # 索引
-│   ├── log.md                     # 操作日志
-│   └── AGENTS.md                  # KB 写入规则
-└── .enjoyknowledge_stage/         # 任务暂存区（AI 自动写）
-    ├── tasks/<task-id>/           # 8 文件
-    ├── drafts/                    # 待 promote 草稿
-    ├── workflow/                  # 工作流 YAML
-    ├── .archive/                  # TTL 过期（180 天）
-    └── AGENTS.md                  # 任务写入规范
+│   ├── _meta/kinds.md              # kind 注册表（Markdown 表格）
+│   ├── architecture/               # 架构知识
+│   ├── gotcha/                     # 踩坑记录
+│   ├── pattern/                    # 最佳实践
+│   ├── rule/                       # 强制规则
+│   ├── decision/                   # 架构决策
+│   ├── business/                   # 业务规则
+│   ├── contract/                   # 接口契约
+│   ├── convention/                 # 命名/格式约定
+│   ├── context/                    # 项目背景/运行时
+│   ├── command/                    # CLI 命令
+│   ├── template/                   # 范式模板
+│   ├── index.md                    # 索引
+│   └── AGENTS.md                   # KB 写入规则
+└── .enjoyknowledge_stage/          # 任务暂存区（AI 自动写）
+    ├── tasks/<task-id>/            # 8 文件
+    ├── drafts/                     # 待 promote 草稿
+    ├── .archive/                   # TTL 过期（180 天）
+    └── AGENTS.md                   # 任务写入规范
 ```
 
 ### 1.2 结构约束
@@ -41,9 +41,11 @@
 |---|---|
 | 深度 | `.enjoyknowledge/` 内 ≤ 2 层（`category/file.md`） |
 | 目录名即分类 | 文件目录决定类型，不在 frontmatter 重复声明 |
+| kind = dir | directory name = kind name，无 "s" 派生 |
 | 物理分离 | `.enjoyknowledge_stage/`（AI 写）与 `.enjoyknowledge/`（人类写）严格物理分离 |
 | frontmatter 极简 | KB 文件仅 4 字段：id / kind / created / author |
 | 任务暂存区 | `tasks/<task-id>/` 不进入长期知识索引 |
+| kind 注册表 | `.enjoyknowledge/_meta/kinds.md` 为 kind → dir 埋点的单一真相源 |
 
 ---
 
@@ -109,8 +111,8 @@ timestamp: 2026-06-21
 | `doctor [--ci]` | 4 项健康检查 | 问题清单；`--ci` warning 也非零退出 |
 | `fix [--req <REQ-ID>]` | 自动修复 | 修复结果 |
 | `export --tool <cursor/claude/auto> [--dry-run]` | 生成 AI 工具入口 | `.cursor/rules/*.mdc` 或 `.claude/skills/*.md` |
-| `workflow <onboard/capture> [--kind <KIND>] [--field KEY=VALUE] [--body <BODY>] [--path <PATH>]` | 运行工作流 | onboard：心智模型；capture：知识捕获 |
-| `promote <draft_file> --to <kind> [--id <id>] [--author <name>]` | draft → KB | KB 文件 + frontmatter |
+| `onboard` | 建立项目心智模型 | AGENTS.md + 定位文档 + 关键 gotchas + 活跃决策 |
+| `promote <draft_file> --to <kind> [--id <id>] [--author <name>]` | draft → KB | KB 文件 + frontmatter（kind=dir，无 "s" 派生） |
 | `stage clean [--dry-run] [--force] [--older-than <days>]` | TTL 清理 | 清理 .archive/ 过期文件 |
 
 ### 3.2 `init`
@@ -120,8 +122,8 @@ enjoyknowledge init [--ai <tool>] [--template <name>] [--link <path>] [--profile
 ```
 
 - 默认 profile = `for-coding`
-- 创建 `.enjoyknowledge/`（10 类目录 + AGENTS.md + index.md + log.md）
-- 创建 `.enjoyknowledge_stage/`（tasks/_template/ 8 文件 + drafts/ + .archive/ + workflow/ + AGENTS.md）
+- 创建 `.enjoyknowledge/`（11 类目录 + _meta/kinds.md + AGENTS.md + index.md）
+- 创建 `.enjoyknowledge_stage/`（tasks/_template/ 8 文件 + drafts/ + .archive/ + AGENTS.md）
 - `--ai <tool>` 同时生成工具入口文件（支持 9 工具）
 - `--link <path>` 引用外部知识库，不创建目录
 
@@ -239,14 +241,14 @@ enjoyknowledge export --tool <cursor|claude|auto> [--dry-run]
 - `--dry-run`：预览不写文件
 - v0.2 首发 2 工具（cursor + claude），其他 7 工具架构保留
 
-### 3.11 `workflow`
+### 3.11 `onboard`
 
 ```
-enjoyknowledge workflow <onboard|capture> [--kind <KIND>] [--field KEY=VALUE] [--body <BODY>] [--path <PATH>]
+enjoyknowledge onboard
 ```
 
-- `onboard`：AI 工具建立项目心智模型
-- `capture`：沉淀知识到 SoT。`--kind` 指定类型（10 类之一），`--field` 传 frontmatter 字段，`--body` 传正文内容
+- 建立项目心智模型（AGENTS.md + 定位文档 + 关键 gotchas + 活跃决策）
+- 无参数，自动扫描 `.enjoyknowledge/` 目录
 
 ### 3.12 `promote`（v0.4）
 
@@ -254,7 +256,7 @@ enjoyknowledge workflow <onboard|capture> [--kind <KIND>] [--field KEY=VALUE] [-
 enjoyknowledge promote <draft_file> --to <kind> [--id <id>] [--author <name>]
 ```
 
-- 把 `.enjoyknowledge_stage/drafts/<name>.md` 落地到 `.enjoyknowledge/<kind>/<name>.md`
+- 把 `.enjoyknowledge_stage/drafts/<name>.md` 落地到 `.enjoyknowledge/<kind>/<name>.md`（kind=dir，无 "s" 派生）
 - 自动生成 4 字段 frontmatter（id / kind / created / author）
 - 默认 author = `enjoy`
 - 原 draft 保留（加 `[PROMOTED]` 标记）

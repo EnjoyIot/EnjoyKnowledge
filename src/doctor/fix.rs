@@ -40,12 +40,13 @@ fn fill_missing_description(content: &str, desc: &str) -> String {
 
     // Locate closing "<nl>---" within fm_inner
     let close_marker = format!("{nl}---");
-    if let Some(close_start) = fm_inner.rfind(&close_marker) {
-        let inner = &fm_inner[..close_start];
-        format!("{leading_ws}---{nl}{inner}{nl}description: {desc}{nl}---{nl}{body}")
-    } else {
-        content.to_string()
-    }
+    fm_inner.rfind(&close_marker).map_or_else(
+        || content.to_string(),
+        |close_start| {
+            let inner = &fm_inner[..close_start];
+            format!("{leading_ws}---{nl}{inner}{nl}description: {desc}{nl}---{nl}{body}")
+        },
+    )
 }
 
 /// v0.2.1 diagnostic: scan for files with valid frontmatter but missing description.
@@ -116,8 +117,7 @@ pub fn run_fix(
                         .find(|l| l.starts_with("## "))
                         .map(|l| l.trim_start_matches("## ").to_string());
 
-                    let desc =
-                        first_heading.unwrap_or_else(|| "TODO: add description".to_string());
+                    let desc = first_heading.unwrap_or_else(|| "TODO: add description".to_string());
 
                     let new_content = fill_missing_description(&content, &desc);
                     if new_content != content {
@@ -184,7 +184,8 @@ mod tests {
 
     #[test]
     fn test_fill_missing_description_already_present_skips() {
-        let input = "---\ndescription: already here\ntimestamp: 2026-06-20\n---\n\n## Title\nbody\n";
+        let input =
+            "---\ndescription: already here\ntimestamp: 2026-06-20\n---\n\n## Title\nbody\n";
         let result = fill_missing_description(input, "new desc");
         assert_eq!(result, input, "unchanged when description exists");
     }
@@ -200,4 +201,3 @@ mod tests {
         assert!(result.contains("description: Decision Title"));
     }
 }
-

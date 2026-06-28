@@ -1,5 +1,38 @@
 ﻿# enjoyknowledge 变更记录
 
+## [v0.4.3] — 2026-06-28
+
+### kind registry 抽离 + 目录回归 + workflow 重构
+
+**3 大模块同步重写**：
+
+**kind registry 抽离**：
+- 新建 `.enjoyknowledge/_meta/kinds.md` — Markdown 表格，kind 注册表的单一真相源
+- 新建 `src/kinds.rs` — `kinds::all()`、`kinds::dir_for()`、`kinds::required_fields()`、`kinds::is_valid_kind()`
+- `ek promote` 改用 `kinds::dir_for()` 替代硬编码 `kind_to_dir()`，消除 5 处派生逻辑
+
+**目录回归（kind = dir，v0.1 哲学）**：
+- 5 目录改名：`gotchas/`→`gotcha/`、`decisions/`→`decision/`、`patterns/`→`pattern/`、`rules/`→`rule/`、`commands/`→`command/`
+- 11 类目录统一为 kind 名，无 "s" 派生
+- 回归 v0.1 DESIGN-V3 L17 "目录名即分类" 哲学
+
+**workflow 命令重构**：
+- `ek onboard` 升格顶层命令（不再 `ek workflow onboard`）
+- 砍掉 `ek workflow capture`（用 `ek promote` + AI draft 替代）
+- 删除 `src/cli/workflow.rs`（1216 行），抽出 `src/cli/onboard.rs`
+
+**doctor 增强**：
+- 新增 kinds.md schema 校验（check #5）：文件存在 + 解析合法 + 与代码 registry 一致
+
+### 破坏性变更
+
+- `ek workflow onboard` → `ek onboard`
+- `ek workflow capture` 移除（用 `ek promote` 替代）
+- 目录结构变化：`.enjoyknowledge/gotchas/` → `.enjoyknowledge/gotcha/`（5 目录改名）
+- `.enjoyknowledge_stage/workflow/` 移除
+
+---
+
 ## [v0.4.2] — 2026-06-28
 
 ### ek fix 保留 frontmatter 字段

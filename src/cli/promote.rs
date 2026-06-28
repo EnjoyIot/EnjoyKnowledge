@@ -1,5 +1,6 @@
 //! `enjoyknowledge promote` — promote a draft from stage/drafts/ to the knowledge base.
 
+use crate::kinds;
 use crate::EK_DIR;
 
 /// Canonical directory name for the stage.
@@ -21,7 +22,7 @@ pub fn run(
     }
 
     // Validate kind
-    let kind_dir = kind_to_dir(kind);
+    let kind_dir = kinds::dir_for(kind);
 
     // Derive target filename
     let target_stem = id.unwrap_or_else(|| draft_file.strip_suffix(".md").unwrap_or(draft_file));
@@ -68,40 +69,12 @@ pub fn run(
     Ok(())
 }
 
-/// Map a kind name (singular) to its directory name.
-fn kind_to_dir(kind: &str) -> &str {
-    match kind {
-        "gotcha" => "gotchas",
-        "decision" => "decisions",
-        "rule" => "rules",
-        "pattern" => "patterns",
-        "command" => "commands",
-        "architecture" | "business" | "context" | "contract" | "convention" | "template" => kind,
-        _ => {
-            // Will be reported as error by the caller
-            kind
-        }
-    }
-}
-
 /// Default author value for promoted KB files (开源组织名).
 const ENV_AUTHOR: &str = "enjoy";
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn kind_to_dir_maps_correctly() {
-        assert_eq!(kind_to_dir("gotcha"), "gotchas");
-        assert_eq!(kind_to_dir("decision"), "decisions");
-        assert_eq!(kind_to_dir("rule"), "rules");
-        assert_eq!(kind_to_dir("pattern"), "patterns");
-        assert_eq!(kind_to_dir("architecture"), "architecture");
-        assert_eq!(kind_to_dir("business"), "business");
-        assert_eq!(kind_to_dir("context"), "context");
-        assert_eq!(kind_to_dir("template"), "template");
-    }
 
     #[test]
     fn promote_creates_file_with_frontmatter() {
@@ -118,11 +91,11 @@ mod tests {
         .unwrap();
 
         // Set up KB structure
-        std::fs::create_dir_all(root.join(".enjoyknowledge/gotchas")).unwrap();
+        std::fs::create_dir_all(root.join(".enjoyknowledge/gotcha")).unwrap();
 
         run(root, "utf8-gotcha.md", "gotcha", None, Some("enjoy")).unwrap();
 
-        let target = root.join(".enjoyknowledge/gotchas/utf8-gotcha.md");
+        let target = root.join(".enjoyknowledge/gotcha/utf8-gotcha.md");
         assert!(target.exists());
         let content = std::fs::read_to_string(&target).unwrap();
         assert!(content.contains("id: utf8-gotcha"));
@@ -141,13 +114,13 @@ mod tests {
         std::fs::create_dir_all(&drafts_dir).unwrap();
         std::fs::write(drafts_dir.join("my-draft.md"), "## My Draft\n- Some content\n").unwrap();
 
-        std::fs::create_dir_all(root.join(".enjoyknowledge/gotchas")).unwrap();
+        std::fs::create_dir_all(root.join(".enjoyknowledge/gotcha")).unwrap();
 
         run(root, "my-draft.md", "gotcha", None, Some("enjoy")).unwrap();
 
         let draft = std::fs::read_to_string(drafts_dir.join("my-draft.md")).unwrap();
         assert!(draft.contains("[PROMOTED]"));
-        assert!(draft.contains(".enjoyknowledge/gotchas/my-draft.md"));
+        assert!(draft.contains(".enjoyknowledge/gotcha/my-draft.md"));
     }
 
     #[test]
@@ -159,13 +132,13 @@ mod tests {
         std::fs::create_dir_all(&drafts_dir).unwrap();
         std::fs::write(drafts_dir.join("draft.md"), "## Content\n- test\n").unwrap();
 
-        std::fs::create_dir_all(root.join(".enjoyknowledge/gotchas")).unwrap();
+        std::fs::create_dir_all(root.join(".enjoyknowledge/gotcha")).unwrap();
 
         run(root, "draft.md", "gotcha", Some("custom-id"), Some("enjoy")).unwrap();
 
-        assert!(root.join(".enjoyknowledge/gotchas/custom-id.md").exists());
+        assert!(root.join(".enjoyknowledge/gotcha/custom-id.md").exists());
         let content =
-            std::fs::read_to_string(root.join(".enjoyknowledge/gotchas/custom-id.md")).unwrap();
+            std::fs::read_to_string(root.join(".enjoyknowledge/gotcha/custom-id.md")).unwrap();
         assert!(content.contains("id: custom-id"));
     }
 
@@ -188,7 +161,7 @@ mod tests {
         std::fs::create_dir_all(&drafts_dir).unwrap();
         std::fs::write(drafts_dir.join("dup.md"), "## duplicate\n- test\n").unwrap();
 
-        let gd = root.join(".enjoyknowledge/gotchas");
+        let gd = root.join(".enjoyknowledge/gotcha");
         std::fs::create_dir_all(&gd).unwrap();
         std::fs::write(gd.join("dup.md"), "existing content").unwrap();
 

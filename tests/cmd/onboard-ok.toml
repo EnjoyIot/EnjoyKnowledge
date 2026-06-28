@@ -1,4 +1,3 @@
 bin.name = "enjoyknowledge"
-args = ["workflow", "onboard"]
+args = ["onboard"]
 fs.cwd = "../fixtures/minimal-project"
-fs.sandbox = true

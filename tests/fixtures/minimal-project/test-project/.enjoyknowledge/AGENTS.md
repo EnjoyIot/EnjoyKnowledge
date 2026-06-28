@@ -15,15 +15,15 @@ This project uses [enjoyknowledge](https://enjoyknowledge.dev) for shared AI con
 |------|-----------|-------------|
 | architecture | `architecture/` | System design, module map, data flow |
 | business | `business/` | Domain rules, compliance, billing logic |
-| commands | `commands/` | CLI commands, scripts, one-liners |
+| command | `command/` | CLI commands, scripts, one-liners |
 | context | `context/` | Stakeholders, constraints, deadlines |
-| decisions | `decisions/` | Architecture Decision Records (ADR) |
-| gotchas | `gotchas/` | Tricky bugs, edge cases, workarounds |
-| patterns | `patterns/` | Reusable solutions, best practices |
-| rules | `rules/` | Coding rules, lint policies |
-| contracts | `contracts/` | API contracts, data schemas |
-| conventions | `conventions/` | Team conventions, workflow norms |
-| templates | `templates/` | Reusable file/component templates |
+| decision | `decision/` | Architecture Decision Records (ADR) |
+| gotcha | `gotcha/` | Tricky bugs, edge cases, workarounds |
+| pattern | `pattern/` | Reusable solutions, best practices |
+| rule | `rule/` | Coding rules, lint policies |
+| contract | `contract/` | API contracts, data schemas |
+| convention | `convention/` | Team conventions, workflow norms |
+| template | `template/` | Reusable file/component templates |
 <!-- /enjoyknowledge_KB_INDEX -->
 
 ## AI Read Rules

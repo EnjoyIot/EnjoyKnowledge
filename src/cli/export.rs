@@ -56,7 +56,7 @@ pub fn run(project_root: &Path, tool_args: &[String], dry_run: bool) -> anyhow::
 
     // Deduplicate while preserving order
     let mut seen = std::collections::HashSet::new();
-    let tools: Vec<_> = tools.into_iter().filter(|t| seen.insert(t.clone())).collect();
+    let tools: Vec<_> = tools.into_iter().filter(|t| seen.insert(*t)).collect();
 
     for tool in &tools {
         if dry_run {
