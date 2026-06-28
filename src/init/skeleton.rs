@@ -46,6 +46,13 @@ pub fn generate_skeleton(project_root: &Path, profile: &dyn Profile) -> anyhow::
         std::fs::write(&kinds_md_path, kinds::init_default_kinds())?;
     }
 
+    // v0.4.5: Create kind directories from user kinds.md (runtime-read, not compile-time)
+    let kinds = kinds::all_from_file(&kinds_md_path).unwrap_or_else(|_| kinds::all().to_vec());
+    for k in &kinds {
+        let dir = ek.join(kinds::dir_for(&k.name));
+        std::fs::create_dir_all(&dir)?;
+    }
+
     // knowledge-tasks/ at project root level
     std::fs::create_dir_all(project_root.join("knowledge-tasks"))?;
 

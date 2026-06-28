@@ -10,7 +10,7 @@ mod knowledge;
 mod profile;
 mod template;
 
-use crate::cli::args::{Cli, Command, StageAction};
+use crate::cli::args::{Cli, Command, KindCmd, StageAction};
 use clap::Parser;
 use std::path::Path;
 
@@ -82,6 +82,17 @@ fn main() -> anyhow::Result<()> {
         Command::Stage { action } => match action {
             StageAction::Clean { dry_run, force, older_than } => {
                 cli::stage_clean::run(Path::new("."), dry_run, force, older_than)?;
+            }
+        },
+        Command::Kind { kind_cmd } => match kind_cmd {
+            KindCmd::Add { name, required, summary, yes } => {
+                cli::kind::run_add(Path::new("."), &name, &required, &summary, yes)?;
+            }
+            KindCmd::Rm { name, force, yes } => {
+                cli::kind::run_rm(Path::new("."), &name, force, yes)?;
+            }
+            KindCmd::List => {
+                cli::kind::run_list(Path::new("."))?;
             }
         },
     }

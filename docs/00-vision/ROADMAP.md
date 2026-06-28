@@ -1,6 +1,6 @@
 # enjoyknowledge 路线图
 
-> v0.4.4 | 2026-06-28
+> v0.4.5 | 2026-06-28
 
 ## 版本节奏
 
@@ -12,14 +12,15 @@
 | v0.4 | 已交付 (2026-06-28) | 极简上下文层（stage + promote + stage clean） |
 | v0.4.2 | 已交付 (2026-06-28) | ek fix 保留 frontmatter 字段 + 文档重写 |
 | v0.4.3 | 已交付 (2026-06-28) | kind registry 抽离 + 目录回归 kind=dir + workflow 重构 |
-| v0.4.4 | **当前** (2026-06-28) | stage 用户可改：stage-defaults.md + Hermes skill + init 不覆盖 |
+| v0.4.4 | 已交付 (2026-06-28) | stage 用户可改：stage-defaults.md + Hermes skill + init 不覆盖 |
+| v0.4.5 | **当前** (2026-06-28) | ek kind add/rm/list + kinds.md 运行时读 |
 | v0.5+ | 方向 | 智能化（语义检索、知识新鲜度），不预设完整 scope |
 
 ---
 
-## v0.4.2 当前状态
+## v0.4.5 当前状态
 
-### CLI 命令（13 个）
+### CLI 命令（14 个）
 
 | 命令 | 用途 |
 |---|---|
@@ -34,6 +35,7 @@
 | `export` | 生成 AI 工具入口文件（`--tool cursor/claude/auto`） |
 | `onboard` | 建立项目心智模型 |
 | `promote` | draft → KB（`--to <kind>` `--id <id>` `--author <name>`） |
+| `kind` | 管理知识种类（add/rm/list） |
 | `stage clean` | TTL 清理（`--dry-run` `--force` `--older-than <days>`） |
 
 ### 11 类知识资产

@@ -1,5 +1,38 @@
 ﻿# enjoyknowledge 变更记录
 
+## [v0.4.5] — 2026-06-28
+
+### `ek kind add/rm/list` + kinds.md 运行时读
+
+**3 大模块同步实施**：
+
+**`ek kind` 子命令（新建 `src/cli/kind.rs`）**：
+- `ek kind add <name>` — 新增知识种类：更新 kinds.md + 创建目录 + seed 文件
+- `ek kind rm <name>` — 删除知识种类：从 kinds.md 移除（`--force` 同时删除目录）
+- `ek kind list` — 列出所有知识种类（表格格式：kind / required / summary）
+- 名称校验：alphanumeric/underscore/dash（防注入）
+- `--yes` 跳过确认，`--force` 强制删除有内容的目录
+
+**kinds.md 运行时读（改 `src/kinds.rs`）**：
+- 新增 `all_from_file(path)` — 运行时读取用户版 kinds.md
+- `parse_kinds_md` 改为 `pub`（供 `kind.rs` 和 doctor 使用）
+- 保留 `KINDS` 编译期嵌入（向后兼容）
+
+**init + doctor 用运行时读**：
+- `generate_ek_skeleton` 优先用 `all_from_file()` 创建目录（回退到 `KINDS` 默认）
+- `check_kinds_md` 交叉校验用户版与代码 registry 一致性
+
+**新增文件**：
+- `src/cli/kind.rs` — 3 子命令 add/rm/list + 单元测试
+- `tests/cmd/kind-add.toml` + `.stdout`
+- `tests/cmd/kind-list.toml` + `.stdout`
+- `tests/cmd/kind-rm.toml` + `.stdout`
+
+**文档更新**：
+- INTERFACE-SPEC: 新增 §3.14 `kind` 子命令，doctor 更新为 5 项检查
+- GLOSSARY: kinds.md 词条更新（用户可改 + `ek kind` 命令）
+- ROADMAP: v0.4.5 标记已交付
+
 ## [v0.4.4] — 2026-06-28
 
 ### stage 用户可改：stage-defaults.md + user-owned AGENTS.md + Hermes skill 格式

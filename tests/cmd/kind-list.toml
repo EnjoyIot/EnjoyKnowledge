@@ -1,0 +1,4 @@
+bin.name = "enjoyknowledge"
+args = ["kind", "list"]
+fs.cwd = "../fixtures/minimal-project/test-project"
+fs.sandbox = true

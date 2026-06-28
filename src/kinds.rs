@@ -3,6 +3,7 @@
 //! Parsed at compile-time from `.enjoyknowledge/_meta/kinds.md` (Markdown table).
 //! All `dir_for()` lookups return `kind` directly — no "s" plural derivation.
 
+use std::path::Path;
 use std::sync::LazyLock;
 
 /// A knowledge kind parsed from `kinds.md`.
@@ -24,6 +25,12 @@ static KINDS: LazyLock<Vec<Kind>> = LazyLock::new(|| parse_kinds_md(KINDS_MD_DEF
 /// Return all registered knowledge kinds.
 pub fn all() -> &'static [Kind] {
     &KINDS
+}
+
+/// Read and parse user-editable `kinds.md` from the filesystem at runtime.
+pub fn all_from_file(path: &Path) -> anyhow::Result<Vec<Kind>> {
+    let content = std::fs::read_to_string(path)?;
+    Ok(parse_kinds_md(&content))
 }
 
 /// Return the canonical directory name for a kind (= kind, no derivation).
@@ -60,7 +67,7 @@ pub fn parse_kinds_md_for_doctor(md: &str) -> Vec<String> {
 
 /// Parse `kinds.md` Markdown table into a `Vec<Kind>`.
 /// Panics on malformed input (fail-fast at startup).
-fn parse_kinds_md(md: &str) -> Vec<Kind> {
+pub fn parse_kinds_md(md: &str) -> Vec<Kind> {
     let mut kinds = Vec::new();
     let mut in_table = false;
 
@@ -82,18 +89,18 @@ fn parse_kinds_md(md: &str) -> Vec<Kind> {
             continue;
         }
         // Parse data row: | kind | required | summary |
-        let cells: Vec<&str> =
-            trimmed.split('|').map(str::trim).filter(|c| !c.is_empty()).collect();
-        if cells.len() < 2 {
+        let cells: Vec<&str> = trimmed.split('|').map(str::trim).collect();
+        // cells[0] is empty (before first |), cells[1]=kind, cells[2]=required, cells[3]=summary
+        if cells.len() < 3 {
             continue;
         }
-        let name = cells[0].to_string();
-        let required: Vec<String> = if cells.len() > 1 && !cells[1].is_empty() {
-            cells[1].split(',').map(|f| f.trim().to_string()).collect()
+        let name = cells[1].to_string();
+        let required: Vec<String> = if cells.len() > 2 && !cells[2].is_empty() {
+            cells[2].split(',').map(|f| f.trim().to_string()).collect()
         } else {
             Vec::new()
         };
-        let summary = cells.get(2).map_or_else(String::new, std::string::ToString::to_string);
+        let summary = cells.get(3).map_or_else(String::new, |s| s.trim().to_string());
 
         kinds.push(Kind { name, required, summary });
     }

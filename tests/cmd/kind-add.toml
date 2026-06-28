@@ -1,0 +1,4 @@
+bin.name = "enjoyknowledge"
+args = ["kind", "add", "bug", "--required", "severity,repro-steps", "--summary", "Bug tracker", "--yes"]
+fs.cwd = "../fixtures/minimal-project"
+fs.sandbox = true

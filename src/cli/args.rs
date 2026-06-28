@@ -143,6 +143,12 @@ pub enum Command {
         #[command(subcommand)]
         action: StageAction,
     },
+
+    /// Manage knowledge kinds (v0.4.5)
+    Kind {
+        #[command(subcommand)]
+        kind_cmd: KindCmd,
+    },
 }
 
 /// Subcommand actions for `ek stage`.
@@ -162,4 +168,43 @@ pub enum StageAction {
         #[arg(long, value_name = "DAYS")]
         older_than: Option<u64>,
     },
+}
+
+/// Subcommand actions for `ek kind` (v0.4.5).
+#[derive(Subcommand)]
+pub enum KindCmd {
+    /// Add a new knowledge kind
+    Add {
+        /// Kind name (alphanumeric/underscore/dash)
+        name: String,
+
+        /// Comma-separated required frontmatter fields
+        #[arg(long, num_args = 1.., value_delimiter = ',')]
+        required: Vec<String>,
+
+        /// Human-readable summary of the kind
+        #[arg(long, default_value = "")]
+        summary: String,
+
+        /// Skip confirmation prompt
+        #[arg(long, short)]
+        yes: bool,
+    },
+
+    /// Remove a knowledge kind
+    Rm {
+        /// Kind name to remove
+        name: String,
+
+        /// Force removal even if directory has entries
+        #[arg(long, short)]
+        force: bool,
+
+        /// Skip confirmation prompt
+        #[arg(long, short)]
+        yes: bool,
+    },
+
+    /// List all knowledge kinds
+    List,
 }

@@ -1,10 +1,3 @@
----
-description: Knowledge kinds registry — single source of truth for kind → dir mapping
-timestamp: __TIMESTAMP__
----
-
-# Knowledge Kinds
-
 | kind | required | summary |
 |------|----------|---------|
 | gotcha | trigger | Pitfall / anti-pattern |
@@ -19,5 +12,3 @@ timestamp: __TIMESTAMP__
 | template | applies_to | Reusable template |
 | command | applies_to | CLI command documentation |
 | test-kind |  | Test kind for ek kind commands |
-
-<!-- dir is derived from kind (no "s" plural convention). -->

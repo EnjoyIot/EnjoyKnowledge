@@ -53,11 +53,12 @@ Core CLI 命令集：`init` / `ls` / `tree` / `cat` / `grep` / `add` / `doctor` 
 
 ### kind 注册表（kinds.md）
 
-`.enjoyknowledge/_meta/kinds.md` — Markdown 表格格式的 kind 清单，`kinds::dir_for()` 的唯一真相源。人类可读可编辑，doctor 校验一致性。
+`.enjoyknowledge/_meta/kinds.md` — Markdown 表格格式的 kind 清单，`kinds::dir_for()` 的唯一真相源。人类可读可编辑，doctor 校验一致性。**v0.4.5+：用户可通过 `ek kind add/rm/list` 命令管理，运行时读取用户版本。**
 
 **关键规则**：
 - **kind = dir**：`kinds::dir_for("gotcha")` = `"gotcha"`（无 "s" 派生）
 - **单一源**：所有 kind→dir 映射从 kinds.md 派生，消除硬编码
+- **用户可改**：`ek kind add <name>` 一行命令完成 kinds.md 更新 + 目录创建 + seed 文件
 
 ---
 

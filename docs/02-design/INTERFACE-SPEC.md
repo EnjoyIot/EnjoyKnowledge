@@ -1,6 +1,6 @@
 # enjoyknowledge 接口规范
 
-> v0.4.3 | 2026-06-28
+> v0.4.5 | 2026-06-28
 >
 > CLI 行为合约。第三方适配器、工具生成器、AI 工具集成的唯一参考。
 
@@ -110,11 +110,14 @@ timestamp: 2026-06-21
 | `cat <path>` | 查看文件内容 | 文件全文（stdout） |
 | `grep <pattern> [--type <dir>] [--tags <tag>] [--path <path>] [--archive] [--req <REQ-ID>]` | 结构化搜索 | 定位到 `##` 段 + 上下文 snippet |
 | `add <path> <content>` | 新增/追加知识 | 确认消息（stderr） |
-| `doctor [--ci]` | 4 项健康检查 | 问题清单；`--ci` warning 也非零退出 |
+| `doctor [--ci]` | 5 项健康检查 | 问题清单；`--ci` warning 也非零退出 |
 | `fix [--req <REQ-ID>]` | 自动修复 | 修复结果 |
 | `export --tool <cursor/claude/auto> [--dry-run]` | 生成 AI 工具入口 | `.cursor/rules/*.mdc` 或 `.claude/skills/*.md` |
 | `onboard` | 建立项目心智模型 | AGENTS.md + 定位文档 + 关键 gotchas + 活跃决策 |
 | `promote <draft_file> --to <kind> [--id <id>] [--author <name>]` | draft → KB | KB 文件 + frontmatter（kind=dir，无 "s" 派生） |
+| `kind add <name> [--required <csv>] [--summary <text>] [--yes]` | 新增知识种类 | 更新 kinds.md + 创建目录 + seed 文件 |
+| `kind rm <name> [--force] [--yes]` | 删除知识种类 | 从 kinds.md 移除 + --force 删除目录 |
+| `kind list` | 列出知识种类 | kinds.md 表格（kind / required / summary） |
 | `stage clean [--dry-run] [--force] [--older-than <days>]` | TTL 清理 | 清理 .archive/ 过期文件 |
 
 ### 3.2 `init`
@@ -201,7 +204,7 @@ enjoyknowledge add <path> <content>
 enjoyknowledge doctor [--ci]
 ```
 
-4 项检查：
+5 项检查：
 
 | 检查 | 内容 |
 |---|---|
@@ -209,6 +212,7 @@ enjoyknowledge doctor [--ci]
 | check_required_fields | gotcha 有 trigger / decision 有 reversible+decided_at / rule|contract|convention|template 有 applies_to |
 | check_sot_staleness | timestamp > 180 天 → warning |
 | check_export_consistency | export 生成文件与 SoT 一致 |
+| check_kinds_md | kinds.md 存在 + 可解析 + 与代码 registry 一致 |
 
 `--ci` 模式：warning 也返回非零退出码。
 
@@ -276,6 +280,34 @@ enjoyknowledge stage clean [--dry-run] [--force] [--older-than <days>]
 - `--dry-run`：列出将清理的文件，不删除
 - `--force`：跳过确认
 - `--older-than <days>`：覆盖默认天数
+
+### 3.14 `kind`（v0.4.5）
+
+```
+enjoyknowledge kind add <name> [--required <csv>] [--summary <text>] [--yes]
+enjoyknowledge kind rm <name> [--force] [--yes]
+enjoyknowledge kind list
+```
+
+管理知识种类（kind registry）。所有操作修改 `.enjoyknowledge/_meta/kinds.md`（Markdown 表格，单一真相源）。
+
+**`kind add <name>`**：
+- 校验名称（alphanumeric/underscore/dash）
+- 在 kinds.md 表格追加一行
+- 创建 `.enjoyknowledge/<name>/` 目录
+- 创建 seed file `<name>.md`
+- `--required <csv>`：逗号分隔的必填 frontmatter 字段
+- `--summary <text>`：人类可读简述
+- `--yes`：跳过确认提示
+
+**`kind rm <name>`**：
+- 从 kinds.md 表格移除对应行
+- 若目录有内容且未传 `--force`，报错阻止删除
+- `--force`：同时删除目录及其内容
+- `--yes`：跳过确认提示
+
+**`kind list`**：
+- 解析 kinds.md 表格，以表格形式输出
 
 ---
 

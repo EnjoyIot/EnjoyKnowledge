@@ -5,6 +5,7 @@ pub mod doctor;
 pub mod export;
 pub mod grep;
 pub mod init;
+pub mod kind;
 pub mod ls;
 pub mod onboard;
 pub mod promote;
