@@ -284,13 +284,17 @@ pub fn generate_stage_defaults_md(project_root: &Path) -> anyhow::Result<()> {
 }
 
 /// Generate `.enjoyknowledge/AGENTS.md` — the KB index that AI tools read.
+/// v0.4.6: Does NOT overwrite if the file already exists (user-owned).
 pub fn generate_ek_agents_md(project_root: &Path) -> anyhow::Result<()> {
     let ek = project_root.join(EK_DIR);
     std::fs::create_dir_all(&ek)?;
 
-    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-    let content = ek_agents_md_content(&today);
-    std::fs::write(ek.join("AGENTS.md"), content)?;
+    let path = ek.join("AGENTS.md");
+    if !path.exists() {
+        let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+        let content = ek_agents_md_content(&today);
+        std::fs::write(&path, content)?;
+    }
     Ok(())
 }
 
@@ -330,46 +334,61 @@ pub fn update_gitignore(project_root: &Path) -> anyhow::Result<()> {
 
 fn ek_agents_md_content(today: &str) -> String {
     format!(
-        r"---
-description: Knowledge base index and AI tool usage guide
-timestamp: {today}
+        r#"---
+name: enjoyknowledge-kb
+description: "Knowledge base index for AI tools. Use when reading project knowledge, listing KB files, or grepping inside knowledge sections. Triggers on '读 KB' / '查项目知识' / 'enjoyknowledge ls/grep/cat' / 'project context' / 'onboard'. Reads at startup alongside AGENTS.md and .enjoyknowledge_stage/AGENTS.md."
+version: 1.0.0
+metadata:
+  hermes:
+    tags: [knowledge-base, kb, ai-context, indexing]
+    related_skills: [enjoyknowledge, enjoyknowledge-stage]
 ---
 
-# AGENTS.md — EnjoyKnowledge KB Index
+# enjoyknowledge KB — Knowledge Base Index (v0.4.6+)
 
-This project uses [enjoyknowledge](https://enjoyknowledge.dev) for shared AI context.
-**All knowledge in `.enjoyknowledge/` is human-reviewed.** AI tools read this file at startup.
+## Overview
+
+This file tells AI tools **how to use `.enjoyknowledge/`** for project context.
+**User-editable**: edit this file directly to change KB conventions.
+`ek init` will **never overwrite** this file (it's user-owned).
 
 ## KB Index
 
 <!-- enjoyknowledge_KB_INDEX -->
-| Kind | Directory | Description |
-|------|-----------|-------------|
-| architecture | `architecture/` | System design, module map, data flow |
-| business | `business/` | Domain rules, compliance, billing logic |
-| command | `command/` | CLI commands, scripts, one-liners |
-| context | `context/` | Stakeholders, constraints, deadlines |
-| decision | `decision/` | Architecture Decision Records (ADR) |
-| gotcha | `gotcha/` | Tricky bugs, edge cases, workarounds |
-| pattern | `pattern/` | Reusable solutions, best practices |
-| rule | `rule/` | Coding rules, lint policies |
-| contract | `contract/` | API contracts, data schemas |
-| convention | `convention/` | Team conventions, workflow norms |
-| template | `template/` | Reusable file/component templates |
+| kind | dir | required | summary |
+|------|-----|----------|---------|
+| gotcha | gotcha/ | trigger, applies_to, severity, reversible | Pitfall / anti-pattern |
+| decision | decision/ | reversible, decided_at | Decision with reversibility |
+| pattern | pattern/ | applies_to | Reusable code/design pattern |
+| rule | rule/ | applies_to | Project-wide rule |
+| business | business/ | applies_to | Domain concept |
+| architecture | architecture/ | applies_to | System / module architecture |
+| contract | contract/ | applies_to | API / data contract |
+| convention | convention/ | applies_to | Team / project convention |
+| context | context/ | applies_to | Runtime context |
+| template | template/ | applies_to | Reusable template |
+| command | command/ | applies_to | CLI command documentation |
 <!-- /enjoyknowledge_KB_INDEX -->
 
 ## AI Read Rules
 
 **On startup and before any coding task**, read:
 1. This file (KB index) — know what knowledge exists
-2. Select `cat` relevant files — get detailed context
-3. Use `grep <pattern>` — search within knowledge sections
+2. `ek cat <path>` — read a knowledge file (path auto-prefixed with `.enjoyknowledge/`)
+3. `ek grep <pattern>` — search within knowledge sections
 
 ## AI Write Rules
 
 **NEVER write to `.enjoyknowledge/` directly** unless the human explicitly asks:
 - `ek add <path> <content>` — append a knowledge entry
 - AI drafts go to `.enjoyknowledge_stage/drafts/`, promoted by human via `ek promote`
+
+## Custom Kind Directories (用户可加)
+
+If user added custom kinds in `_meta/kinds.md`:
+- `ek kind list` — see all kinds
+- `ek kind add <name>` — add new kind directory
+- `ek kind rm <name>` — remove kind directory
 
 ## Commands
 
@@ -383,11 +402,15 @@ This project uses [enjoyknowledge](https://enjoyknowledge.dev) for shared AI con
 | `ek doctor` | Health check |
 | `ek fix` | Auto-fix common issues |
 | `ek promote <draft> --to <kind>` | Promote a draft to KB |
+| `ek kind add/rm/list` | Manage knowledge kinds |
 | `ek stage clean` | Clean old archived tasks |
+| `ek onboard` | Establish project mental model |
 
 ---
-*Generated by `ek init`. See `.enjoyknowledge_stage/AGENTS.md` for stage writing conventions.*
-"
+*User-owned: edit this file to customize KB conventions. `ek init` will not overwrite.*
+*Generated by `ek init` v0.4.6. See `.enjoyknowledge_stage/AGENTS.md` for stage writing conventions.*
+timestamp: {today}
+"#
     )
 }
 
@@ -809,12 +832,26 @@ mod tests {
         generate_ek_agents_md(root).unwrap();
 
         let content = std::fs::read_to_string(root.join(".enjoyknowledge/AGENTS.md")).unwrap();
-        assert!(content.contains("EnjoyKnowledge KB Index"));
+        assert!(content.contains("enjoyknowledge KB"));
         assert!(content.contains("<!-- enjoyknowledge_KB_INDEX -->"));
         assert!(content.contains("architecture"));
         assert!(content.contains("gotcha"));
         assert!(content.contains("rule"));
         assert!(content.contains("NEVER write to `.enjoyknowledge/` directly"));
+    }
+
+    #[test]
+    fn generate_ek_agents_md_does_not_overwrite() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path();
+        let ek = root.join(".enjoyknowledge");
+        std::fs::create_dir_all(&ek).unwrap();
+        let agents_path = ek.join("AGENTS.md");
+        std::fs::write(&agents_path, "USER-MARKER-12345\n").unwrap();
+        generate_ek_agents_md(root).unwrap();
+        let content = std::fs::read_to_string(&agents_path).unwrap();
+        assert!(content.contains("USER-MARKER-12345"), "user marker should be preserved");
+        assert!(!content.contains("enjoyknowledge-kb"), "default should NOT overwrite");
     }
 
     #[test]

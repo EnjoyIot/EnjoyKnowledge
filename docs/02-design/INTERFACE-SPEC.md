@@ -1,6 +1,6 @@
 # enjoyknowledge 接口规范
 
-> v0.4.5 | 2026-06-28
+> v0.4.6 | 2026-06-28
 >
 > CLI 行为合约。第三方适配器、工具生成器、AI 工具集成的唯一参考。
 
@@ -94,7 +94,7 @@ timestamp: 2026-06-21
 | 文件 | 位置 | 作用 |
 |---|---|---|
 | `index.md` | 任何目录下（可选）| 该目录的目录 |
-| `AGENTS.md` | `.enjoyknowledge/` + `.enjoyknowledge_stage/` | AI 入口 + 写入规范 |
+| `AGENTS.md` | `.enjoyknowledge/` + `.enjoyknowledge_stage/` | AI 入口 + 写入规范，均为 Hermes skill 格式，用户拥有（init 不覆盖）|
 
 ---
 
@@ -130,6 +130,7 @@ enjoyknowledge init [--ai <tool>] [--template <name>] [--link <path>] [--profile
 - 创建 `.enjoyknowledge/`（11 类目录 + _meta/kinds.md + AGENTS.md + index.md）
 - 创建 `.enjoyknowledge_stage/`（tasks/_template/ 8 文件 + drafts/ + .archive/ + AGENTS.md + _meta/stage-defaults.md）
 - v0.4.4+: stage AGENTS.md 和 _meta/stage-defaults.md 为用户所有，init **不覆盖**已存在文件
+- v0.4.6+: `.enjoyknowledge/AGENTS.md` 也为用户所有，init **不覆盖**已存在文件；采用 Hermes skill 格式（frontmatter + body，与 stage AGENTS.md 一致）
 - `--ai <tool>` 同时生成工具入口文件（支持 9 工具）
 - `--link <path>` 引用外部知识库，不创建目录
 

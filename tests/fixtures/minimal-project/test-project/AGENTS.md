@@ -18,7 +18,7 @@ pattern/
 rule/
 template/
 test-kind/
-  AGENTS.md → Knowledge base index and AI tool usage guide
+  AGENTS.md → Knowledge base index for AI tools. Use when reading project knowledge, listing KB files, or grepping inside knowledge sections. Triggers on '读 KB' / '查项目知识' / 'enjoyknowledge ls/grep/cat' / 'project context' / 'onboard'. Reads at startup alongside AGENTS.md and .enjoyknowledge_stage/AGENTS.md.
   overview.md → Project architecture overview -- system design, module map, data flow
   business.md → Business rules, domain logic, calculation formulas, and compliance requirements
   command.md → CLI commands, scripts, and one-liners worth remembering

@@ -1,5 +1,31 @@
 ﻿# enjoyknowledge 变更记录
 
+## [v0.4.6] — 2026-06-28
+
+### ek AGENTS.md 100% 对齐 stage（不覆盖 + Hermes skill 格式）
+
+**2 大模块同步改动**：
+
+**`generate_ek_agents_md` 不覆盖**：
+- `.enjoyknowledge/AGENTS.md` 现在跟 `.enjoyknowledge_stage/AGENTS.md` 行为一致：存在则跳过，不存在才写
+- 1 行核心改动：`if !path.exists()` guard
+
+**`ek_agents_md_content` = Hermes skill 格式**：
+- 重写 ek AGENTS.md 为 Hermes skill frontmatter + body（与 stage AGENTS.md 格式 100% 一致）
+- Frontmatter: `name: enjoyknowledge-kb`、`description`、`version: 1.0.0`、`metadata.hermes`
+- Body: Overview / KB Index / AI Read Rules / AI Write Rules / Custom Kind Directories / Commands
+- KB Index 表格保留（`<!-- enjoyknowledge_KB_INDEX -->` 标记兼容 `sync_agents_md_summary`）
+- 末尾加 `*User-owned*` 注释
+
+**不改的部分**：
+- `generate_agents_md`（根目录 AGENTS.md）永远覆盖——AI 工具入口不能"用户拥有"
+- `sync_agents_md_summary` 不变——依赖 KB_INDEX 标记
+
+**文档更新**：
+- INTERFACE-SPEC: §1.1 AGENTS.md 词条 + §3.2 init 加 v0.4.6 说明
+- GLOSSARY: `.enjoyknowledge/AGENTS.md` 词条更新（用户拥有 + Hermes skill 格式）
+- ROADMAP: v0.4.6 标记已交付
+
 ## [v0.4.5] — 2026-06-28
 
 ### `ek kind add/rm/list` + kinds.md 运行时读

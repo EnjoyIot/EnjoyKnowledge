@@ -181,7 +181,7 @@ fn init_generates_ek_agents_md() {
     init_project(root);
 
     let content = std::fs::read_to_string(root.join(".enjoyknowledge/AGENTS.md")).unwrap();
-    assert!(content.contains("EnjoyKnowledge KB Index"));
+    assert!(content.contains("enjoyknowledge KB"));
     assert!(content.contains("NEVER write to"));
 }
 

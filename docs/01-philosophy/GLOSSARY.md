@@ -1,6 +1,6 @@
 # enjoyknowledge 术语表
 
-> v0.4.2 | 2026-06-28
+> v0.4.6 | 2026-06-28
 >
 > 所有文档共享的统一术语。按类别排列。
 
@@ -18,7 +18,10 @@
 Core CLI 命令集：`init` / `ls` / `tree` / `cat` / `grep` / `add` / `doctor` / `fix` / `export` / `workflow` / `promote` / `stage clean`。所有原语不写死目录名、不关心领域语义。
 
 ### AGENTS.md
-项目根目录的 AI 入口文件。内嵌 `enjoyknowledge ls` 摘要（`<!-- enjoyknowledge_LS_START -->` 块），AI 30 秒读完即知项目知识结构。`init` 生成，`add` 自动更新。**路由表模式**——不复制 SoT 内容，只放链接。
+项目根目录的 AI 入口文件。内嵌 `enjoyknowledge ls` 摘要（`<!-- enjoyknowledge_LS_START -->` 块），AI 30 秒读完即知项目知识结构。`init` 生成，`add` 自动更新。**路由表模式**——不复制 SoT 内容，只放链接。**永远覆盖**（AI 工具入口不能"用户拥有"）。
+
+### `.enjoyknowledge/AGENTS.md`（v0.4.6+）
+KB 写入规则与索引，按 Hermes skill 格式（frontmatter + body）组织，与 `.enjoyknowledge_stage/AGENTS.md` 格式 100% 一致。**用户拥有**：`ek init` 永远不会覆盖已存在的文件。用户可直接编辑此文件来自定义 KB 约定。
 
 ---
 

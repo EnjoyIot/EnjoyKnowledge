@@ -1,6 +1,6 @@
 # enjoyknowledge 路线图
 
-> v0.4.5 | 2026-06-28
+> v0.4.6 | 2026-06-28
 
 ## 版本节奏
 
@@ -13,7 +13,8 @@
 | v0.4.2 | 已交付 (2026-06-28) | ek fix 保留 frontmatter 字段 + 文档重写 |
 | v0.4.3 | 已交付 (2026-06-28) | kind registry 抽离 + 目录回归 kind=dir + workflow 重构 |
 | v0.4.4 | 已交付 (2026-06-28) | stage 用户可改：stage-defaults.md + Hermes skill + init 不覆盖 |
-| v0.4.5 | **当前** (2026-06-28) | ek kind add/rm/list + kinds.md 运行时读 |
+| v0.4.5 | 已交付 (2026-06-28) | ek kind add/rm/list + kinds.md 运行时读 |
+| v0.4.6 | **当前** (2026-06-28) | ek AGENTS.md 对齐 stage：不覆盖 + Hermes skill 格式 |
 | v0.5+ | 方向 | 智能化（语义检索、知识新鲜度），不预设完整 scope |
 
 ---
