@@ -616,10 +616,10 @@ See `$file:.enjoyknowledge/index.md` for project knowledge.
 
 ## 📂 v4 完整记录
 
-- **整合文档**：`C:\Users\jay\Documents\why-workspace\daily\2026-06-27-enjoyknowledge-rule-design-integration.md`
+- **整合文档**：`C:\Users\Enjoy\Documents\why-workspace\daily\2026-06-27-enjoyknowledge-rule-design-integration.md`
 - **新增节**：v4 for Coding 完整设计（10 节）
-- **Codex v3 log**：`C:\Users\jay\AppData\Local\Temp\ek-codex-fc.log`
-- **Claude v3 log**：`C:\Users\jay\AppData\Local\Temp\ek-claude-fc.log`
+- **Codex v3 log**：`C:\Users\Enjoy\AppData\Local\Temp\ek-codex-fc.log`
+- **Claude v3 log**：`C:\Users\Enjoy\AppData\Local\Temp\ek-claude-fc.log`
 
 ---
 

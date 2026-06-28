@@ -366,7 +366,7 @@
 |---|---|---|---|
 | 7 | **MemTensor/MemOS** | 9,928 | "🎯 **Self-evolving memory OS** for LLM & AI Agents"（**有 ArXiv 论文** 2507.03724）|
 | 8 | **EverMind-AI/EverOS** | 7,965 | "Self-evolving memory across Agent and platform. The **one portable memory layer**" |
-| 9 | **Dammyjay93/interface-design** | 5,091 | "Design engineering for Claude Code. **Craft, memory, and enforcement** for consistency" |
+| 9 | **DammyEnjoy93/interface-design** | 5,091 | "Design engineering for Claude Code. **Craft, memory, and enforcement** for consistency" |
 | 10 | **CaviraOSS/OpenMemory** | 4,248 | "Local persistent memory store for LLM applications including claude desktop" |
 | 11 | **basicmachines-co/basic-memory** | 3,265 | "**AI conversations that actually remember**. Never re-explain your project to your AI" |
 | 12 | **breferrari/obsidian-mind** | 3,037 | "An **Obsidian vault** that gives AI coding agents persistent memory" |
@@ -635,7 +635,7 @@ agentmemory README 提到：
 
 ---
 
-## 9. 下一步建议（不动手，等 Jay 决定）
+## 9. 下一步建议（不动手，等 Enjoy 决定）
 
 | 选项 | 内容 |
 |---|---|
@@ -643,7 +643,7 @@ agentmemory README 提到：
 | B | 继续挖 Karpathy LLM Wiki 模式 + Manus / Drew Breunig 实践 |
 | C | 跟 basic-memory / obsidian-mind 做直接对比，找出 EnjoyFlow 还能立足的角度 |
 | D | 暂停调研，开始做 demo 验证双向翻译机制是否真的成立 |
-| E | 其他（Jay 指定）|
+| E | 其他（Enjoy 指定）|
 
 ---
 
@@ -670,7 +670,7 @@ agentmemory README 提到：
 | 项 | 值 |
 |---|---|
 | 日期 | 2026-06-19 |
-| 触发原因 | Jay 把定位升级为 v4 "接口规范 + 默认实现"哲学，需要找真实参照系 |
+| 触发原因 | Enjoy 把定位升级为 v4 "接口规范 + 默认实现"哲学，需要找真实参照系 |
 | 调研范围 | 已成功的接口协议案例 + 2026 年 AI 领域 interface-driven 项目 |
 | 方法 | HN Algolia + GitHub API + 各项目一手 README + 规范站 |
 | 不下结论 | 只记录事实，定位判断留给用户 |
@@ -965,13 +965,13 @@ typography:
 
 ---
 
-## 8. Jay 工具栈相关发现
+## 8. Enjoy 工具栈相关发现
 
 ### 8.1 Hermes Agent
 
 - **NousResearch/hermes-agent** —— **197,655 stars**
-- Jay 用的工具
-- EnjoyFlow 是 Jay 开发的——enjoyflow 跟 Hermes 是**同一个生态**
+- Enjoy 用的工具
+- EnjoyFlow 是 Enjoy 开发的——enjoyflow 跟 Hermes 是**同一个生态**
 
 ### 8.2 MemOS
 
@@ -1015,7 +1015,7 @@ typography:
 - https://github.com/letta-ai/letta
 - https://github.com/topoteretes/cognee
 
-### 9.4 Jay 工具栈相关
+### 9.4 Enjoy 工具栈相关
 
 - https://github.com/NousResearch/hermes-agent （197,655 stars）
 - https://github.com/MemTensor/MemOS

@@ -594,7 +594,7 @@ alwaysApply: false
 
 ---
 
-## 11. 给 Jay 的快速摘要(可跳过细节)
+## 11. 给 Enjoy 的快速摘要(可跳过细节)
 
 1. **SoT = `.enjoyknowledge/rules/<id>.md`**,统一 frontmatter(`title` / `description` / `id` / `tags`),body 是普通 Markdown。
 2. **tags 三轴**:`scope:`(team/user/project) + `policy:`(always/glob/desc/subdir) + `tools:`(白名单)。缺省值是 project + always + 全部工具,缺省时 sync 报警。

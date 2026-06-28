@@ -216,9 +216,9 @@ Claude 说"`docs/specs/rules-sync.md` 完整"——但**实际代码里没有 `r
 
 ## 📂 v2 完整记录
 
-- **整合文档**：`C:\Users\jay\Documents\why-workspace\daily\2026-06-27-enjoyknowledge-rule-design-integration.md`（v3 方案 = v1 rule 整合 + v2 3 机制协同）
-- **Codex v2 log**：`C:\Users\jay\AppData\Local\Temp\ek-codex-v2-output.log`（489 行，含 sandbox 错误记录）
-- **Claude v2 log**：`C:\Users\jay\AppData\Local\Temp\ek-claude-v2-output.log`（108 行，干净）
+- **整合文档**：`C:\Users\Enjoy\Documents\why-workspace\daily\2026-06-27-enjoyknowledge-rule-design-integration.md`（v3 方案 = v1 rule 整合 + v2 3 机制协同）
+- **Codex v2 log**：`C:\Users\Enjoy\AppData\Local\Temp\ek-codex-v2-output.log`（489 行，含 sandbox 错误记录）
+- **Claude v2 log**：`C:\Users\Enjoy\AppData\Local\Temp\ek-claude-v2-output.log`（108 行，干净）
 
 ---
 

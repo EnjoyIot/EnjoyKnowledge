@@ -254,9 +254,9 @@ onboard (W1) ──── 唯一前置依赖
 
 ## 📂 完整记录
 
-- **整合文档**：`C:\Users\jay\Documents\why-workspace\daily\2026-06-27-enjoyknowledge-rule-design-integration.md`
-- **Codex v3 log**：`C:\Users\jay\AppData\Local\Temp\ek-codex-fc.log`（761 行）
-- **Claude v3 log**：`C:\Users\jay\AppData\Local\Temp\ek-claude-fc.log`（321 行）
+- **整合文档**：`C:\Users\Enjoy\Documents\why-workspace\daily\2026-06-27-enjoyknowledge-rule-design-integration.md`
+- **Codex v3 log**：`C:\Users\Enjoy\AppData\Local\Temp\ek-codex-fc.log`（761 行）
+- **Claude v3 log**：`C:\Users\Enjoy\AppData\Local\Temp\ek-claude-fc.log`（321 行）
 - **B 站原文**：https://mp.weixin.qq.com/s/YH5iiaW7OQ9AvXtZFUyK-A
 
 ---
