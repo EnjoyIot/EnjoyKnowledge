@@ -446,7 +446,7 @@ fn validate_required_fields(kind: &str, fields: &HashMap<String, String>) -> any
     Ok(())
 }
 
-/// Build YAML frontmatter for a capture entry.
+/// Build YAML field content for a capture entry (without `---` delimiters).
 fn build_capture_frontmatter(kind: &str, fields: &HashMap<String, String>, body: &str) -> String {
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
     let description = body.lines().find(|l| l.starts_with("## ")).map_or_else(
@@ -454,12 +454,12 @@ fn build_capture_frontmatter(kind: &str, fields: &HashMap<String, String>, body:
         |l| l.trim_start_matches("## ").trim().to_string(),
     );
 
-    let mut fm = format!("---\ndescription: {description}\ntimestamp: {today}\n");
+    let mut yaml = format!("description: {description}\ntimestamp: {today}\n");
 
     // Write kind-specific fields first, then any extra fields
     for req in required_fields(kind) {
         if let Some(val) = fields.get(*req) {
-            let _ = std::fmt::Write::write_fmt(&mut fm, format_args!("{req}: {val}\n"));
+            let _ = std::fmt::Write::write_fmt(&mut yaml, format_args!("{req}: {val}\n"));
         }
     }
 
@@ -467,12 +467,11 @@ fn build_capture_frontmatter(kind: &str, fields: &HashMap<String, String>, body:
     let required: Vec<&str> = required_fields(kind).to_vec();
     for (k, v) in fields {
         if !required.contains(&k.as_str()) {
-            let _ = std::fmt::Write::write_fmt(&mut fm, format_args!("{k}: {v}\n"));
+            let _ = std::fmt::Write::write_fmt(&mut yaml, format_args!("{k}: {v}\n"));
         }
     }
 
-    fm.push_str("---\n");
-    fm
+    yaml
 }
 
 /// Write the capture entry to disk via `FilesystemSource`.
@@ -486,15 +485,22 @@ fn write_entry(
     let full = source.root.join(path);
 
     if full.exists() {
-        // Append body (without frontmatter) and refresh timestamp.
+        // Safety net: strip any trailing `---` from previously-corrupted files
+        // before appending, so frontmatter parsing won't break.
+        let existing = std::fs::read_to_string(&full)?;
+        let cleaned = existing.trim_end().to_string();
+        if cleaned.ends_with("\n---") {
+            let stripped = cleaned[..cleaned.len() - 4].trim_end().to_string();
+            std::fs::write(&full, format!("{stripped}\n"))?;
+        }
         source.add_entry(path, body)?;
     } else {
-        // New file: full frontmatter + body.
-        let fm = build_capture_frontmatter(kind, fields, body);
+        // New file: explicit frontmatter template — no stray `---`.
+        let yaml = build_capture_frontmatter(kind, fields, body);
         if let Some(parent) = full.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        std::fs::write(&full, format!("{fm}\n{body}\n"))?;
+        std::fs::write(&full, format!("---\n{yaml}---\n\n{body}\n"))?;
     }
 
     Ok(())
@@ -949,5 +955,151 @@ mod tests {
     #[test]
     fn unescape_multiple_escapes() {
         assert_eq!(unescape_body(r"a\nb\nc\td"), "a\nb\nc\td");
+    }
+
+    // ── capture: no trailing `---` ───────────────────────────────────────
+
+    #[test]
+    fn capture_new_file_has_exactly_two_separators() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ek = setup_ek_dir(tmp.path());
+        fs::write(
+            ek.join("index.md"),
+            "---\ndescription: index\ntimestamp: 2026-01-01\n---\n\n# Index\n",
+        )
+        .unwrap();
+
+        let input = CaptureInput {
+            kind: "gotcha".to_string(),
+            fields: {
+                let mut m = HashMap::new();
+                m.insert("trigger".to_string(), "t".to_string());
+                m
+            },
+            body: "## Test\nBody content.".to_string(),
+            path: None,
+        };
+
+        let output = run_capture(tmp.path(), &input).unwrap();
+        let content = fs::read_to_string(ek.join(&output.written_path)).unwrap();
+        let separator_count = content.lines().filter(|l| *l == "---").count();
+        assert_eq!(
+            separator_count, 2,
+            "new file should have exactly 2 '---' lines (opening + closing), got {}:\n{content}",
+            separator_count
+        );
+    }
+
+    #[test]
+    fn capture_append_no_extra_separator() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ek = setup_ek_dir(tmp.path());
+        // Existing file with correct 2-separator frontmatter
+        let existing_path = "gotchas/gotchas.md";
+        fs::create_dir_all(ek.join("gotchas")).unwrap();
+        fs::write(
+            ek.join(existing_path),
+            "---\ndescription: first\ntimestamp: 2026-01-01\n---\n\n## First\nOne.\n",
+        )
+        .unwrap();
+        fs::write(
+            ek.join("index.md"),
+            "---\ndescription: index\ntimestamp: 2026-01-01\n---\n\n# Index\n",
+        )
+        .unwrap();
+
+        let input = CaptureInput {
+            kind: "gotcha".to_string(),
+            fields: {
+                let mut m = HashMap::new();
+                m.insert("trigger".to_string(), "t".to_string());
+                m
+            },
+            body: "## Second\nTwo.".to_string(),
+            path: None,
+        };
+
+        let output = run_capture(tmp.path(), &input).unwrap();
+        let content = fs::read_to_string(ek.join(&output.written_path)).unwrap();
+        let separator_count = content.lines().filter(|l| *l == "---").count();
+        assert_eq!(
+            separator_count, 2,
+            "after append should still have exactly 2 '---' lines, got {}:\n{content}",
+            separator_count
+        );
+        assert!(content.contains("## First"));
+        assert!(content.contains("## Second"));
+    }
+
+    #[test]
+    fn capture_body_with_horizontal_rule_preserved() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ek = setup_ek_dir(tmp.path());
+        fs::write(
+            ek.join("index.md"),
+            "---\ndescription: index\ntimestamp: 2026-01-01\n---\n\n# Index\n",
+        )
+        .unwrap();
+
+        let input = CaptureInput {
+            kind: "rule".to_string(),
+            fields: {
+                let mut m = HashMap::new();
+                m.insert("applies_to".to_string(), "all".to_string());
+                m
+            },
+            body: "## My Rule\nTop content.\n\n---\n\nBottom content.".to_string(),
+            path: None,
+        };
+
+        let output = run_capture(tmp.path(), &input).unwrap();
+        let content = fs::read_to_string(ek.join(&output.written_path)).unwrap();
+        // The body's horizontal rule `---` should be preserved
+        assert!(content.contains("Top content."));
+        assert!(content.contains("Bottom content."));
+        // Frontmatter parsing should still succeed
+        let fm = parse_frontmatter(&content);
+        assert!(fm.is_some(), "frontmatter should parse even with body `---` hr");
+        assert_eq!(fm.unwrap().description.unwrap(), "My Rule");
+    }
+
+    #[test]
+    fn capture_append_strips_trailing_separator() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ek = setup_ek_dir(tmp.path());
+        // Simulate a previously-corrupted file with trailing `---`
+        let corrupted_content = "---\ndescription: bad\ntimestamp: 2026-01-01\n---\n\n## Entry\nBody.\n\n---\n";
+        fs::create_dir_all(ek.join("gotchas")).unwrap();
+        fs::write(ek.join("gotchas/gotchas.md"), corrupted_content).unwrap();
+        fs::write(
+            ek.join("index.md"),
+            "---\ndescription: index\ntimestamp: 2026-01-01\n---\n\n# Index\n",
+        )
+        .unwrap();
+
+        let input = CaptureInput {
+            kind: "gotcha".to_string(),
+            fields: {
+                let mut m = HashMap::new();
+                m.insert("trigger".to_string(), "t2".to_string());
+                m
+            },
+            body: "## Fixed\nNow clean.".to_string(),
+            path: None,
+        };
+
+        let output = run_capture(tmp.path(), &input).unwrap();
+        let content = fs::read_to_string(ek.join(&output.written_path)).unwrap();
+        // Should have stripped the trailing `---` and appended cleanly
+        let separator_count = content.lines().filter(|l| *l == "---").count();
+        assert_eq!(
+            separator_count, 2,
+            "corrupted trailing '---' should be stripped; got {}:\n{content}",
+            separator_count
+        );
+        assert!(content.contains("## Fixed"));
+        // Frontmatter should parse correctly now
+        let fm = parse_frontmatter(&content);
+        assert!(fm.is_some(), "frontmatter should parse after stripping trailing '---'");
     }
 }
