@@ -21,6 +21,9 @@ Thumbs.db
 .hermes
 $CODEX_HOME
 .codex
+
+# R1 working area (local design docs + claude prompts, not part of repo)
+why-workspace/
 # Node (if applicable)
 node_modules/
 
