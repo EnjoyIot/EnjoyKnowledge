@@ -147,52 +147,55 @@ CLI 核心       打磨稳定      for Coding 场景深化   团队规模化    
 
 ---
 
-## v0.4 — 知识 + 开发流程交织 + 团队规模化（合并发布）
+## v0.4 — 极简上下文层（已落地 2026-06-28）
 
-**目标**: 让知识不再只是静态文档，而是与开发流程交织；支持多仓库、多团队场景。  
+**目标**: 给 AI 工具提供**人类已审核的好上下文**——v0.4 的全部使命。
 
-**预计**: 2-3 个迭代（**原 v0.3 剩余 4 大类 + 原 v0.4 5 大类合并**）
+**预计**: 5-7 天（实际一次性完成）
 
-### 搜索能力增强
+**核心交付**（commit 600b8a4）：
 
-- [ ] `grep --related <file>`：基于 tags 和正文关键词，查找与指定文件主题相关的其他知识条目
-- [ ] `grep --semantic <query>`：可选语义搜索后端（本地嵌入模型，不依赖外部 API），作为结构搜索的补充
-- [ ] 搜索结果排序优化：匹配在 description 中的权重高于正文弱匹配
-- [ ] `grep --snippet-lines N`：控制匹配结果中上下文片段的行数
+### ek init 增强
+- [x] 创建 `.enjoyknowledge_stage/{tasks,drafts,.archive}/` 目录
+- [x] 生成 `.enjoyknowledge/AGENTS.md`（KB 索引 + 11 kind 描述 + 写入规则）
+- [x] 生成 `.enjoyknowledge_stage/AGENTS.md`（任务暂存 8 文件写入规范）
+- [x] 生成 `.enjoyknowledge_stage/tasks/_template/` 8 文件模板
+- [x] 更新 `.gitignore`（stage 排除规则）
 
-### AI 集成深度
+### ek promote 新增
+- [x] 从 `.enjoyknowledge_stage/drafts/` 复制到 `.enjoyknowledge/<kind>/`
+- [x] 自动生成最小 4 字段 frontmatter（id/kind/created/author）
+- [x] 原 draft 文件保留（加 `[PROMOTED]` 标记，审计链）
+- [x] 人类手动 / 显式 AI 操作
 
-- [ ] **智能推送范围**：当知识库增大时，AGENTS.md 中的推送块根据当前任务上下文智能缩减
-- [ ] 对不同 AI 工具的**接入深度优化**：Cursor rules / Claude Code Skill / Codex prompt
-- [ ] `enjoyknowledge context <task-description>`：根据任务描述输出相关知识的摘要
+### ek stage clean 新增
+- [x] 默认清理 `.enjoyknowledge_stage/.archive/tasks/` > 180 天
+- [x] `--dry-run` / `--force` / `--older-than <days>` 3 个 flag
 
-### 代码编织
+### 集成测试
+- [x] 10 个新增集成测试（init × 5 + promote × 3 + stage clean × 4，部分共享）
+- [x] 28 个 trycmd 端到端测试
+- [x] 单元测试全绿
+- [x] enjoyiot-kaiyuan 端到端 dogfooding 通过
 
-- [ ] **规则统一管理（三层防护）**：源规则层 + 推送层 + 兜底层
-- [ ] **git commit hook**：commit 时自动检测变更文件，提示相关知识条目
-- [ ] **PR 模板自动引用**：创建 PR 时自动检测变更涉及的目录
-- [ ] `enjoyknowledge link <file> --to <code-path>`：手动建立代码文件与知识条目的关联
+### v0.4 哲学（Jay 6 次反馈）
+- 人类是 authority anchor（KB 内容人类手动 + 显式让 AI 写）
+- 简单 > 完整（砍 C10 trust / C11 lifecycle / C12 sync）
+- 物理分离 > 状态字段（stage/ vs .enjoyknowledge/）
+- AGENTS.md > frontmatter（4 字段极简）
+- form 服从 function
 
-### 团队工作流基础
+### v0.4 砍掉（v0.5+ 按需）
+- ❌ C10 信任体系（confidence / last_verified / feedback_count / source / scope）
+- ❌ C11 生命周期（4 状态机 + archive/ 物理移动）
+- ❌ C12 同步（code ↔ KB 一致性检测）
+- ❌ 复杂 frontmatter schema（保持 4 字段）
+- ❌ workflow/ 独立目录（8 文件完全覆盖）
+- ❌ `ek capture --from-commit` 提议门（AI 直接写 stage）
 
-- [ ] 知识 PR 审核指南：review checklist
-- [ ] `doctor --ci` 输出 JSON 格式
-- [ ] 可配置严重级别（error / warning / info）
-- [ ] GitHub Actions / GitLab CI 集成模板
-
-### 多仓库知识链接
-
-- [ ] `--link` 支持 Git URL（自动 clone + 缓存）
-- [ ] 知识溯源：OKF `resource` 字段标注来源仓库
-- [ ] `ls` / `grep` 标注知识归属（本地 / 上游 / 组织）
-
-### 共享知识库 + 组织级 + 知识废弃
-
-- [ ] 独立知识库仓库的推荐结构 + 语义化版本管理
-- [ ] `enjoyknowledge knowledge pull`：拉取上游知识库更新
-- [ ] 组织级预设：`--org` 标志
-- [ ] `enjoyknowledge aggregate` 汇总多个知识库
-- [ ] `deprecated` frontmatter 字段 + `doctor` 检测废弃引用
+### 参考
+- 设计依据：`docs/00-vision/v0.4-final-design.md`（why-workspace 同名）
+- 调研附录：`docs/00-vision/archive/v0.4-research-full.md`（v0.5+ 参考）
 
 ---
 
