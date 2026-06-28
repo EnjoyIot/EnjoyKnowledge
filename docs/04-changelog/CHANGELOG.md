@@ -1,5 +1,41 @@
 ﻿# enjoyknowledge 变更记录
 
+## [v0.4.4] — 2026-06-28
+
+### stage 用户可改：stage-defaults.md + user-owned AGENTS.md + Hermes skill 格式
+
+**4 大模块同步重写**：
+
+**stage-defaults.md 默认目录清单**：
+- 新建 `_meta/stage-defaults.md` — 用户可编辑的 Markdown 文档，定义默认 stage 目录
+- 编译期 `include_str!` 嵌入，init 时复制到项目（不覆盖用户版本）
+- `ek init` 读 stage-defaults.md → 解析 Default Directories 表 → 创建目录
+- 回退：文件缺失或为空时回到 v0.4.1 硬编码默认（向后兼容）
+
+**init 不覆盖用户 stage AGENTS.md**：
+- 如果 `.enjoyknowledge_stage/AGENTS.md` 存在 → init 跳过，不覆盖
+- 如果不存在 → 写默认 Hermes skill 格式
+- 同理 `_meta/stage-defaults.md` 存在则跳过
+
+**stage AGENTS.md = Hermes skill 格式**：
+- 重写 `STAGE_AGENTS_MD_CONTENT` 为 Hermes skill frontmatter + body
+- Frontmatter: `name: enjoyknowledge-stage`、`description`、`version: 1.0.0`、`metadata`
+- Body 6 段：Overview / Inputs / Workflow / Custom Directories / Promote Workflow / Hard Gate Protocol
+
+**init 创建目录按 stage-defaults.md**：
+- 新增 `parse_stage_defaults()` 解析 Markdown 表格
+- `generate_stage_skeleton()` 读 `_meta/stage-defaults.md`（用户版本或默认）→ 按解析结果创建目录
+- 始终确保 `.archive/tasks` 存在（向后兼容）
+
+**新增文件**：
+- `tests/fixtures/stage-defaults.md` — 编译期嵌入的默认值
+- 测试：5 新单元测试 + 4 新集成测试
+
+**文档更新**：
+- GLOSSARY: 新 stage AGENTS.md 和 stage-defaults.md 词条
+- INTERFACE-SPEC: 目录树加 `_meta/`、init 说明加不覆盖行为
+- POSITIONING: v0.4.4 版本号 + "用户可改 stage" 第 6 原则
+
 ## [v0.4.3] — 2026-06-28
 
 ### kind registry 抽离 + 目录回归 + workflow 重构

@@ -8,6 +8,9 @@ use std::path::Path;
 /// Canonical directory name for the stage (AI task staging area).
 pub const STAGE_DIR: &str = ".enjoyknowledge_stage";
 
+/// Default stage-directory specification — embedded at compile-time.
+const STAGE_DEFAULTS_MD_DEFAULT: &str = include_str!("../../tests/fixtures/stage-defaults.md");
+
 /// Generate the `.enjoyknowledge/` skeleton and `knowledge-tasks/` under `project_root`.
 ///
 /// The skeleton shape is determined by `profile.directories()` and
@@ -163,13 +166,31 @@ Above is the current knowledge base contents. Before starting any coding task, c
 // ════════════════════════════════════════════════════════════════════════════
 
 /// Generate the `.enjoyknowledge_stage/` directory tree and 8 template files.
+///
+/// v0.4.4: Reads `_meta/stage-defaults.md` (user or default) to determine
+/// which directories to create. Falls back to v0.4.1 hardcoded defaults if
+/// parsing fails.
 pub fn generate_stage_skeleton(project_root: &Path) -> anyhow::Result<()> {
     let stage = project_root.join(STAGE_DIR);
 
-    // Top-level directories
-    std::fs::create_dir_all(stage.join("tasks"))?;
-    std::fs::create_dir_all(stage.join("drafts"))?;
-    std::fs::create_dir_all(stage.join(".archive").join("tasks"))?;
+    // v0.4.4: Read stage-defaults.md to determine directories.
+    // Priority: user-edited copy > embedded default.
+    let defaults_md_path = stage.join("_meta").join("stage-defaults.md");
+    let defaults_md = if defaults_md_path.exists() {
+        std::fs::read_to_string(&defaults_md_path).unwrap_or_default()
+    } else {
+        STAGE_DEFAULTS_MD_DEFAULT.to_string()
+    };
+    let dirs = parse_stage_defaults(&defaults_md);
+
+    // Create directories from parsed stage-defaults.md
+    for dir in &dirs {
+        std::fs::create_dir_all(stage.join(dir))?;
+    }
+    // Always ensure .archive/tasks exists (backward compat)
+    if !dirs.iter().any(|d| d == ".archive/tasks") {
+        std::fs::create_dir_all(stage.join(".archive").join("tasks"))?;
+    }
 
     // 8 template files under tasks/_template/
     let template_dir = stage.join("tasks").join("_template");
@@ -199,6 +220,62 @@ pub fn generate_stage_skeleton(project_root: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Parse the Default Directories table from `stage-defaults.md`.
+/// Returns directory paths relative to `.enjoyknowledge_stage/`.
+fn parse_stage_defaults(md: &str) -> Vec<String> {
+    let mut dirs: Vec<String> = Vec::new();
+    let mut in_table = false;
+
+    for line in md.lines() {
+        let trimmed = line.trim();
+        // Detect table header
+        if trimmed.starts_with("| name ") && trimmed.contains("| purpose ") {
+            in_table = true;
+            continue;
+        }
+        if !in_table {
+            continue;
+        }
+        // Stop at end of table
+        if !trimmed.starts_with('|') {
+            break;
+        }
+        // Skip separator line
+        if trimmed.contains("---") {
+            continue;
+        }
+        // Parse data row: | `name` | purpose | files |
+        let cells: Vec<&str> =
+            trimmed.split('|').map(str::trim).filter(|c| !c.is_empty()).collect();
+        if cells.is_empty() {
+            continue;
+        }
+        // Strip backticks from name
+        let name = cells[0].trim_matches('`');
+        dirs.push(name.to_string());
+    }
+
+    if dirs.is_empty() {
+        // Fallback to v0.4.1 defaults
+        dirs.extend(["tasks", "drafts", ".archive"].iter().map(std::string::ToString::to_string));
+    }
+
+    dirs
+}
+
+/// Copy the default `stage-defaults.md` to `.enjoyknowledge_stage/_meta/`.
+/// Does NOT overwrite if the file already exists (user-owned).
+pub fn generate_stage_defaults_md(project_root: &Path) -> anyhow::Result<()> {
+    let meta_dir = project_root.join(STAGE_DIR).join("_meta");
+    std::fs::create_dir_all(&meta_dir)?;
+
+    let path = meta_dir.join("stage-defaults.md");
+    if !path.exists() {
+        std::fs::write(&path, STAGE_DEFAULTS_MD_DEFAULT)?;
+    }
+    Ok(())
+}
+
 /// Generate `.enjoyknowledge/AGENTS.md` — the KB index that AI tools read.
 pub fn generate_ek_agents_md(project_root: &Path) -> anyhow::Result<()> {
     let ek = project_root.join(EK_DIR);
@@ -211,12 +288,16 @@ pub fn generate_ek_agents_md(project_root: &Path) -> anyhow::Result<()> {
 }
 
 /// Generate `.enjoyknowledge_stage/AGENTS.md` — the stage writing spec for AI tools.
+///
+/// v0.4.4: Does NOT overwrite if the file already exists (user-owned).
 pub fn generate_stage_agents_md(project_root: &Path) -> anyhow::Result<()> {
     let stage = project_root.join(STAGE_DIR);
     std::fs::create_dir_all(&stage)?;
 
-    let content = STAGE_AGENTS_MD_CONTENT;
-    std::fs::write(stage.join("AGENTS.md"), content)?;
+    let path = stage.join("AGENTS.md");
+    if !path.exists() {
+        std::fs::write(&path, STAGE_AGENTS_MD_CONTENT)?;
+    }
     Ok(())
 }
 
@@ -303,101 +384,79 @@ This project uses [enjoyknowledge](https://enjoyknowledge.dev) for shared AI con
     )
 }
 
-const STAGE_AGENTS_MD_CONTENT: &str = r#"# AGENTS.md — EnjoyKnowledge Stage Writing Spec
+const STAGE_AGENTS_MD_CONTENT: &str = r#"---
+name: enjoyknowledge-stage
+description: "Stage writing conventions for AI tools during coding tasks. Use when starting a new task, deciding what to write, or reviewing the project. Triggers on '做任务' / 'stage 写什么' / '改 stage AGENTS.md' / 'extend stage' / 'add stage dir' / 'task phase P1-P5'."
+version: 1.0.0
+metadata:
+  hermes:
+    tags: [stage, task, coding, ai-context]
+    related_skills: [enjoyknowledge]
+---
+
+# enjoyknowledge Stage — Task Writing Spec (v0.4.4+)
+
+## Overview
 
 This file tells AI tools **how to use `.enjoyknowledge_stage/`** during coding tasks.
-Read at startup alongside `../.enjoyknowledge/AGENTS.md` and the project root `AGENTS.md`.
+**User-editable**: edit this file directly to change stage conventions.
+`ek init` will **never overwrite** this file (it's user-owned).
 
-## Directory Layout
+## Inputs (what user provides)
 
-```
-.enjoyknowledge_stage/
-├── AGENTS.md           ← You are here
-├── tasks/              ← Active task records
-│   └── <task-id>/      ← One directory per task
-│       ├── summary.md
-│       ├── requirements.md
-│       ├── design.md
-│       ├── plan.md
-│       ├── changes.md
-│       ├── tests.md
-│       ├── delivery.md
-│       └── review.md
-├── drafts/             ← Knowledge drafts (promote → KB)
-└── .archive/           ← Completed/archived tasks
-```
+- Task ID (e.g., `2026-06-28-add-kind-registry`)
+- Task description (1-3 sentences)
 
-## 8-File System (5 Phases × 3 Hard Gates)
+## Workflow (5 Phases x 3 Hard Gates)
 
-| Phase | File | Write Trigger | Hard Gate? |
-|-------|------|---------------|------------|
-| P1 Requirements | `requirements.md` | After reading issue + 3+ source files | **Gate 1** |
-| P2 Design | `design.md` | After requirements confirmed | **Gate 2** |
-| P2b Plan | `plan.md` | After design confirmed | No |
-| P3 Coding | `changes.md` | After every file edit (append-only) | No |
-| P4 Testing | `tests.md` | Before first test run + after each run | Soft gate |
-| P5 Delivery | `delivery.md` | After all tests pass | **Gate 3** |
-| — | `summary.md` | Task start + each phase complete | — |
-| — | `review.md` | Each phase complete (AI pre-fills) | Human ticks |
+### P1 Requirements
+- Write to: `tasks/<task-id>/requirements.md`
+- EARS format (Event -> Action -> Response -> State)
+- Hard Gate 1: human approval
 
-## Writing Rules
+### P2 Design
+- Write to: `tasks/<task-id>/design.md`
+- Hard Gate 2: human approval
 
-### For ALL files
-- Use EARS format for requirements (Event → Action → Response → State)
-- Start each file with YAML frontmatter:
-  ```yaml
-  ---
-  task: <task-id>
-  phase: P1 | P2 | P2b | P3 | P4 | P5
-  status: draft | in-progress | done
-  ---
-  ```
+### P2b Plan
+- Write to: `tasks/<task-id>/plan.md`
 
-### `changes.md` — Append-only log
-- **Add one line per file edit** (old → new summary)
-- **NEVER rewrite** — this is an audit log
-- **Gitignored** — does not go into version control
+### P3 Coding
+- Write to: `tasks/<task-id>/changes.md` (append-only)
+- One line per file edit (old -> new summary)
 
-### `review.md` — AI pre-fills, human ticks
-- AI fills checkboxes with `[ ]` (never `[x]`)
-- **Only humans tick `[x]`**
-- Each phase produces a checklist section
+### P4 Testing
+- Write to: `tasks/<task-id>/tests.md`
+- Before first test run + after each run
+
+### P5 Delivery
+- Write to: `tasks/<task-id>/delivery.md`
+- Hard Gate 3: human approval
+- After: `ek promote <draft> --to <kind>`
+
+## Custom Directories (user-editable)
+
+If user added custom directories in `_meta/stage-defaults.md`:
+- `notes/<file>.md` — user notes
+- `experiments/<file>.md` — experiment records
+- ...
+
+AI should use these directories according to user's stage AGENTS.md updates.
+
+## Promote Workflow
+
+1. AI writes draft to `.enjoyknowledge_stage/drafts/<id>.md`
+2. Human reviews + runs `ek promote <draft> --to <kind>`
+3. Draft gets `[PROMOTED]` marker
 
 ## Hard Gate Protocol
 
 ```
-P1 requirements ──[Human Gate 1]──→ P2 design ──[Human Gate 2]──→ P3 coding
-    ↓ (must approve before AI proceeds)
-
-P3 coding → P4 testing ──(Human reviews tests.md)──→ P5 delivery
-    ↓ (no hard gate — AI can proceed)
-
-P5 delivery ──[Human Gate 3]──→ promote to KB + archive task
+P1 req -[H1]-> P2 design -[H2]-> P3 coding -> P4 test -> P5 delivery -[H3]-> promote
 ```
 
-## Promote Workflow
-
-1. AI writes knowledge drafts to `.enjoyknowledge_stage/drafts/<id>.md`
-2. Human reviews + runs `ek promote <draft> --to <kind>`
-3. Draft gets `[PROMOTED]` marker, stays for audit
-
-### Draft frontmatter (kind-specific required fields)
-
-When writing drafts in `.enjoyknowledge_stage/drafts/`, **include the kind's required frontmatter field** so the promoted KB file passes `ek doctor`:
-
-| Kind | Required field | Example |
-|------|---------------|---------|
-| gotcha | `trigger` | `trigger: "user submits empty form"` |
-| rule / contract / convention / template | `applies_to` | `applies_to: ["src/cli/**"]` |
-| decision | `reversible` + `decided_at` | `reversible: false` + `decided_at: 2026-06-28` |
-
-**Why?** `ek doctor` checks KB files for kind-specific required fields. Drafts without these fields will fail doctor after promote. **AI must fill these when writing drafts** — do not rely on `ek promote` to auto-fill (promote is intentionally minimal, 4-field base only).
-
-**For other kinds** (architecture / business / context / pattern / command): no extra frontmatter needed.
-
 ---
-
-*Generated by `ek init` v0.4. Follow this spec for all stage writes.*
+*User-owned: edit this file to customize stage conventions. `ek init` will not overwrite.*
 "#;
 
 const STAGE_TEMPLATE_SUMMARY: &str = r"---
@@ -761,10 +820,94 @@ mod tests {
 
         let content =
             std::fs::read_to_string(root.join(".enjoyknowledge_stage/AGENTS.md")).unwrap();
-        assert!(content.contains("Stage Writing Spec"));
-        assert!(content.contains("8-File System"));
+        assert!(content.contains("enjoyknowledge Stage"));
+        assert!(content.contains("Workflow (5 Phases"));
         assert!(content.contains("Hard Gate Protocol"));
         assert!(content.contains("changes.md"));
+    }
+
+    #[test]
+    fn generate_stage_agents_md_does_not_overwrite() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join(".enjoyknowledge_stage")).unwrap();
+
+        // Write user-customized content
+        let user_content = "# My Custom Stage Rules\n\nThis is user-edited.";
+        std::fs::write(root.join(".enjoyknowledge_stage/AGENTS.md"), user_content).unwrap();
+
+        // Call generate — should not overwrite
+        generate_stage_agents_md(root).unwrap();
+
+        let actual = std::fs::read_to_string(root.join(".enjoyknowledge_stage/AGENTS.md")).unwrap();
+        assert_eq!(actual, user_content);
+    }
+
+    #[test]
+    fn generate_stage_defaults_md_produces_file() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path();
+
+        generate_stage_defaults_md(root).unwrap();
+
+        let path = root.join(".enjoyknowledge_stage/_meta/stage-defaults.md");
+        assert!(path.exists());
+        let content = std::fs::read_to_string(&path).unwrap();
+        assert!(content.contains("Stage Default Directories"));
+        assert!(content.contains("| name | purpose | files |"));
+    }
+
+    #[test]
+    fn generate_stage_defaults_md_does_not_overwrite() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join(".enjoyknowledge_stage/_meta")).unwrap();
+
+        let user_content = "# My custom stage defaults\n\nI changed this.";
+        std::fs::write(root.join(".enjoyknowledge_stage/_meta/stage-defaults.md"), user_content)
+            .unwrap();
+
+        generate_stage_defaults_md(root).unwrap();
+
+        let actual =
+            std::fs::read_to_string(root.join(".enjoyknowledge_stage/_meta/stage-defaults.md"))
+                .unwrap();
+        assert_eq!(actual, user_content);
+    }
+
+    #[test]
+    fn parse_stage_defaults_parses_default_table() {
+        let dirs = parse_stage_defaults(STAGE_DEFAULTS_MD_DEFAULT);
+        assert!(dirs.contains(&"tasks".to_string()));
+        assert!(dirs.contains(&"drafts".to_string()));
+        assert!(dirs.contains(&".archive".to_string()));
+    }
+
+    #[test]
+    fn parse_stage_defaults_fallback_on_empty() {
+        let dirs = parse_stage_defaults("");
+        assert!(dirs.contains(&"tasks".to_string()));
+        assert!(dirs.contains(&"drafts".to_string()));
+        assert!(dirs.contains(&".archive".to_string()));
+    }
+
+    #[test]
+    fn generate_stage_skeleton_reads_defaults_md() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path();
+
+        // First write a custom stage-defaults.md with an extra dir
+        let meta_dir = root.join(".enjoyknowledge_stage/_meta");
+        std::fs::create_dir_all(&meta_dir).unwrap();
+        let custom_defaults = "# Stage Default Directories\n\n## Default Directories\n\n| name | purpose | files |\n|------|---------|-------|\n| `tasks` | Active task records | summary/requirements |\n| `drafts` | Knowledge drafts | (user writes freely) |\n| `.archive` | Completed/archived tasks | (auto) |\n| `experiments` | Experiment records | (user writes freely) |\n";
+        std::fs::write(meta_dir.join("stage-defaults.md"), custom_defaults).unwrap();
+
+        generate_stage_skeleton(root).unwrap();
+
+        assert!(root.join(".enjoyknowledge_stage/tasks").exists());
+        assert!(root.join(".enjoyknowledge_stage/drafts").exists());
+        assert!(root.join(".enjoyknowledge_stage/.archive/tasks").exists());
+        assert!(root.join(".enjoyknowledge_stage/experiments").exists());
     }
 
     #[test]

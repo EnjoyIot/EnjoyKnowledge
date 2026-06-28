@@ -1,6 +1,6 @@
 # enjoyknowledge 路线图
 
-> v0.4.3 | 2026-06-28
+> v0.4.4 | 2026-06-28
 
 ## 版本节奏
 
@@ -11,7 +11,8 @@
 | v0.3 | 待定 | 捕获体验 + 质量保障深化 |
 | v0.4 | 已交付 (2026-06-28) | 极简上下文层（stage + promote + stage clean） |
 | v0.4.2 | 已交付 (2026-06-28) | ek fix 保留 frontmatter 字段 + 文档重写 |
-| v0.4.3 | **当前** (2026-06-28) | kind registry 抽离 + 目录回归 kind=dir + workflow 重构 |
+| v0.4.3 | 已交付 (2026-06-28) | kind registry 抽离 + 目录回归 kind=dir + workflow 重构 |
+| v0.4.4 | **当前** (2026-06-28) | stage 用户可改：stage-defaults.md + Hermes skill + init 不覆盖 |
 | v0.5+ | 方向 | 智能化（语义检索、知识新鲜度），不预设完整 scope |
 
 ---

@@ -79,6 +79,12 @@ AI 工具首次进入仓库时建立项目心智模型。触发：`enjoyknowledg
 ### `.enjoyknowledge_stage/`
 项目根下的物理暂存区，与 `.enjoyknowledge/` 并列。AI 在开发任务中**自动写入**过程材料。不进入长期知识索引，审核后 promote 迁入。
 
+### stage AGENTS.md（v0.4.4+）
+`.enjoyknowledge_stage/AGENTS.md` 按 Hermes skill 格式（frontmatter + body）组织，定义 stage 写入规范。**用户拥有**：`ek init` 永远不会覆盖已存在的 stage AGENTS.md。用户可直接编辑此文件来自定义 stage 约定。
+
+### `_meta/stage-defaults.md`（v0.4.4+）
+`.enjoyknowledge_stage/_meta/stage-defaults.md` 定义默认 stage 目录清单。编译期嵌入默认值，`ek init` 复制到项目中。**用户可编辑**：修改后下次 init 按新目录创建。不覆盖用户已修改的版本。
+
 ### promote
 `enjoyknowledge promote <draft.md> --to <kind>`：把 stage drafts 落地到 KB。自动添加 4 字段 frontmatter（id/kind/created/author）。默认 author = `enjoy`。必须人类手动执行。
 

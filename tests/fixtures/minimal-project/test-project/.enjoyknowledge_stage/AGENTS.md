@@ -1,95 +1,73 @@
-# AGENTS.md — EnjoyKnowledge Stage Writing Spec
+---
+name: enjoyknowledge-stage
+description: "Stage writing conventions for AI tools during coding tasks. Use when starting a new task, deciding what to write, or reviewing the project. Triggers on '做任务' / 'stage 写什么' / '改 stage AGENTS.md' / 'extend stage' / 'add stage dir' / 'task phase P1-P5'."
+version: 1.0.0
+metadata:
+  hermes:
+    tags: [stage, task, coding, ai-context]
+    related_skills: [enjoyknowledge]
+---
+
+# enjoyknowledge Stage — Task Writing Spec (v0.4.4+)
+
+## Overview
 
 This file tells AI tools **how to use `.enjoyknowledge_stage/`** during coding tasks.
-Read at startup alongside `../.enjoyknowledge/AGENTS.md` and the project root `AGENTS.md`.
+**User-editable**: edit this file directly to change stage conventions.
+`ek init` will **never overwrite** this file (it's user-owned).
 
-## Directory Layout
+## Inputs (what user provides)
 
-```
-.enjoyknowledge_stage/
-├── AGENTS.md           ← You are here
-├── tasks/              ← Active task records
-│   └── <task-id>/      ← One directory per task
-│       ├── summary.md
-│       ├── requirements.md
-│       ├── design.md
-│       ├── plan.md
-│       ├── changes.md
-│       ├── tests.md
-│       ├── delivery.md
-│       └── review.md
-├── drafts/             ← Knowledge drafts (promote → KB)
-└── .archive/           ← Completed/archived tasks
-```
+- Task ID (e.g., `2026-06-28-add-kind-registry`)
+- Task description (1-3 sentences)
 
-## 8-File System (5 Phases × 3 Hard Gates)
+## Workflow (5 Phases x 3 Hard Gates)
 
-| Phase | File | Write Trigger | Hard Gate? |
-|-------|------|---------------|------------|
-| P1 Requirements | `requirements.md` | After reading issue + 3+ source files | **Gate 1** |
-| P2 Design | `design.md` | After requirements confirmed | **Gate 2** |
-| P2b Plan | `plan.md` | After design confirmed | No |
-| P3 Coding | `changes.md` | After every file edit (append-only) | No |
-| P4 Testing | `tests.md` | Before first test run + after each run | Soft gate |
-| P5 Delivery | `delivery.md` | After all tests pass | **Gate 3** |
-| — | `summary.md` | Task start + each phase complete | — |
-| — | `review.md` | Each phase complete (AI pre-fills) | Human ticks |
+### P1 Requirements
+- Write to: `tasks/<task-id>/requirements.md`
+- EARS format (Event -> Action -> Response -> State)
+- Hard Gate 1: human approval
 
-## Writing Rules
+### P2 Design
+- Write to: `tasks/<task-id>/design.md`
+- Hard Gate 2: human approval
 
-### For ALL files
-- Use EARS format for requirements (Event → Action → Response → State)
-- Start each file with YAML frontmatter:
-  ```yaml
-  ---
-  task: <task-id>
-  phase: P1 | P2 | P2b | P3 | P4 | P5
-  status: draft | in-progress | done
-  ---
-  ```
+### P2b Plan
+- Write to: `tasks/<task-id>/plan.md`
 
-### `changes.md` — Append-only log
-- **Add one line per file edit** (old → new summary)
-- **NEVER rewrite** — this is an audit log
-- **Gitignored** — does not go into version control
+### P3 Coding
+- Write to: `tasks/<task-id>/changes.md` (append-only)
+- One line per file edit (old -> new summary)
 
-### `review.md` — AI pre-fills, human ticks
-- AI fills checkboxes with `[ ]` (never `[x]`)
-- **Only humans tick `[x]`**
-- Each phase produces a checklist section
+### P4 Testing
+- Write to: `tasks/<task-id>/tests.md`
+- Before first test run + after each run
+
+### P5 Delivery
+- Write to: `tasks/<task-id>/delivery.md`
+- Hard Gate 3: human approval
+- After: `ek promote <draft> --to <kind>`
+
+## Custom Directories (user-editable)
+
+If user added custom directories in `_meta/stage-defaults.md`:
+- `notes/<file>.md` — user notes
+- `experiments/<file>.md` — experiment records
+- ...
+
+AI should use these directories according to user's stage AGENTS.md updates.
+
+## Promote Workflow
+
+1. AI writes draft to `.enjoyknowledge_stage/drafts/<id>.md`
+2. Human reviews + runs `ek promote <draft> --to <kind>`
+3. Draft gets `[PROMOTED]` marker
 
 ## Hard Gate Protocol
 
 ```
-P1 requirements ──[Human Gate 1]──→ P2 design ──[Human Gate 2]──→ P3 coding
-    ↓ (must approve before AI proceeds)
-
-P3 coding → P4 testing ──(Human reviews tests.md)──→ P5 delivery
-    ↓ (no hard gate — AI can proceed)
-
-P5 delivery ──[Human Gate 3]──→ promote to KB + archive task
+P1 req -[H1]-> P2 design -[H2]-> P3 coding -> P4 test -> P5 delivery -[H3]-> promote
 ```
 
-## Promote Workflow
-
-1. AI writes knowledge drafts to `.enjoyknowledge_stage/drafts/<id>.md`
-2. Human reviews + runs `ek promote <draft> --to <kind>`
-3. Draft gets `[PROMOTED]` marker, stays for audit
-
-### Draft frontmatter (kind-specific required fields)
-
-When writing drafts in `.enjoyknowledge_stage/drafts/`, **include the kind's required frontmatter field** so the promoted KB file passes `ek doctor`:
-
-| Kind | Required field | Example |
-|------|---------------|---------|
-| gotcha | `trigger` | `trigger: "user submits empty form"` |
-| rule / contract / convention / template | `applies_to` | `applies_to: ["src/cli/**"]` |
-| decision | `reversible` + `decided_at` | `reversible: false` + `decided_at: 2026-06-28` |
-
-**Why?** `ek doctor` checks KB files for kind-specific required fields. Drafts without these fields will fail doctor after promote. **AI must fill these when writing drafts** — do not rely on `ek promote` to auto-fill (promote is intentionally minimal, 4-field base only).
-
-**For other kinds** (architecture / business / context / pattern / command): no extra frontmatter needed.
-
 ---
-
-*Generated by `ek init` v0.4. Follow this spec for all stage writes.*
+*User-owned: edit this file to customize stage conventions. `ek init` will not overwrite.*

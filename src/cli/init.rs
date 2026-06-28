@@ -88,6 +88,7 @@ enjoyknowledge --root {link_path} ls
 
     // v0.4: Generate stage skeleton + both AGENTS.md + update .gitignore
     init::skeleton::generate_stage_skeleton(&project_root)?;
+    init::skeleton::generate_stage_defaults_md(&project_root)?;
     init::skeleton::generate_ek_agents_md(&project_root)?;
     init::skeleton::generate_stage_agents_md(&project_root)?;
     init::skeleton::update_gitignore(&project_root)?;

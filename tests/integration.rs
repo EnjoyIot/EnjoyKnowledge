@@ -192,8 +192,78 @@ fn init_generates_stage_agents_md() {
     init_project(root);
 
     let content = std::fs::read_to_string(root.join(".enjoyknowledge_stage/AGENTS.md")).unwrap();
-    assert!(content.contains("Stage Writing Spec"));
+    assert!(content.contains("enjoyknowledge Stage"));
+    assert!(content.contains("Workflow (5 Phases"));
     assert!(content.contains("Hard Gate Protocol"));
+}
+
+#[test]
+fn init_generates_stage_defaults_md() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let path = root.join(".enjoyknowledge_stage/_meta/stage-defaults.md");
+    assert!(path.exists());
+    let content = std::fs::read_to_string(&path).unwrap();
+    assert!(content.contains("Stage Default Directories"));
+    assert!(content.contains("| name | purpose | files |"));
+}
+
+#[test]
+fn init_does_not_overwrite_user_stage_agents_md() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    // User edits stage AGENTS.md
+    let user_content = "# My Custom Stage Rules\n\nUser edited this file.";
+    std::fs::write(root.join(".enjoyknowledge_stage/AGENTS.md"), user_content).unwrap();
+
+    // Re-init should NOT overwrite
+    init_project(root);
+
+    let actual = std::fs::read_to_string(root.join(".enjoyknowledge_stage/AGENTS.md")).unwrap();
+    assert_eq!(actual, user_content);
+}
+
+#[test]
+fn init_does_not_overwrite_user_stage_defaults_md() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    // User edits stage-defaults.md
+    let user_content = "# My custom stage defaults\n\nCustomized.";
+    std::fs::write(root.join(".enjoyknowledge_stage/_meta/stage-defaults.md"), user_content)
+        .unwrap();
+
+    // Re-init should NOT overwrite
+    init_project(root);
+
+    let actual =
+        std::fs::read_to_string(root.join(".enjoyknowledge_stage/_meta/stage-defaults.md"))
+            .unwrap();
+    assert_eq!(actual, user_content);
+}
+
+#[test]
+fn init_reads_stage_defaults_for_directory_creation() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+
+    // First create a custom stage-defaults.md before init
+    let stage_dir = root.join(".enjoyknowledge_stage");
+    std::fs::create_dir_all(stage_dir.join("_meta")).unwrap();
+    let custom = "# Stage Default Directories\n\n## Default Directories\n\n| name | purpose | files |\n|------|---------|-------|\n| `tasks` | Active task records | summary |\n| `drafts` | Knowledge drafts | (user writes freely) |\n| `experiments` | Extra experiments dir | (user writes freely) |\n";
+    std::fs::write(stage_dir.join("_meta/stage-defaults.md"), custom).unwrap();
+
+    init_project(root);
+
+    // Custom dir from stage-defaults.md should be created
+    assert!(root.join(".enjoyknowledge_stage/experiments").exists());
+    // Backward compat: .archive/tasks still created
+    assert!(root.join(".enjoyknowledge_stage/.archive/tasks").exists());
 }
 
 #[test]

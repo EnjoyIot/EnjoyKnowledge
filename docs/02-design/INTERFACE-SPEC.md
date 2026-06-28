@@ -29,10 +29,12 @@
 │   ├── index.md                    # 索引
 │   └── AGENTS.md                   # KB 写入规则
 └── .enjoyknowledge_stage/          # 任务暂存区（AI 自动写）
+    ├── _meta/
+    │   └── stage-defaults.md        # 默认 stage 目录（用户可编辑）
     ├── tasks/<task-id>/            # 8 文件
     ├── drafts/                     # 待 promote 草稿
     ├── .archive/                   # TTL 过期（180 天）
-    └── AGENTS.md                   # 任务写入规范
+    └── AGENTS.md                   # 任务写入规范（Hermes skill 格式，用户拥有）
 ```
 
 ### 1.2 结构约束
@@ -123,7 +125,8 @@ enjoyknowledge init [--ai <tool>] [--template <name>] [--link <path>] [--profile
 
 - 默认 profile = `for-coding`
 - 创建 `.enjoyknowledge/`（11 类目录 + _meta/kinds.md + AGENTS.md + index.md）
-- 创建 `.enjoyknowledge_stage/`（tasks/_template/ 8 文件 + drafts/ + .archive/ + AGENTS.md）
+- 创建 `.enjoyknowledge_stage/`（tasks/_template/ 8 文件 + drafts/ + .archive/ + AGENTS.md + _meta/stage-defaults.md）
+- v0.4.4+: stage AGENTS.md 和 _meta/stage-defaults.md 为用户所有，init **不覆盖**已存在文件
 - `--ai <tool>` 同时生成工具入口文件（支持 9 工具）
 - `--link <path>` 引用外部知识库，不创建目录
 
