@@ -1,0 +1,1 @@
+Error: kind 'gotcha' requires field 'trigger' (missing). Use --field trigger=VALUE

@@ -1,0 +1,3 @@
+bin.name = "enjoyknowledge"
+args = ["workflow", "onboard"]
+fs.cwd = "../fixtures/minimal-project"

@@ -1,0 +1,5 @@
+bin.name = "enjoyknowledge"
+args = ["workflow", "capture", "--kind", "gotcha", "--body", "no trigger"]
+fs.cwd = "../fixtures/minimal-project"
+fs.sandbox = true
+status.code = 1

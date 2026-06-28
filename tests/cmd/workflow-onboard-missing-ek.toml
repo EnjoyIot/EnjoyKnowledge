@@ -1,0 +1,4 @@
+bin.name = "enjoyknowledge"
+args = ["workflow", "onboard"]
+fs.sandbox = true
+status.code = 1
