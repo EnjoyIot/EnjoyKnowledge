@@ -1,4 +1,4 @@
 bin.name = "enjoyknowledge"
-args = ["export", "--tool", "cursor,claude"]
+args = ["export", "--tool", "cursor", "--tool", "claude"]
 fs.cwd = "../fixtures/minimal-project"
 fs.sandbox = true

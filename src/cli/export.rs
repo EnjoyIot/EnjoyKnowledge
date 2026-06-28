@@ -40,15 +40,17 @@ fn parse_tool(tool_arg: &str) -> anyhow::Result<AiTool> {
     Ok(tool)
 }
 
-/// 运行 export 命令。v0.2.1 支持逗号分隔多工具（如 `claude,cursor`）。
+/// 运行 export 命令。v0.2.1 支持多工具（--tool 可重复或逗号分隔）。
 ///
 /// # Arguments
 /// - `project_root`: 项目根路径（通常是 `.`）
-/// - `tool_arg`: `--tool` 参数（cursor / claude / auto / 逗号分隔组合）
+/// - `tool_args`: `--tool` 参数列表（每个元素是 cursor / claude / auto，或逗号分隔组合）
 /// - `dry_run`: true = 只打印不写
-pub fn run(project_root: &Path, tool_arg: &str, dry_run: bool) -> anyhow::Result<()> {
-    let tools: Vec<AiTool> = tool_arg
-        .split(',')
+pub fn run(project_root: &Path, tool_args: &[String], dry_run: bool) -> anyhow::Result<()> {
+    // Flatten: each element may itself be comma-separated (e.g. from --tool cursor,claude)
+    let tools: Vec<AiTool> = tool_args
+        .iter()
+        .flat_map(|s| s.split(','))
         .map(|s| parse_tool(s.trim()))
         .collect::<anyhow::Result<Vec<_>>>()?;
 
@@ -164,5 +166,29 @@ mod tests {
     fn multi_tool_parse_unsupported_errors() {
         let err = "codex".split(',').map(|s| parse_tool(s.trim())).collect::<anyhow::Result<Vec<_>>>().unwrap_err();
         assert!(err.to_string().contains("暂未实现"));
+    }
+
+    // ── run() with Vec<String> (multi-tool) ─────────────────────────────
+
+    #[test]
+    fn run_single_tool_dry() {
+        let tmp = tempfile::tempdir().unwrap();
+        let tools = vec!["cursor".to_string()];
+        assert!(run(tmp.path(), &tools, true).is_ok());
+    }
+
+    #[test]
+    fn run_multi_tool_dry() {
+        let tmp = tempfile::tempdir().unwrap();
+        let tools = vec!["cursor".to_string(), "claude".to_string()];
+        assert!(run(tmp.path(), &tools, true).is_ok());
+    }
+
+    #[test]
+    fn run_bad_tool_errors() {
+        let tmp = tempfile::tempdir().unwrap();
+        let tools = vec!["notarealtool".to_string()];
+        let err = run(tmp.path(), &tools, true).unwrap_err();
+        assert!(err.to_string().contains("unknown AI tool"));
     }
 }

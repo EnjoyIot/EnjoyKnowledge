@@ -108,9 +108,9 @@ pub enum Command {
 
     /// Generate AI tool entry files from .enjoyknowledge/ (v0.2 首发 2 工具：cursor / claude)
     Export {
-        /// AI tool to generate entry file for (cursor / claude / auto; v0.2 其他 7 工具暂未实现)
-        #[arg(long, default_value = "auto")]
-        tool: String,
+        /// AI tool to generate entry file for (cursor / claude / auto; repeatable, or comma-separated)
+        #[arg(long, default_value = "auto", num_args = 1.., value_delimiter = ',')]
+        tool: Vec<String>,
 
         /// Print what would be generated without writing files
         #[arg(long)]
