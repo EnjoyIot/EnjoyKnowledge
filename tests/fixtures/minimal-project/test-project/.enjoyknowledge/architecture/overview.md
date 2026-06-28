@@ -1,0 +1,34 @@
+---
+description: Project architecture overview -- system design, module map, data flow
+timestamp: 2026-06-28
+---
+
+# Architecture Overview
+
+> Fill in your project's high-level architecture here.
+
+## Module Map
+
+- module-a/ -- description
+- module-b/ -- description
+
+## Tech Stack
+
+| Layer    | Choice            | Why |
+|----------|-------------------|-----|
+| Runtime  |                   |     |
+| Database |                   |     |
+| Frontend |                   |     |
+
+## Data Flow
+
+```
+[Request] -> [Handler] -> [Service] -> [Repository] -> [DB]
+```
+
+## Deployment Topology
+
+Describe how the system is deployed (monolith, microservices, etc.):
+
+```
+```

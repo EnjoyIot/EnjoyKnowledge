@@ -448,18 +448,47 @@ fn validate_required_fields(kind: &str, fields: &HashMap<String, String>) -> any
 
 /// Build YAML field content for a capture entry (without `---` delimiters).
 fn build_capture_frontmatter(kind: &str, fields: &HashMap<String, String>, body: &str) -> String {
+    /// 需要转义的 YAML 特殊字符（flow 标量 / 指示符）。
+    fn yaml_needs_quoting(value: &str) -> bool {
+        if value.is_empty() {
+            return true;
+        }
+        let first = value.as_bytes()[0];
+        if first == b' ' || first == b'\t' {
+            return true;
+        }
+        let last = value.as_bytes()[value.len() - 1];
+        if last == b' ' || last == b'\t' {
+            return true;
+        }
+        value.contains(|c: char| matches!(
+            c, ':' | '#' | '{' | '}' | '[' | ']' | ',' | '&' | '*' | '?' | '|'
+             | '-' | '<' | '>' | '=' | '!' | '%' | '@' | '`' | '"' | '\''
+        ))
+    }
+
+    /// Escape a value so it's a valid YAML plain scalar or double-quoted string.
+    fn yaml_escape(value: &str) -> String {
+        if yaml_needs_quoting(value) {
+            let escaped = value.replace('\\', "\\\\").replace('"', "\\\"");
+            format!("\"{escaped}\"")
+        } else {
+            value.to_string()
+        }
+    }
+
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
     let description = body.lines().find(|l| l.starts_with("## ")).map_or_else(
         || format!("{kind} entry"),
         |l| l.trim_start_matches("## ").trim().to_string(),
     );
 
-    let mut yaml = format!("description: {description}\ntimestamp: {today}\n");
+    let mut yaml = format!("description: {}\ntimestamp: {today}\n", yaml_escape(&description));
 
     // Write kind-specific fields first, then any extra fields
     for req in required_fields(kind) {
         if let Some(val) = fields.get(*req) {
-            let _ = std::fmt::Write::write_fmt(&mut yaml, format_args!("{req}: {val}\n"));
+            let _ = std::fmt::Write::write_fmt(&mut yaml, format_args!("{req}: {}\n", yaml_escape(val)));
         }
     }
 
@@ -467,7 +496,7 @@ fn build_capture_frontmatter(kind: &str, fields: &HashMap<String, String>, body:
     let required: Vec<&str> = required_fields(kind).to_vec();
     for (k, v) in fields {
         if !required.contains(&k.as_str()) {
-            let _ = std::fmt::Write::write_fmt(&mut yaml, format_args!("{k}: {v}\n"));
+            let _ = std::fmt::Write::write_fmt(&mut yaml, format_args!("{k}: {}\n", yaml_escape(v)));
         }
     }
 
@@ -1101,5 +1130,64 @@ mod tests {
         // Frontmatter should parse correctly now
         let fm = parse_frontmatter(&content);
         assert!(fm.is_some(), "frontmatter should parse after stripping trailing '---'");
+    }
+
+    // ── YAML value escaping (R6) ────────────────────────────────────────
+
+    /// Values with YAML special chars (`*`, `,`) must be double-quoted
+    /// so serde_yaml can parse the frontmatter.
+    #[test]
+    fn capture_field_with_yaml_special_chars_ok() {
+        let mut fields = HashMap::new();
+        fields.insert("applies_to".to_string(), "*.java,*.vue".to_string());
+        let yaml = build_capture_frontmatter("rule", &fields, "## Rule\nContent.");
+        // serde_yaml must parse the output without error
+        let parsed: serde_yaml::Value =
+            serde_yaml::from_str(&yaml).expect("frontmatter should parse with special chars");
+        assert_eq!(parsed["applies_to"].as_str().unwrap(), "*.java,*.vue");
+        // Must be double-quoted in the raw YAML (asterisk is a YAML alias indicator)
+        assert!(yaml.contains(r#""*.java,*.vue""#), "special-char value must be quoted");
+    }
+
+    /// Values containing a double-quote must escape it.
+    #[test]
+    fn capture_field_with_quote_ok() {
+        let mut fields = HashMap::new();
+        fields.insert("applies_to".to_string(), r#"he said "hello""#.to_string());
+        let yaml = build_capture_frontmatter("rule", &fields, "## Rule\nContent.");
+        let parsed: serde_yaml::Value =
+            serde_yaml::from_str(&yaml).expect("frontmatter should parse with quotes");
+        assert_eq!(
+            parsed["applies_to"].as_str().unwrap(),
+            r#"he said "hello""#
+        );
+    }
+
+    /// Values containing `:` must be quoted so the colon isn't
+    /// mistaken for a YAML key-value separator.
+    #[test]
+    fn capture_field_with_colon_ok() {
+        let mut fields = HashMap::new();
+        fields.insert("applies_to".to_string(), "key: value".to_string());
+        let yaml = build_capture_frontmatter("rule", &fields, "## Rule\nContent.");
+        let parsed: serde_yaml::Value =
+            serde_yaml::from_str(&yaml).expect("frontmatter should parse with colon");
+        assert_eq!(parsed["applies_to"].as_str().unwrap(), "key: value");
+    }
+
+    /// Plain strings without YAML special chars should remain unquoted.
+    #[test]
+    fn capture_field_plain_value_unchanged() {
+        let mut fields = HashMap::new();
+        fields.insert("applies_to".to_string(), "java".to_string());
+        let yaml = build_capture_frontmatter("rule", &fields, "## Rule\nContent.");
+        let parsed: serde_yaml::Value =
+            serde_yaml::from_str(&yaml).expect("frontmatter should parse plain value");
+        assert_eq!(parsed["applies_to"].as_str().unwrap(), "java");
+        // Plain value must NOT be quoted
+        assert!(
+            yaml.contains("applies_to: java"),
+            "plain value should not be quoted; got:\n{yaml}"
+        );
     }
 }
