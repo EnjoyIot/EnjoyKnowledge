@@ -1,6 +1,6 @@
 # enjoyknowledge 术语表
 
-> v0.4.6 | 2026-06-28
+> v0.4.10 | 2026-06-29
 >
 > 所有文档共享的统一术语。按类别排列。
 
@@ -44,13 +44,13 @@ KB 写入规则与索引，按 Hermes skill 格式（frontmatter + body）组织
 |---|---|---|---|
 | gotcha | gotcha/ | 踩坑记录 | `trigger` |
 | decision | decision/ | 架构决策 | `reversible` + `decided_at` |
-| pattern | pattern/ | 最佳实践 | — |
+| pattern | pattern/ | 最佳实践 | `applies_to` |
 | rule | rule/ | 强制规则 | `applies_to` |
-| business | business/ | 业务规则 | — |
-| architecture | architecture/ | 系统结构 | — |
+| business | business/ | 业务规则 | `applies_to` |
+| architecture | architecture/ | 系统结构 | `applies_to` |
 | contract | contract/ | 接口契约 | `applies_to` |
 | convention | convention/ | 命名/格式约定 | `applies_to` |
-| context | context/ | 项目背景/运行时 | — |
+| context | context/ | 项目背景/运行时 | `applies_to` |
 | template | template/ | 范式模板 | `applies_to` |
 | command | command/ | CLI 命令文档 | `applies_to` |
 
@@ -68,10 +68,10 @@ KB 写入规则与索引，按 Hermes skill 格式（frontmatter + body）组织
 ## 工作流
 
 ### onboard
-AI 工具首次进入仓库时建立项目心智模型。触发：`enjoyknowledge onboard`。详见 [workflows.md](../02-design/architecture/workflows.md)。
+AI 工具首次进入仓库时建立项目心智模型。触发：`enjoyknowledge onboard`。
 
 ### capture
-把对话中发现的隐性知识沉淀到 SoT。触发：用户/AI 主动 / `enjoyknowledge workflow capture`。详见 [workflows.md](../02-design/architecture/workflows.md)。
+把对话中发现的隐性知识沉淀到 SoT。触发：用户/AI 主动 / `enjoyknowledge workflow capture`。
 
 ### export
 把 `.enjoyknowledge/` 内容导出到 AI 工具入口文件。v0.2 首发 Claude + Cursor。`--tool auto` 自动检测。详见 [rule-system.md](../02-design/architecture/rule-system.md)。
@@ -99,7 +99,7 @@ AI 工具首次进入仓库时建立项目心智模型。触发：`enjoyknowledg
 `tasks/<task-id>/` 下 AI 维护的 8 个文件：requirements / design / plan / changes / tests / delivery / summary / review。3 硬门（P1 需求 / P2 设计 / P5 交付）需人类批准。
 
 ### doctor（健康检查）
-4 项检查：frontmatter 有效 / 必填字段 / SoT 过期（> 180 天）/ export 一致性。`--ci` 模式 warning 也返回非零。
+4 项检查：frontmatter 有效 / 必填字段（动态从 kind registry 读取）/ SoT 过期（> 180 天）/ export 一致性 / kinds.md schema。`--ci` 模式 warning 也返回非零。
 
 ### fix（自动修复）
 可自动修复：缺 description、AGENTS.md 过期、超出预算（> 20 条目）、待归档任务。不可自动修复：缺 frontmatter。`--req <REQ-ID>` 指定任务目录。
@@ -126,8 +126,8 @@ AGENTS.md 的核心内容——不放 SoT 正文，只放链接。≤ 50 行。`
 
 - **对外版本号**：v0.3 / v0.4 / v0.5 / v1.0 / v1.x+
 - **Cargo.toml**：`version = "0.1.0"`（内部版本号走 git tag）
-- **当前版本**：v0.4.2
+- **当前版本**：v0.4.10
 
 ---
 
-*关联文档：[knowledge-types.md](../02-design/architecture/knowledge-types.md) · [workflows.md](../02-design/architecture/workflows.md) · [INTERFACE-SPEC.md](../02-design/INTERFACE-SPEC.md)*
+*关联文档：[knowledge-types.md](../02-design/architecture/knowledge-types.md) · [INTERFACE-SPEC.md](../02-design/INTERFACE-SPEC.md)*

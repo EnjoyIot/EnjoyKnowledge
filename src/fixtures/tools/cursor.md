@@ -1,0 +1,16 @@
+---
+alwaysApply: true
+---
+# enjoyknowledge — Shared AI Context
+
+This project uses enjoyknowledge to manage shared coding context.
+When given a task, run the corresponding search command to load relevant knowledge:
+
+```bash
+enjoyknowledge ls                    # list available knowledge
+enjoyknowledge grep <query>          # search inside ## sections  
+enjoyknowledge cat <path>            # read a knowledge file
+enjoyknowledge add <path> <content>  # record a new finding
+```
+
+Relevant directories: .enjoyknowledge/architecture/, gotchas/, patterns/, business/, decisions/

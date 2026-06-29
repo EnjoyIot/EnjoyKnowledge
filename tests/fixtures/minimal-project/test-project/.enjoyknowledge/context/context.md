@@ -1,5 +1,6 @@
 ---
 description: Project context -- stakeholders, constraints, deadlines, and background
+applies_to: "*"
 timestamp: 2026-06-28
 ---
 

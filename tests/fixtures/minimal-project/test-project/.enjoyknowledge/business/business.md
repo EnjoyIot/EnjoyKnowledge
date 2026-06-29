@@ -1,5 +1,6 @@
 ---
 description: Business rules, domain logic, calculation formulas, and compliance requirements
+applies_to: "*"
 timestamp: 2026-06-28
 ---
 

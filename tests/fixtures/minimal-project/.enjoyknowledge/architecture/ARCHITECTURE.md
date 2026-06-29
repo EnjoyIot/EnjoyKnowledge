@@ -1,5 +1,6 @@
 ---
 description: IoT 水务平台架构概览
+applies_to: "*"
 tags:
   - architecture
 timestamp: 2026-06-21

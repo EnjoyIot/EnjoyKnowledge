@@ -1,10 +1,7 @@
 //! `enjoyknowledge promote` — promote a draft from stage/drafts/ to the knowledge base.
 
+use crate::config::{self, EK_DIR, STAGE_DIR, DRAFTS_DIR};
 use crate::kinds;
-use crate::EK_DIR;
-
-/// Canonical directory name for the stage.
-const STAGE_DIR: &str = ".enjoyknowledge_stage";
 
 use std::path::Path;
 
@@ -15,10 +12,10 @@ pub fn run(
     id: Option<&str>,
     author: Option<&str>,
 ) -> anyhow::Result<()> {
-    let draft_path = project_root.join(STAGE_DIR).join("drafts").join(draft_file);
+    let draft_path = project_root.join(STAGE_DIR).join(DRAFTS_DIR).join(draft_file);
 
     if !draft_path.exists() {
-        anyhow::bail!("draft not found: {STAGE_DIR}/drafts/{draft_file}");
+        anyhow::bail!("draft not found: {STAGE_DIR}/{DRAFTS_DIR}/{draft_file}");
     }
 
     // Validate kind
@@ -45,7 +42,7 @@ pub fn run(
     let body_content = draft_content[body..].trim().to_string();
 
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-    let author_val = author.unwrap_or(ENV_AUTHOR);
+    let author_val = author.unwrap_or(config::DEFAULT_AUTHOR);
     let promote_id = target_stem;
 
     // Build KB file with 4-field frontmatter
@@ -68,9 +65,6 @@ pub fn run(
     eprintln!("enjoyknowledge: promoted {promote_id} → .enjoyknowledge/{target_rel} [{kind}]");
     Ok(())
 }
-
-/// Default author value for promoted KB files (开源组织名).
-const ENV_AUTHOR: &str = "enjoy";
 
 #[cfg(test)]
 mod tests {

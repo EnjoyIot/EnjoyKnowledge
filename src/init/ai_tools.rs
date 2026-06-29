@@ -62,67 +62,71 @@ impl AiTool {
             Self::Generic => "Generic",
         }
     }
+
+    /// Project-relative file path where this tool expects its config.
+    pub const fn file_path(self) -> &'static str {
+        match self {
+            Self::Cursor => ".cursor/rules/enjoyknowledge.mdc",
+            Self::Claude => ".claude/skills/enjoyknowledge.md",
+            Self::Copilot => ".github/copilot-instructions.md",
+            Self::Windsurf => ".windsurf/rules/enjoyknowledge.md",
+            Self::Cline => ".clinerules/enjoyknowledge.md",
+            Self::Codex => ".codex/prompts/enjoyknowledge.md",
+            Self::Trae => ".trae/rules/enjoyknowledge.md",
+            Self::Gemini => "GEMINI.md",
+            Self::Generic => "enjoyknowledge.md",
+            Self::Auto => "AGENTS.md",
+        }
+    }
+
+    /// Whether this tool appends to an existing file (vs. creating a standalone file).
+    pub const fn is_append_mode(self) -> bool {
+        matches!(self, Self::Copilot | Self::Gemini)
+    }
+
+    /// The template content for this tool's config file.
+    pub const fn content(self) -> &'static str {
+        match self {
+            Self::Cursor => CURSOR_RULES,
+            Self::Claude => CLAUDE_SKILL,
+            Self::Copilot => COPILOT_BLOCK,
+            Self::Windsurf => WINDSURF_RULES,
+            Self::Cline => CLINE_RULES,
+            Self::Codex => CODEX_PROMPT,
+            Self::Trae => TRAE_RULES,
+            Self::Gemini => GEMINI_BLOCK,
+            Self::Generic => GENERIC_TOOL_FILE,
+            Self::Auto => "",
+        }
+    }
 }
 
 /// Generate the tool-specific rules/prompts file under `project_root`.
 ///
 /// `Auto` does nothing (AGENTS.md alone is sufficient).
 pub fn generate_tool_files(project_root: &Path, tool: AiTool) -> anyhow::Result<()> {
-    match tool {
-        AiTool::Cursor => {
-            let dir = project_root.join(".cursor").join("rules");
-            std::fs::create_dir_all(&dir)?;
-            std::fs::write(dir.join("enjoyknowledge.mdc"), CURSOR_RULES)?;
-        }
-        AiTool::Claude => {
-            let dir = project_root.join(".claude").join("skills");
-            std::fs::create_dir_all(&dir)?;
-            std::fs::write(dir.join("enjoyknowledge.md"), CLAUDE_SKILL)?;
-        }
-        AiTool::Copilot => {
-            let dir = project_root.join(".github");
-            std::fs::create_dir_all(&dir)?;
-            let path = dir.join("copilot-instructions.md");
-            let existing = std::fs::read_to_string(&path).unwrap_or_default();
-            if !existing.contains("enjoyknowledge") {
-                std::fs::write(&path, format!("{existing}\n{COPILOT_BLOCK}"))?;
-            }
-        }
-        AiTool::Windsurf => {
-            let dir = project_root.join(".windsurf").join("rules");
-            std::fs::create_dir_all(&dir)?;
-            std::fs::write(dir.join("enjoyknowledge.md"), WINDSURF_RULES)?;
-        }
-        AiTool::Cline => {
-            let dir = project_root.join(".clinerules");
-            std::fs::create_dir_all(&dir)?;
-            std::fs::write(dir.join("enjoyknowledge.md"), CLINE_RULES)?;
-        }
-        AiTool::Codex => {
-            let dir = project_root.join(".codex").join("prompts");
-            std::fs::create_dir_all(&dir)?;
-            std::fs::write(dir.join("enjoyknowledge.md"), CODEX_PROMPT)?;
-        }
-        AiTool::Trae => {
-            let dir = project_root.join(".trae").join("rules");
-            std::fs::create_dir_all(&dir)?;
-            std::fs::write(dir.join("enjoyknowledge.md"), TRAE_RULES)?;
-        }
-        AiTool::Gemini => {
-            let path = project_root.join("GEMINI.md");
-            let existing = std::fs::read_to_string(&path).unwrap_or_default();
-            if !existing.contains("enjoyknowledge") {
-                std::fs::write(&path, format!("{existing}\n{GEMINI_BLOCK}"))?;
-            }
-        }
-        AiTool::Auto => {
-            // auto-detect: AGENTS.md alone is sufficient
-        }
-        AiTool::Generic => {
-            let path = project_root.join("enjoyknowledge.md");
-            std::fs::write(&path, GENERIC_TOOL_FILE)?;
-        }
+    if tool == AiTool::Auto {
+        return Ok(());
     }
+
+    let rel_path = tool.file_path();
+    let full_path = project_root.join(rel_path);
+
+    if let Some(parent) = full_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+
+    let content = tool.content();
+
+    if tool.is_append_mode() {
+        let existing = std::fs::read_to_string(&full_path).unwrap_or_default();
+        if !existing.contains("enjoyknowledge") {
+            std::fs::write(&full_path, format!("{existing}\n{content}"))?;
+        }
+    } else {
+        std::fs::write(&full_path, content)?;
+    }
+
     Ok(())
 }
 
@@ -140,119 +144,25 @@ pub fn update_gitignore(root: &Path) -> anyhow::Result<()> {
 
 // ── Tool rule templates ────────────────────────────────────────────────
 
-const CURSOR_RULES: &str = r"---
-alwaysApply: true
----
-# enjoyknowledge — Shared AI Context
+const CURSOR_RULES: &str = include_str!("../fixtures/tools/cursor.md");
 
-This project uses enjoyknowledge to manage shared coding context.
-When given a task, run the corresponding search command to load relevant knowledge:
+const CLAUDE_SKILL: &str = include_str!("../fixtures/tools/claude.md");
 
-```bash
-enjoyknowledge ls                    # list available knowledge
-enjoyknowledge grep <query>          # search inside ## sections  
-enjoyknowledge cat <path>            # read a knowledge file
-enjoyknowledge add <path> <content>  # record a new finding
-```
-
-Relevant directories: .enjoyknowledge/architecture/, gotchas/, patterns/, business/, decisions/
-";
-
-const CLAUDE_SKILL: &str = r"# enjoyknowledge Skill
-
-This project uses enjoyknowledge to manage shared coding context.
-
-## How to Use
-
-When the user begins a coding task, follow these rules:
-1. Identify the scenario (new feature / bug fix / refactor / hotfix / architecture decision)
-2. Run `enjoyknowledge grep <query>` to get relevant context
-3. After the task, run `enjoyknowledge add <path> <content>` to record new findings
-
-Available commands:
-- `enjoyknowledge ls` — list knowledge files with descriptions
-- `enjoyknowledge grep <query>` — structure-aware search
-- `enjoyknowledge cat <path>` — read a knowledge file
-- `enjoyknowledge add <path> <content>` — record an entry
-";
-
-const COPILOT_BLOCK: &str = r"
-## enjoyknowledge
-
-This project uses enjoyknowledge to manage shared AI coding context.
-Run `enjoyknowledge grep <query>` to search relevant knowledge before starting work.
-";
+const COPILOT_BLOCK: &str = include_str!("../fixtures/tools/copilot.md");
 
 /// Tool-agnostic enjoyknowledge.md for any AI coding tool that can read a
 /// project-level Markdown file.
-const GENERIC_TOOL_FILE: &str = r"# enjoyknowledge - Shared AI Context
+const GENERIC_TOOL_FILE: &str = include_str!("../fixtures/tools/generic.md");
 
-This project uses [enjoyknowledge](https://enjoyknowledge.dev) to manage
-shared context for AI coding tools.
+const WINDSURF_RULES: &str = include_str!("../fixtures/tools/windsurf.md");
 
-## How to Use
+const CLINE_RULES: &str = include_str!("../fixtures/tools/cline.md");
 
-Before starting any coding task, check the knowledge base for relevant context:
+const CODEX_PROMPT: &str = include_str!("../fixtures/tools/codex.md");
 
-```bash
-enjoyknowledge ls                    # list available knowledge
-enjoyknowledge grep <query>          # search inside ## sections
-enjoyknowledge cat <path>            # read a knowledge file
-enjoyknowledge add <path> <content>  # record a new finding
-enjoyknowledge doctor                # health check
-```
+const TRAE_RULES: &str = include_str!("../fixtures/tools/trae.md");
 
-Relevant directories under `.enjoyknowledge/`: architecture, gotchas, patterns,
-business, decisions.
-
-## When to Contribute
-
-After a coding task, record new findings:
-- Gotchas you encountered and how you resolved them
-- Architecture decisions and their rationale
-- Business rules or constraints that affected implementation
-- Patterns or conventions the team follows
-
----
-*Generated by enjoyknowledge init --ai generic*
-";
-
-const WINDSURF_RULES: &str = r"# enjoyknowledge
-
-This project uses enjoyknowledge to manage shared AI coding context.
-Before starting any coding task, run `enjoyknowledge grep <query>` to check for relevant knowledge.
-";
-
-const CLINE_RULES: &str = r"# enjoyknowledge
-
-This project uses enjoyknowledge to manage shared AI coding context.
-Before starting any coding task, run `enjoyknowledge grep <query>` to check for relevant knowledge.
-";
-
-const CODEX_PROMPT: &str = r"# enjoyknowledge
-
-This project uses enjoyknowledge to manage shared AI coding context.
-Before starting any coding task, run `enjoyknowledge grep <query>` to check for relevant knowledge.
-";
-
-const TRAE_RULES: &str = r"# enjoyknowledge
-
-This project uses enjoyknowledge to manage shared AI coding context.
-Before starting any coding task, run `enjoyknowledge grep <query>` to check for relevant knowledge.
-
-Available commands:
-- `enjoyknowledge ls` — list knowledge files
-- `enjoyknowledge grep <query>` — search inside ## sections
-- `enjoyknowledge cat <path>` — read a knowledge file
-- `enjoyknowledge add <path> <content>` — record a new entry
-";
-
-const GEMINI_BLOCK: &str = r"
-## enjoyknowledge
-
-This project uses enjoyknowledge to manage shared AI coding context.
-Run `enjoyknowledge grep <query>` to search relevant knowledge before starting work.
-";
+const GEMINI_BLOCK: &str = include_str!("../fixtures/tools/gemini.md");
 
 #[cfg(test)]
 mod tests {

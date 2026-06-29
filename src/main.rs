@@ -1,6 +1,7 @@
 // enjoyknowledge — CLI entry point for the AI coding context layer
 
 mod cli;
+mod config;
 mod core;
 mod doctor;
 mod format;
@@ -11,14 +12,20 @@ mod profile;
 mod template;
 
 use crate::cli::args::{Cli, Command, KindCmd, StageAction};
+use crate::config::EK_DIR;
 use clap::Parser;
 use std::path::Path;
 
-/// Canonical directory name for enjoyknowledge data.
-pub(crate) const EK_DIR: &str = ".enjoyknowledge";
-
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
+
+    // Initialise the kind registry from the user's kinds.md (or compile-time default).
+    // Use the project directory if provided, otherwise current directory.
+    let project_dir = match &cli.command {
+        Command::Init { path, .. } => path.as_deref().unwrap_or("."),
+        _ => ".",
+    };
+    kinds::init_kinds(Path::new(project_dir));
 
     match cli.command {
         Command::Init { path, ai, template, link, profile: profile_name } => {

@@ -1,5 +1,6 @@
 ---
 description: 水费计算业务规则
+applies_to: "backend/billing"
 tags:
   - export
   - billing

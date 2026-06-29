@@ -7,6 +7,7 @@
 //! 4. Append entries to target knowledge files
 //! 5. Move the task directory to `knowledge-tasks/.archive/<REQ-ID>/`
 
+use crate::config::{ARCHIVE_DIR, DEFAULT_WALK_DEPTH, KNOWLEDGE_TASKS_DIR};
 use crate::format;
 use std::path::Path;
 
@@ -29,12 +30,12 @@ pub fn archive_completed_tasks(
     project_root: &Path,
     req: Option<&str>,
 ) -> anyhow::Result<Vec<ArchiveResult>> {
-    let tasks_dir = project_root.join("knowledge-tasks");
+    let tasks_dir = project_root.join(KNOWLEDGE_TASKS_DIR);
     if !tasks_dir.exists() {
         return Ok(Vec::new());
     }
 
-    let archive_dir = tasks_dir.join(".archive");
+    let archive_dir = tasks_dir.join(ARCHIVE_DIR);
     let mut results = Vec::new();
 
     // If req is specified, only process that specific task
@@ -79,7 +80,7 @@ pub fn archive_completed_tasks(
 /// Check whether a task directory is completed by looking for `status: completed` marker.
 fn is_task_completed(task_dir: &Path) -> bool {
     for entry in walkdir::WalkDir::new(task_dir)
-        .max_depth(2)
+        .max_depth(DEFAULT_WALK_DEPTH)
         .into_iter()
         .filter_map(std::result::Result::ok)
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
@@ -105,7 +106,7 @@ fn archive_single_task(
 
     // Process each .md file in the task directory
     for entry in walkdir::WalkDir::new(task_dir)
-        .max_depth(2)
+        .max_depth(DEFAULT_WALK_DEPTH)
         .into_iter()
         .filter_map(std::result::Result::ok)
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))

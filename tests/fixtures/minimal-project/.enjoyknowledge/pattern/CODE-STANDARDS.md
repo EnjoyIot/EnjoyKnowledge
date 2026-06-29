@@ -1,5 +1,6 @@
 ---
 description: Vue3 和 Java 代码规范
+applies_to: "*.vue, *.java"
 tags:
   - code-standards
   - vue3

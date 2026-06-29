@@ -1,6 +1,7 @@
 //! doctor diagnostic checks for the knowledge base.
 //! v0.2: 4 checks per GLOSSARY L51 —
 //!   missing frontmatter / missing required fields / `SoT` staleness / export consistency.
+use crate::config::{DEFAULT_TTL_DAYS, KINDS_MD_REL};
 use crate::knowledge::KnowledgeSource;
 use std::path::Path;
 
@@ -75,48 +76,20 @@ fn check_required_fields(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
             continue;
         };
 
-        match kind {
-            "gotcha" => {
-                if !keys.iter().any(|k| k == "trigger") {
-                    results.push(CheckResult {
-                        file: rel.clone(),
-                        issue: "gotcha missing required field 'trigger'".to_string(),
-                        severity: Severity::Error,
-                    });
-                }
+        for field in crate::kinds::required_fields(&kind) {
+            if !keys.iter().any(|k| k == &field) {
+                results.push(CheckResult {
+                    file: rel.clone(),
+                    issue: format!("{kind} missing required field '{field}'"),
+                    severity: Severity::Error,
+                });
             }
-            "rule" | "contract" | "convention" | "template" => {
-                if !keys.iter().any(|k| k == "applies_to") {
-                    results.push(CheckResult {
-                        file: rel.clone(),
-                        issue: format!("{kind} missing required field 'applies_to'"),
-                        severity: Severity::Error,
-                    });
-                }
-            }
-            "decision" => {
-                if !keys.iter().any(|k| k == "reversible") {
-                    results.push(CheckResult {
-                        file: rel.clone(),
-                        issue: "decision missing required field 'reversible'".to_string(),
-                        severity: Severity::Error,
-                    });
-                }
-                if !keys.iter().any(|k| k == "decided_at") {
-                    results.push(CheckResult {
-                        file: rel.clone(),
-                        issue: "decision missing required field 'decided_at'".to_string(),
-                        severity: Severity::Error,
-                    });
-                }
-            }
-            _ => {}
         }
     }
     results
 }
 
-// ── Check 3: SoT staleness — warn if timestamp > 180 days ───────────────────
+// ── Check 3: SoT staleness — warn if timestamp > DEFAULT_TTL_DAYS days ──────
 
 fn check_sot_staleness(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
     let mut results = Vec::new();
@@ -135,7 +108,7 @@ fn check_sot_staleness(source: &dyn KnowledgeSource) -> Vec<CheckResult> {
             continue;
         };
         let days = (today - date).num_days();
-        if days > 180 {
+        if days.unsigned_abs() > DEFAULT_TTL_DAYS {
             results.push(CheckResult {
                 file: rel.clone(),
                 issue: format!("timestamp is {days} days old — consider reviewing"),
@@ -179,11 +152,11 @@ fn check_export_consistency(
 
 fn check_kinds_md(project_root: &Path) -> Vec<CheckResult> {
     let mut results = Vec::new();
-    let kinds_md_path = project_root.join(".enjoyknowledge/_meta/kinds.md");
+    let kinds_md_path = project_root.join(KINDS_MD_REL);
 
     if !kinds_md_path.exists() {
         results.push(CheckResult {
-            file: ".enjoyknowledge/_meta/kinds.md".to_string(),
+            file: KINDS_MD_REL.to_string(),
             issue: "kinds.md missing — run `ek init` to regenerate".to_string(),
             severity: Severity::Error,
         });
@@ -192,7 +165,7 @@ fn check_kinds_md(project_root: &Path) -> Vec<CheckResult> {
 
     let Ok(content) = std::fs::read_to_string(&kinds_md_path) else {
         results.push(CheckResult {
-            file: ".enjoyknowledge/_meta/kinds.md".to_string(),
+            file: KINDS_MD_REL.to_string(),
             issue: "kinds.md unreadable".to_string(),
             severity: Severity::Error,
         });
@@ -203,7 +176,7 @@ fn check_kinds_md(project_root: &Path) -> Vec<CheckResult> {
     let user_kinds = crate::kinds::parse_kinds_md_for_doctor(&content);
     if user_kinds.is_empty() {
         results.push(CheckResult {
-            file: ".enjoyknowledge/_meta/kinds.md".to_string(),
+            file: KINDS_MD_REL.to_string(),
             issue: "kinds.md has no valid kind rows".to_string(),
             severity: Severity::Error,
         });
@@ -211,11 +184,12 @@ fn check_kinds_md(project_root: &Path) -> Vec<CheckResult> {
     }
 
     // Cross-check against code registry
-    let code_kinds: Vec<&str> = crate::kinds::all().iter().map(|k| k.name.as_str()).collect();
+    let all_kinds = crate::kinds::all();
+    let code_kinds: Vec<&str> = all_kinds.iter().map(|k| k.name.as_str()).collect();
     for ck in &code_kinds {
         if !user_kinds.iter().any(|u| u == *ck) {
             results.push(CheckResult {
-                file: ".enjoyknowledge/_meta/kinds.md".to_string(),
+                file: KINDS_MD_REL.to_string(),
                 issue: format!("kind '{ck}' is in code registry but missing from kinds.md"),
                 severity: Severity::Warning,
             });
@@ -224,7 +198,7 @@ fn check_kinds_md(project_root: &Path) -> Vec<CheckResult> {
     for uk in &user_kinds {
         if !code_kinds.contains(&uk.as_str()) {
             results.push(CheckResult {
-                file: ".enjoyknowledge/_meta/kinds.md".to_string(),
+                file: KINDS_MD_REL.to_string(),
                 issue: format!("kind '{uk}' is in kinds.md but not in code registry"),
                 severity: Severity::Warning,
             });
@@ -237,17 +211,14 @@ fn check_kinds_md(project_root: &Path) -> Vec<CheckResult> {
 // ── helpers ─────────────────────────────────────────────────────────────────
 
 /// Determine knowledge kind from the file's top-level directory.
-/// "gotchas/x.md" → "gotcha", "rules/x.md" → "rule", etc.
-fn kind_from_path(path: &str) -> Option<&'static str> {
+/// Looks up the top-level directory in the kind registry.
+fn kind_from_path(path: &str) -> Option<String> {
     let top_dir = path.split('/').next()?;
-    match top_dir {
-        "gotcha" => Some("gotcha"),
-        "rule" => Some("rule"),
-        "decision" => Some("decision"),
-        "contract" => Some("contract"),
-        "convention" => Some("convention"),
-        "template" => Some("template"),
-        _ => None,
+    let kinds = crate::kinds::all();
+    if kinds.iter().any(|k| k.name == top_dir) {
+        Some(top_dir.to_string())
+    } else {
+        None
     }
 }
 

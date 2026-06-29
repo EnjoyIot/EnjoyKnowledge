@@ -1,6 +1,6 @@
 # for Coding 完整设计
 
-> v0.4.2 | 2026-06-28
+> v0.4.10 | 2026-06-29
 >
 > for Coding 领域应用层的完整设计。Core 通用引擎见 [DESIGN.md](../DESIGN.md)。
 
@@ -19,7 +19,7 @@
 | # | 原则 | 含义 |
 |---|---|---|
 | 1 | **SoT 单一 + 入口多元** | `.enjoyknowledge/` 是唯一真值源，export 生成多个 AI 工具入口 |
-| 2 | **元数据驱动** | 工作流 = YAML 文件，加新工作流不需要改 Rust 代码 |
+| 2 | **元数据驱动** | kind 注册表 = Markdown 表格，加新 kind 不需要改 Rust 代码 |
 | 3 | **显式失败** | SoT 缺失→报错，不静默降级 |
 | 4 | **物理分离** | `.enjoyknowledge_stage/`（AI 写）与 `.enjoyknowledge/`（人类写）物理目录分离 |
 
@@ -43,43 +43,48 @@ AI 编码工具 (Cursor / Claude Code)
     for Coding 应用结构
     项目根/
     ├── .enjoyknowledge/           ← 长期知识 SoT（人类编辑/审核）
+    │   ├── _meta/kinds.md          # kind 注册表
+    │   ├── skills/                # 工作流 skill 文件
     │   ├── architecture/
-    │   ├── gotchas/
-    │   ├── patterns/
-    │   ├── rules/
-    │   ├── decisions/
     │   ├── business/
-    │   ├── contracts/
-    │   ├── conventions/
+    │   ├── command/
     │   ├── context/
-    │   ├── templates/
+    │   ├── contract/
+    │   ├── convention/
+    │   ├── decision/
+    │   ├── gotcha/
+    │   ├── pattern/
+    │   ├── rule/
+    │   ├── template/
     │   ├── index.md
-    │   ├── log.md
     │   └── AGENTS.md              ← KB 写入规则
     └── .enjoyknowledge_stage/     ← 任务暂存区（AI 自动写）
+        ├── _meta/stage-defaults.md  # 默认目录清单（用户可编辑）
         ├── tasks/<task-id>/       # 8 文件
         ├── drafts/                # 待 promote 草稿
         ├── .archive/              # TTL 过期（180 天）
-        ├── workflow/              # 工作流 YAML
         └── AGENTS.md              ← 任务写入规范
 ```
 
 ---
 
-## 4. 10 类知识目录
+## 4. 11 类知识目录
 
 | 目录 | 内容 | 必填字段 |
 |---|---|---|
-| `architecture/` | 系统结构、模块地图、技术栈 | — |
-| `gotchas/` | 踩坑、陷阱、workaround | `trigger` |
-| `patterns/` | 最佳实践、推荐模式 | — |
-| `rules/` | 强制规则（区别于 pattern） | `applies_to` |
-| `decisions/` | ADR（为什么这样设计） | `reversible` + `decided_at` |
-| `business/` | 业务规则 | — |
-| `contracts/` | API 契约、接口约定 | `applies_to` |
-| `conventions/` | 命名/目录/commit 格式 | `applies_to` |
-| `context/` | 项目背景、约束、运行时 | — |
-| `templates/` | 范式模板 | `applies_to` |
+| `architecture/` | 系统结构、模块地图、技术栈 | `applies_to` |
+| `business/` | 业务规则 | `applies_to` |
+| `command/` | CLI 命令文档 | `applies_to` |
+| `context/` | 项目背景、约束、运行时 | `applies_to` |
+| `contract/` | API 契约、接口约定 | `applies_to` |
+| `convention/` | 命名/目录/commit 格式 | `applies_to` |
+| `decision/` | ADR（为什么这样设计） | `reversible` + `decided_at` |
+| `gotcha/` | 踩坑、陷阱、workaround | `trigger` |
+| `pattern/` | 最佳实践、推荐模式 | `applies_to` |
+| `rule/` | 强制规则（区别于 pattern） | `applies_to` |
+| `template/` | 范式模板 | `applies_to` |
+
+> v0.4.10：必填字段动态从 `.enjoyknowledge/_meta/kinds.md` 读取，不再硬编码。
 
 ---
 
@@ -105,13 +110,13 @@ AI 编码工具 (Cursor / Claude Code)
 ## Quick links
 - **Index**: `.enjoyknowledge/index.md`
 - **Architecture**: `.enjoyknowledge/architecture/`
-- **Gotchas**: `.enjoyknowledge/gotchas/`
-- **Rules**: `.enjoyknowledge/rules/`
-- **Decisions**: `.enjoyknowledge/decisions/`
+- **Gotchas**: `.enjoyknowledge/gotcha/`
+- **Rules**: `.enjoyknowledge/rule/`
+- **Decisions**: `.enjoyknowledge/decision/`
 
 ## How to use
 - **New to project?** → Read architecture overview + gotchas
-- **Making changes?** → Run `enjoyknowledge workflow capture` after commit
+- **Making changes?** → Run `enjoyknowledge promote` to capture knowledge
 ```
 
 **约束**：AGENTS.md ≤ 50 行。路由表不复制 SoT 内容。
@@ -125,9 +130,9 @@ AI 编码工具 (Cursor / Claude Code)
 | Rule ≤ 8 条 | AGENTS.md > 50 行 |
 | Gotcha ≤ 100 词 + trigger 字段 | "注意性能"类空洞条目 |
 | Decision 必含 reversible + decided_at | Rule 写代码风格（留 formatter/linter） |
-| 体积 ≤ 4000 词 | AI 自动生成 gotcha |
+| 其余 9 类必含 applies_to | AI 自动生成 gotcha |
 | `doctor` 接 CI 且 fail=block | LLM 扩写 knowledge |
 
 ---
 
-*关联文档：[knowledge-types.md](./knowledge-types.md) · [rule-system.md](./rule-system.md) · [workflows.md](./workflows.md) · [INTERFACE-SPEC.md](../INTERFACE-SPEC.md)*
+*关联文档：[knowledge-types.md](./knowledge-types.md) · [rule-system.md](./rule-system.md) · [INTERFACE-SPEC.md](../INTERFACE-SPEC.md)*

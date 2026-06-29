@@ -1,6 +1,6 @@
 # enjoyknowledge 路线图
 
-> v0.4.6 | 2026-06-28
+> v0.4.10 | 2026-06-29
 
 ## 版本节奏
 
@@ -14,7 +14,8 @@
 | v0.4.3 | 已交付 (2026-06-28) | kind registry 抽离 + 目录回归 kind=dir + workflow 重构 |
 | v0.4.4 | 已交付 (2026-06-28) | stage 用户可改：stage-defaults.md + Hermes skill + init 不覆盖 |
 | v0.4.5 | 已交付 (2026-06-28) | ek kind add/rm/list + kinds.md 运行时读 |
-| v0.4.6 | **当前** (2026-06-28) | ek AGENTS.md 对齐 stage：不覆盖 + Hermes skill 格式 |
+| v0.4.6 | 已交付 (2026-06-28) | ek AGENTS.md 对齐 stage：不覆盖 + Hermes skill 格式 |
+| v0.4.10 | **当前** (2026-06-29) | 去硬编码重构：config 统一 + kind registry 动态化 + 模板全部 fixture 化 |
 | v0.5+ | 方向 | 智能化（语义检索、知识新鲜度），不预设完整 scope |
 
 ---
@@ -49,8 +50,7 @@
 |---|---|
 | gotcha | `trigger` |
 | decision | `reversible` + `decided_at` |
-| rule / contract / convention / template / command | `applies_to` |
-| 其他 | 无 |
+| pattern / rule / business / architecture / contract / convention / context / template / command | `applies_to` |
 
 ### `.enjoyknowledge/` 结构
 

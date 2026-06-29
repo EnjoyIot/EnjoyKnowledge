@@ -1,5 +1,51 @@
 ﻿# enjoyknowledge 变更记录
 
+## [v0.4.10] — 2026-06-29
+
+### 去硬编码重构：config 统一 + kind registry 动态化 + 模板全部 fixture 化
+
+用户的核心洞察：目录、kind、流程都通过 `kinds.md` 和 `stage-defaults.md` 由用户定义，代码不应硬编码任何 kind 名或必填字段。
+
+**7 步实施（35 个源文件，~200 处硬编码消除）**：
+
+**Step 1 — 统一 config 模块（`src/config.rs` 新建）**：
+- 所有路径常量集中定义：`EK_DIR`、`STAGE_DIR`、`META_DIR`、`SKILLS_DIR`、`DRAFTS_DIR`、`TASKS_DIR`、`ARCHIVE_DIR`、`KINDS_FILE` 等 20+ 常量
+- 魔法数字集中：`DEFAULT_BUDGET_LIMIT`(20)、`DEFAULT_TTL_DAYS`(180)、`DEFAULT_WALK_DEPTH`(2) 等
+- 12 个引用文件统一从 config 导入，消除重复定义（如 `STAGE_DIR` 原来在 3 处各自定义）
+
+**Step 2 — 消除 kind 专有 match 语句**：
+- `kinds::required_fields()`: 30 行 match 块 → 从 registry 动态查找
+- `doctor::kind_from_path()`: match 硬编码 → 遍历 kind registry 匹配
+- `doctor::check_required_fields()`: match 逐个判断 → `kinds::required_fields()` 动态获取
+- 测试不再断言确切 kind 数量（`all().len() == 11` → `> 0`）
+
+**Step 3 — kind registry 运行时驱动**：
+- `LazyLock<Vec<Kind>>`（编译期）→ `RwLock<Vec<Kind>>`（运行时可初始化）
+- 新增 `init_kinds(project_root)` — 优先读 `.enjoyknowledge/_meta/kinds.md`，fallback 到 `KINDS_MD_DEFAULT`
+- `ensure_initialized()` 保证测试不调 `init_kinds()` 时自动用默认值
+- `all()` 返回 `Vec<Kind>` 替代 `&'static [Kind]`
+
+**Step 4 — 28 个内联模板抽离到 fixture 文件**：
+- 11 个 seed 模板：`src/fixtures/seeds/{kind}.md`（`include_str!` 替代 `r"..."` 常量）
+- 8 个 stage 模板：`src/fixtures/stage/{name}.md`
+- 9 个 AI tool 模板：`src/fixtures/tools/{tool}.md`
+
+**Step 5 — AiTool 数据驱动 + 路径去重**：
+- `AiTool` enum 新增 3 个方法：`file_path()`、`content()`、`is_append_mode()`
+- `generate_tool_files()`: 55 行 match → 20 行通用逻辑
+- `export.rs` 和 `ai_tools.rs` 路径定义统一为 `tool.file_path()`
+
+**Step 6 — 魔法数字提取到 config**：budget 20、TTL 180、walk depth 2/3、grep context 等全部命名常量。
+
+**Step 7 — 回归验证**：108 单元测试 + 25 trycmd + 34 集成测试全部通过，零 clippy 警告。
+
+**用户可见变化**：
+- `pattern`、`business`、`architecture`、`context` 的必填字段从"无"变为 `applies_to`（跟 kinds-default.md 一致）
+- `ek doctor` 的 `check_required_fields` 现在是完全动态的：用户改 `kinds.md` 添加/修改 required 字段后，doctor 自动校验新规则
+- 用户编辑 `src/fixtures/` 下 .md 文件后重新编译即可修改默认模板内容
+
+**哲学**：filesystem 是唯一真相源，代码只是提供 seed 默认值的 fallback。
+
 ## [v0.4.9] — 2026-06-29
 
 ### 7 个硬编码全部抽离到 fixture 文件

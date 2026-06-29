@@ -1,10 +1,13 @@
 //! Kind registry — single source of truth for knowledge kinds.
 //!
-//! Parsed at compile-time from `.enjoyknowledge/_meta/kinds.md` (Markdown table).
+//! Defaults are embedded at compile-time from `src/fixtures/kinds-default.md`.
+//! Call `init_kinds()` at startup to override with the user's
+//! `.enjoyknowledge/_meta/kinds.md` when it exists.
+//!
 //! All `dir_for()` lookups return `kind` directly — no "s" plural derivation.
 
 use std::path::Path;
-use std::sync::LazyLock;
+use std::sync::RwLock;
 
 /// A knowledge kind parsed from `kinds.md`.
 #[derive(Debug, Clone)]
@@ -19,12 +22,44 @@ pub struct Kind {
 /// Default `kinds.md` content — embedded at compile-time.
 const KINDS_MD_DEFAULT: &str = include_str!("fixtures/kinds-default.md");
 
-/// Lazily-parsed kind registry.
-static KINDS: LazyLock<Vec<Kind>> = LazyLock::new(|| parse_kinds_md(KINDS_MD_DEFAULT));
+/// Runtime kind registry, initialised from compile-time default.
+/// Call `init_kinds()` to override from the user's filesystem copy.
+static KINDS: RwLock<Vec<Kind>> = RwLock::new(Vec::new());
 
-/// Return all registered knowledge kinds.
-pub fn all() -> &'static [Kind] {
-    &KINDS
+/// One-time initialisation: called at process start in `main()`.
+/// Populates the registry from the user's kinds.md when present.
+pub fn init_kinds(project_root: &Path) {
+    let path = project_root.join(crate::config::KINDS_MD_REL);
+    let kinds = if path.exists() {
+        std::fs::read_to_string(&path)
+            .ok()
+            .and_then(|content| {
+                let parsed = parse_kinds_md(&content);
+                if parsed.is_empty() { None } else { Some(parsed) }
+            })
+            .unwrap_or_else(|| parse_kinds_md(KINDS_MD_DEFAULT))
+    } else {
+        parse_kinds_md(KINDS_MD_DEFAULT)
+    };
+    *KINDS.write().expect("kinds lock poisoned") = kinds;
+}
+
+/// Return all registered knowledge kinds (snapshot).
+/// Lazily initialises from the compile-time default if `init_kinds()` was not called.
+pub fn all() -> Vec<Kind> {
+    ensure_initialized();
+    KINDS.read().expect("kinds lock poisoned").clone()
+}
+
+/// Populate the registry from compile-time default when not yet initialised.
+fn ensure_initialized() {
+    if KINDS.read().expect("kinds lock poisoned").is_empty() {
+        // read guard dropped before acquiring write
+        let mut kinds = KINDS.write().expect("kinds lock poisoned");
+        if kinds.is_empty() {
+            *kinds = parse_kinds_md(KINDS_MD_DEFAULT);
+        }
+    }
 }
 
 /// Read and parse user-editable `kinds.md` from the filesystem at runtime.
@@ -39,20 +74,22 @@ pub const fn dir_for(name: &str) -> &str {
 }
 
 /// Return required frontmatter fields for a given kind.
-#[allow(dead_code)]
-pub fn required_fields(name: &str) -> &'static [&'static str] {
-    match name {
-        "gotcha" => &["trigger"],
-        "decision" => &["reversible", "decided_at"],
-        "rule" | "contract" | "convention" | "template" | "command" => &["applies_to"],
-        _ => &[],
-    }
+/// Looks up the kind in the runtime registry and returns its required fields.
+pub fn required_fields(name: &str) -> Vec<String> {
+    ensure_initialized();
+    let kinds = KINDS.read().expect("kinds lock poisoned");
+    kinds
+        .iter()
+        .find(|k| k.name == name)
+        .map(|k| k.required.clone())
+        .unwrap_or_default()
 }
 
 /// Return whether `name` is a registered knowledge kind.
 #[allow(dead_code)]
 pub fn is_valid_kind(name: &str) -> bool {
-    KINDS.iter().any(|k| k.name == name)
+    ensure_initialized();
+    KINDS.read().expect("kinds lock poisoned").iter().any(|k| k.name == name)
 }
 
 /// Return the default `kinds.md` content (for seeding new projects).
@@ -117,37 +154,40 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_all_11_kinds() {
+    fn parse_all_kinds_non_empty() {
         let all = all();
-        assert_eq!(all.len(), 11, "expected 11 kinds, got {}", all.len());
+        assert!(!all.is_empty(), "expected at least one kind, got 0");
     }
 
     #[test]
     fn dir_for_is_identity() {
-        assert_eq!(dir_for("gotcha"), "gotcha");
-        assert_eq!(dir_for("decision"), "decision");
-        assert_eq!(dir_for("pattern"), "pattern");
-        assert_eq!(dir_for("rule"), "rule");
-        assert_eq!(dir_for("command"), "command");
-        assert_eq!(dir_for("architecture"), "architecture");
+        for k in all() {
+            assert_eq!(dir_for(&k.name), k.name.as_str());
+        }
     }
 
     #[test]
     fn is_valid_kind_checks_registry() {
-        assert!(is_valid_kind("gotcha"));
-        assert!(is_valid_kind("decision"));
-        assert!(is_valid_kind("command"));
+        let all = all();
+        assert!(!all.is_empty());
+        // Every registered kind should be valid
+        for k in all {
+            assert!(is_valid_kind(&k.name), "expected {} to be valid", k.name);
+        }
         assert!(!is_valid_kind("nonexistent"));
-        assert!(!is_valid_kind("gotchas")); // plural = invalid
     }
 
     #[test]
     fn required_fields_per_kind() {
+        // Verify required fields match the kinds-default.md table
         assert_eq!(required_fields("gotcha"), &["trigger"]);
         assert_eq!(required_fields("decision"), &["reversible", "decided_at"]);
         assert_eq!(required_fields("rule"), &["applies_to"]);
         assert_eq!(required_fields("command"), &["applies_to"]);
-        assert!(required_fields("architecture").is_empty());
+        assert_eq!(required_fields("architecture"), &["applies_to"]);
+        assert_eq!(required_fields("pattern"), &["applies_to"]);
+        // Unknown kind returns empty
+        assert!(required_fields("nonexistent_kind_xyz").is_empty());
     }
 
     #[test]

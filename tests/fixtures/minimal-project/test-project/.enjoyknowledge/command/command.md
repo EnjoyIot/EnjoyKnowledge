@@ -1,5 +1,6 @@
 ---
 description: CLI commands, scripts, and one-liners worth remembering
+applies_to: "cli"
 timestamp: 2026-06-28
 ---
 

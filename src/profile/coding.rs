@@ -66,219 +66,24 @@ impl Profile for CodingProfile {
 
 // ---------- Seed template content -------------------------------------------
 
-const SEED_ARCHITECTURE: &str = r"---
-description: Project architecture overview -- system design, module map, data flow
-timestamp: __TIMESTAMP__
----
+const SEED_ARCHITECTURE: &str = include_str!("../fixtures/seeds/architecture.md");
 
-# Architecture Overview
+const SEED_BUSINESS: &str = include_str!("../fixtures/seeds/business.md");
 
-> Fill in your project's high-level architecture here.
+const SEED_COMMANDS: &str = include_str!("../fixtures/seeds/command.md");
 
-## Module Map
+const SEED_CONTEXT: &str = include_str!("../fixtures/seeds/context.md");
 
-- module-a/ -- description
-- module-b/ -- description
+const SEED_DECISIONS: &str = include_str!("../fixtures/seeds/decision.md");
 
-## Tech Stack
+const SEED_GOTCHAS: &str = include_str!("../fixtures/seeds/gotcha.md");
 
-| Layer    | Choice            | Why |
-|----------|-------------------|-----|
-| Runtime  |                   |     |
-| Database |                   |     |
-| Frontend |                   |     |
+const SEED_PATTERNS: &str = include_str!("../fixtures/seeds/pattern.md");
 
-## Data Flow
+const SEED_RULES: &str = include_str!("../fixtures/seeds/rule.md");
 
-```
-[Request] -> [Handler] -> [Service] -> [Repository] -> [DB]
-```
+const SEED_CONTRACTS: &str = include_str!("../fixtures/seeds/contract.md");
 
-## Deployment Topology
+const SEED_CONVENTIONS: &str = include_str!("../fixtures/seeds/convention.md");
 
-Describe how the system is deployed (monolith, microservices, etc.):
-
-```
-```
-";
-
-const SEED_BUSINESS: &str = r"---
-description: Business rules, domain logic, calculation formulas, and compliance requirements
-timestamp: __TIMESTAMP__
----
-
-# Business Rules
-
-> Domain-specific rules that code must enforce.
-> AI tools should check these before implementing related features.
-
-## Template: Rule name
-- **Rule**: What the rule says, in plain language
-- **Scope**: Which features / endpoints / user roles are affected
-- **Code location**: Where this rule is enforced (file paths or module names)
-- **Test**: How to verify compliance
-";
-
-const SEED_COMMANDS: &str = r"---
-description: CLI commands, scripts, and one-liners worth remembering
-timestamp: __TIMESTAMP__
----
-
-# Commands
-
-> Useful commands and scripts for this project.
-> Each command is a ## section with usage, purpose, and caveats.
-
-## Template: Command name
-- **Command**: `the exact command`
-- **When**: When to run this
-- **Why**: What problem it solves
-- **Caveat**: Any gotchas or preconditions
-";
-
-const SEED_CONTEXT: &str = r"---
-description: Project context -- stakeholders, constraints, deadlines, and background
-timestamp: __TIMESTAMP__
----
-
-# Project Context
-
-> Background information that helps understand why decisions were made.
-
-## Stakeholders
-
-- **Role** — Name — Contact
-
-## Constraints
-
-- Constraint — Impact — Source
-
-## Key Dates
-
-| Date | Milestone |
-|------|-----------|
-|      |           |
-";
-
-const SEED_DECISIONS: &str = r"---
-description: Architecture Decision Records (ADR) -- key technical decisions and their rationale
-reversible: true
-decided_at: __TIMESTAMP__
-timestamp: __TIMESTAMP__
----
-
-# Architecture Decisions
-
-> ADR format: title, status, context, decision, consequences.
-> Number sequentially: 001-topic.md, 002-topic.md, ...
-
-## 000 -- Use ADRs
-- **Status**: Accepted
-- **Context**: We need to track why key technical decisions were made.
-- **Decision**: Use lightweight ADRs in decisions/.
-- **Consequences**: Every significant architectural choice must be documented.
-";
-
-const SEED_GOTCHAS: &str = r"---
-description: Gotchas, tricky bugs, edge cases, and workarounds discovered during development
-trigger: TODO - describe the triggering condition
-timestamp: __TIMESTAMP__
----
-
-# Gotchas
-
-> Record each gotcha as a ## section.
-> Run: enjoyknowledge add gotchas/gotchas.md '## your title'
-
-## Template: Short descriptive title
-- **Instance**: What went wrong / what surprised you
-- **Impact**: Which component or flow was affected
-- **Workaround**: How it is handled now (even if imperfect)
-- **Related**: Link to related architecture or patterns
-";
-
-const SEED_PATTERNS: &str = r"---
-description: Validated patterns, conventions, and best practices for this project
-timestamp: __TIMESTAMP__
----
-
-# Patterns and Conventions
-
-> Validated solutions that have worked well in this project.
-> Each pattern is a ## section -- use enjoyknowledge add patterns/patterns.md '## ...'
-
-## Template: Pattern name
-- **When**: When to apply this pattern
-- **How**: How it works, with a short code snippet if helpful
-- **Why**: Rationale -- why this over alternatives
-- **Anti-pattern**: When NOT to use it (if applicable)
-";
-
-const SEED_RULES: &str = r#"---
-description: Coding rules, lint policies, naming conventions enforced in this project
-applies_to: "*.rs"
-timestamp: __TIMESTAMP__
----
-
-# Rules
-
-> Coding rules that AI tools and contributors should follow.
-> Each rule is a ## section.
-
-## Template: Rule name
-- **Rule**: What the rule requires
-- **Scope**: Which files / modules / patterns it applies to
-- **Rationale**: Why this rule exists
-- **Enforcement**: How it is checked (lint, review, CI)
-"#;
-
-const SEED_CONTRACTS: &str = r#"---
-description: API contracts, data schemas, interface guarantees
-applies_to: "*"
-timestamp: __TIMESTAMP__
----
-
-# Contracts
-
-> API contracts and interface guarantees.
-> Breaking changes must update this file.
-
-## Template: Contract name
-- **Endpoint / Interface**: The surface being contracted
-- **Guarantee**: What callers can rely on
-- **Version**: When this contract took effect
-- **Breaking change policy**: How violations are handled
-"#;
-
-const SEED_CONVENTIONS: &str = r#"---
-description: Team conventions, workflow norms, and process agreements
-applies_to: "*"
-timestamp: __TIMESTAMP__
----
-
-# Conventions
-
-> Team conventions and workflow agreements.
-> These are social norms, not enforced by tooling.
-
-## Template: Convention name
-- **What**: The agreed practice
-- **Why**: The reasoning behind it
-- **Exceptions**: When it's OK to break this convention
-"#;
-
-const SEED_TEMPLATES: &str = r#"---
-description: Reusable file and component templates
-applies_to: "*"
-timestamp: __TIMESTAMP__
----
-
-# Templates
-
-> Reusable templates for files, components, or documents.
-> Copy these when creating new artifacts.
-
-## Template: Template name
-- **Use**: When to use this template
-- **Content**: The template body or a reference to where it lives
-"#;
+const SEED_TEMPLATES: &str = include_str!("../fixtures/seeds/template.md");

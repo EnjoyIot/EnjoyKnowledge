@@ -1,8 +1,8 @@
 //! `enjoyknowledge init` — initialize the knowledge base.
+use crate::config::{EK_DIR, AGENTS_FILE};
 use crate::core::template::TemplateProvider;
 use crate::core::Profile;
 use crate::init;
-use crate::EK_DIR;
 use std::path::Path;
 
 pub fn run(
@@ -66,7 +66,7 @@ enjoyknowledge --root {link_path} ls
 | `enjoyknowledge fix` | Auto-fix common issues |
 "#
         );
-        std::fs::write(project_root.join("AGENTS.md"), agents_content)?;
+        std::fs::write(project_root.join(AGENTS_FILE), agents_content)?;
         eprintln!("enjoyknowledge: AGENTS.md generated -> linked to {link_path}");
         return Ok(());
     }

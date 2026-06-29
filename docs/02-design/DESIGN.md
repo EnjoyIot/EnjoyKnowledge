@@ -1,6 +1,6 @@
 # enjoyknowledge 设计
 
-> v0.4.3 | 2026-06-28
+> v0.4.10 | 2026-06-29
 >
 > 整体架构入口。详细设计见子文档。
 
@@ -24,7 +24,7 @@ enjoyknowledge for Coding   ← 领域应用（默认）
 
 | 层 | 职责 | 当前内容 |
 |---|---|---|
-| **Core** | 知识文件的格式、索引、检索、写入、健康检查 | 13 个 CLI 命令 |
+| **Core** | 知识文件的格式、索引、检索、写入、健康检查 | 14 个 CLI 命令 |
 | **for Coding** | AI 编程场景的目录、任务暂存区、AI 入口 | 11 类知识资产 + stage + export |
 
 ---
@@ -36,6 +36,7 @@ enjoyknowledge for Coding   ← 领域应用（默认）
 ├── AGENTS.md                      # AI 入口（内嵌 ls 摘要）
 ├── .enjoyknowledge/               # 长期知识 SoT（人类编辑/审核）
 │   ├── _meta/kinds.md              # kind 注册表（Markdown 表格）
+│   ├── skills/                    # 工作流 skill 文件
 │   ├── architecture/
 │   ├── gotcha/
 │   ├── pattern/
@@ -50,6 +51,7 @@ enjoyknowledge for Coding   ← 领域应用（默认）
 │   ├── index.md
 │   └── AGENTS.md                   # KB 写入规则
 └── .enjoyknowledge_stage/          # 任务暂存区（AI 自动写）
+    ├── _meta/stage-defaults.md       # 默认目录清单（用户可编辑）
     ├── tasks/<task-id>/            # 8 文件
     ├── drafts/                     # 待 promote 草稿
     ├── .archive/                   # TTL 过期（180 天）
@@ -110,10 +112,10 @@ v0.4.3 引入 `.enjoyknowledge/_meta/kinds.md` —— Markdown 表格格式的 k
 | `cat` | 读取文件 |
 | `grep` | 结构化搜索（定位到 `##` 段） |
 | `add` | 追加/创建知识条目 |
-| `doctor` | 4 项健康检查 |
+| `doctor` | 5 项健康检查 |
 | `fix` | 自动修复可处理问题 |
 | `export` | 生成 AI 工具入口文件（Claude + Cursor） |
-| `workflow` | 运行 onboard / capture |
+| `kind` | 管理知识种类（add/rm/list，v0.4.5） |
 | `promote` | draft → KB（v0.4） |
 | `stage clean` | TTL 清理（v0.4） |
 
@@ -125,9 +127,8 @@ v0.4.3 引入 `.enjoyknowledge/_meta/kinds.md` —— Markdown 表格格式的 k
 
 | 文档 | 内容 |
 |---|---|
-| [architecture/knowledge-types.md](./architecture/knowledge-types.md) | 10 类知识资产 + 必填字段 |
+| [architecture/knowledge-types.md](./architecture/knowledge-types.md) | 11 类知识资产 + 必填字段 |
 | [architecture/rule-system.md](./architecture/rule-system.md) | 规则系统 + export 行为 |
-| [architecture/workflows.md](./architecture/workflows.md) | 工作流系统 + YAML schema |
 | [architecture/for-coding-design.md](./architecture/for-coding-design.md) | for Coding 完整设计 |
 | [INTERFACE-SPEC.md](./INTERFACE-SPEC.md) | CLI 行为合约 + 错误码 |
 | [../01-philosophy/GLOSSARY.md](../01-philosophy/GLOSSARY.md) | 统一术语 |

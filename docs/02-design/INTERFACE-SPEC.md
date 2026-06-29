@@ -1,6 +1,6 @@
 # enjoyknowledge 接口规范
 
-> v0.4.6 | 2026-06-28
+> v0.4.10 | 2026-06-29
 >
 > CLI 行为合约。第三方适配器、工具生成器、AI 工具集成的唯一参考。
 
@@ -86,8 +86,7 @@ timestamp: 2026-06-21
 |---|---|
 | gotcha | `trigger` |
 | decision | `reversible` + `decided_at` |
-| rule / contract / convention / template | `applies_to` |
-| 其他 | 无 |
+| pattern / rule / business / architecture / contract / convention / context / template / command | `applies_to` |
 
 ### 2.5 保留文件名
 
@@ -205,12 +204,12 @@ enjoyknowledge add <path> <content>
 enjoyknowledge doctor [--ci]
 ```
 
-5 项检查：
+5 项检查（v0.4.10：必填字段动态从 kind registry 读取，不再硬编码）：
 
 | 检查 | 内容 |
 |---|---|
 | check_frontmatter | 所有 .md 有有效 YAML frontmatter |
-| check_required_fields | gotcha 有 trigger / decision 有 reversible+decided_at / rule|contract|convention|template 有 applies_to |
+| check_required_fields | 动态从 kinds.md 读取每个 kind 的必填字段并校验 |
 | check_sot_staleness | timestamp > 180 天 → warning |
 | check_export_consistency | export 生成文件与 SoT 一致 |
 | check_kinds_md | kinds.md 存在 + 可解析 + 与代码 registry 一致 |
@@ -343,4 +342,4 @@ enjoyknowledge init --template list   # 列出可用模板
 
 ---
 
-*关联文档：[DESIGN.md](./DESIGN.md) · [GLOSSARY.md](../01-philosophy/GLOSSARY.md) · [workflows.md](./architecture/workflows.md)*
+*关联文档：[DESIGN.md](./DESIGN.md) · [GLOSSARY.md](../01-philosophy/GLOSSARY.md)*

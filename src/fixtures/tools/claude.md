@@ -1,0 +1,16 @@
+# enjoyknowledge Skill
+
+This project uses enjoyknowledge to manage shared coding context.
+
+## How to Use
+
+When the user begins a coding task, follow these rules:
+1. Identify the scenario (new feature / bug fix / refactor / hotfix / architecture decision)
+2. Run `enjoyknowledge grep <query>` to get relevant context
+3. After the task, run `enjoyknowledge add <path> <content>` to record new findings
+
+Available commands:
+- `enjoyknowledge ls` — list knowledge files with descriptions
+- `enjoyknowledge grep <query>` — structure-aware search
+- `enjoyknowledge cat <path>` — read a knowledge file
+- `enjoyknowledge add <path> <content>` — record an entry

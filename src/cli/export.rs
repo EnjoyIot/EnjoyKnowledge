@@ -65,20 +65,10 @@ pub fn run(project_root: &Path, tool_args: &[String], dry_run: bool) -> anyhow::
                 tool.label(),
                 project_root.display()
             );
-            let target = match tool {
-                AiTool::Cursor => ".cursor/rules/enjoyknowledge.mdc",
-                AiTool::Claude => ".claude/skills/enjoyknowledge.md",
-                _ => unreachable!("parse_tool 已过滤"),
-            };
-            println!("  → {target}");
+            println!("  → {}", tool.file_path());
         } else {
             generate_tool_files(project_root, *tool)?;
-            let target = match tool {
-                AiTool::Cursor => ".cursor/rules/enjoyknowledge.mdc",
-                AiTool::Claude => ".claude/skills/enjoyknowledge.md",
-                _ => unreachable!("parse_tool 已过滤"),
-            };
-            println!("✓ Generated {} entry file: {}", tool.label(), target);
+            println!("✓ Generated {} entry file: {}", tool.label(), tool.file_path());
         }
     }
 

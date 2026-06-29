@@ -1,10 +1,8 @@
 //! `enjoyknowledge stage clean` — TTL-based cleanup of archived stage tasks.
 
+use crate::config::{self, STAGE_DIR, ARCHIVE_DIR, TASKS_DIR};
 use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-
-/// Canonical directory for stage archives.
-const STAGE_DIR: &str = ".enjoyknowledge_stage";
 
 pub fn run(
     project_root: &Path,
@@ -12,8 +10,8 @@ pub fn run(
     force: bool,
     older_than_days: Option<u64>,
 ) -> anyhow::Result<()> {
-    let ttl_days = older_than_days.unwrap_or(180);
-    let archive_dir = project_root.join(STAGE_DIR).join(".archive").join("tasks");
+    let ttl_days = older_than_days.unwrap_or(config::DEFAULT_TTL_DAYS);
+    let archive_dir = project_root.join(STAGE_DIR).join(ARCHIVE_DIR).join(TASKS_DIR);
 
     if !archive_dir.exists() {
         eprintln!("enjoyknowledge: no archived tasks to clean");
@@ -91,7 +89,7 @@ pub fn run(
 fn find_newest_mtime(dir: &Path) -> Option<SystemTime> {
     let mut newest: Option<SystemTime> = None;
     for entry in
-        walkdir::WalkDir::new(dir).max_depth(10).into_iter().filter_map(std::result::Result::ok)
+        walkdir::WalkDir::new(dir).max_depth(config::MTIME_SCAN_DEPTH).into_iter().filter_map(std::result::Result::ok)
     {
         if entry.file_type().is_file() {
             if let Ok(meta) = entry.metadata() {

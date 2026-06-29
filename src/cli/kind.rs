@@ -3,11 +3,8 @@
 use std::fs;
 use std::path::Path;
 
+use crate::config::{EK_DIR, META_DIR, KINDS_FILE};
 use crate::kinds;
-use crate::EK_DIR;
-
-const KIND_META_DIR: &str = "_meta";
-const KINDS_FILE: &str = "kinds.md";
 
 /// `ek kind add <name> [--required <csv>] [--summary <text>] [--yes]`
 pub fn run_add(
@@ -23,7 +20,7 @@ pub fn run_add(
     }
 
     // 2. Check kinds.md exists
-    let kinds_md_path = project_root.join(EK_DIR).join(KIND_META_DIR).join(KINDS_FILE);
+    let kinds_md_path = project_root.join(EK_DIR).join(META_DIR).join(KINDS_FILE);
     if !kinds_md_path.exists() {
         anyhow::bail!("{} not found — run `ek init` first", kinds_md_path.display());
     }
@@ -65,7 +62,7 @@ pub fn run_add(
 
 /// `ek kind rm <name> [--force] [--yes]`
 pub fn run_rm(project_root: &Path, name: &str, force: bool, yes: bool) -> anyhow::Result<()> {
-    let kinds_md_path = project_root.join(EK_DIR).join(KIND_META_DIR).join(KINDS_FILE);
+    let kinds_md_path = project_root.join(EK_DIR).join(META_DIR).join(KINDS_FILE);
 
     if !kinds_md_path.exists() {
         anyhow::bail!("{} not found — run `ek init` first", kinds_md_path.display());
@@ -108,7 +105,7 @@ pub fn run_rm(project_root: &Path, name: &str, force: bool, yes: bool) -> anyhow
 
 /// `ek kind list`
 pub fn run_list(project_root: &Path) -> anyhow::Result<()> {
-    let kinds_md_path = project_root.join(EK_DIR).join(KIND_META_DIR).join(KINDS_FILE);
+    let kinds_md_path = project_root.join(EK_DIR).join(META_DIR).join(KINDS_FILE);
 
     if !kinds_md_path.exists() {
         anyhow::bail!("{} not found — run `ek init` first", kinds_md_path.display());

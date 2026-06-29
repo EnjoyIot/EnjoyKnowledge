@@ -38,7 +38,7 @@ impl FilesystemSource {
         let scan_root = dir.map_or_else(|| self.root.clone(), |d| self.root.join(d));
 
         walkdir::WalkDir::new(&scan_root)
-            .max_depth(2)
+            .max_depth(crate::config::DEFAULT_WALK_DEPTH)
             .into_iter()
             .filter_map(std::result::Result::ok)
             .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
@@ -214,13 +214,13 @@ impl KnowledgeSource for FilesystemSource {
         let search_roots: Vec<PathBuf> = query.req.as_ref().map_or_else(
             || {
                 if query.include_archive {
-                    vec![self.root.clone(), self.project_root.join("knowledge-tasks")]
+                    vec![self.root.clone(), self.project_root.join(crate::config::KNOWLEDGE_TASKS_DIR)]
                 } else {
                     vec![self.root.clone()]
                 }
             },
             |req_id| {
-                vec![self.root.clone(), self.project_root.join("knowledge-tasks").join(req_id)]
+                vec![self.root.clone(), self.project_root.join(crate::config::KNOWLEDGE_TASKS_DIR).join(req_id)]
             },
         );
 
@@ -233,7 +233,7 @@ impl KnowledgeSource for FilesystemSource {
                 query.path.as_ref().map_or_else(|| search_root.clone(), |p| search_root.join(p));
 
             for entry in walkdir::WalkDir::new(&scan_dir)
-                .max_depth(3)
+                .max_depth(crate::config::SEARCH_WALK_DEPTH)
                 .into_iter()
                 .filter_map(std::result::Result::ok)
                 .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
@@ -288,8 +288,8 @@ impl KnowledgeSource for FilesystemSource {
                             .unwrap_or_default();
 
                     let all_lines: Vec<&str> = content.lines().collect();
-                    let start = actual_line.saturating_sub(3);
-                    let end = (actual_line + 4).min(all_lines.len());
+                    let start = actual_line.saturating_sub(crate::config::GREP_CONTEXT_BEFORE);
+                    let end = (actual_line + crate::config::GREP_CONTEXT_AFTER).min(all_lines.len());
                     let snippet = all_lines[start..end].join("\n");
 
                     results.push(SearchResult { file: rel_path, section, snippet });

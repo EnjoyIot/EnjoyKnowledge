@@ -1,5 +1,6 @@
 ---
 description: Project architecture overview -- system design, module map, data flow
+applies_to: "*"
 timestamp: 2026-06-28
 ---
 

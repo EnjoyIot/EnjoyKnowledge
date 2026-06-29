@@ -1,25 +1,26 @@
 # 知识类型设计
 
-> v0.4.2 | 2026-06-28
+> v0.4.10 | 2026-06-29
 >
-> 定义 10 类知识资产 + 判断标准 + 必填字段。
+> 定义 11 类知识资产 + 判断标准 + 必填字段（动态从 kind registry 读取）。
 
 ---
 
-## 1. 10 类知识资产
+## 1. 11 类知识资产
 
 | # | kind | 目录 | 本质 | 必填 frontmatter |
 |---|---|---|---|---|
-| 1 | gotcha | gotchas/ | 踩坑记录 | `trigger` |
-| 2 | decision | decisions/ | 架构决策 | `reversible` + `decided_at` |
-| 3 | pattern | patterns/ | 最佳实践 | — |
-| 4 | rule | rules/ | 强制规则 | `applies_to` |
-| 5 | business | business/ | 业务规则 | — |
-| 6 | architecture | architecture/ | 系统结构 | — |
-| 7 | contract | contracts/ | 接口契约 | `applies_to` |
-| 8 | convention | conventions/ | 命名/格式约定 | `applies_to` |
-| 9 | context | context/ | 项目背景/运行时 | — |
-| 10 | template | templates/ | 范式模板 | `applies_to` |
+| 1 | gotcha | gotcha/ | 踩坑记录 | `trigger` |
+| 2 | decision | decision/ | 架构决策 | `reversible` + `decided_at` |
+| 3 | pattern | pattern/ | 最佳实践 | `applies_to` |
+| 4 | rule | rule/ | 强制规则 | `applies_to` |
+| 5 | business | business/ | 业务规则 | `applies_to` |
+| 6 | architecture | architecture/ | 系统结构 | `applies_to` |
+| 7 | contract | contract/ | 接口契约 | `applies_to` |
+| 8 | convention | convention/ | 命名/格式约定 | `applies_to` |
+| 9 | context | context/ | 项目背景/运行时 | `applies_to` |
+| 10 | template | template/ | 范式模板 | `applies_to` |
+| 11 | command | command/ | CLI 命令文档 | `applies_to` |
 
 ---
 
@@ -65,14 +66,10 @@ id: postgresql-over-mysql
 reversible: false
 decided_at: 2026-04-15
 
-# rule / contract / convention / template（必含 applies_to）
+# pattern / rule / business / architecture / contract / convention / context / template / command（必含 applies_to）
 id: rust-no-unwrap
 applies_to: ["*.rs"]
 tags: [rust, error-handling]
-
-# architecture / pattern / business / context（无必填字段）
-id: api-layer-axum-tower
-tags: [api, backend]
 ```
 
 ---
@@ -103,8 +100,7 @@ tags: [api, backend]
 **强制**：
 - gotcha 必含 `trigger` 字段（缺它 doctor 报错）
 - decision 必含 `reversible` + `decided_at`
-- rule / contract / convention / template 必含 `applies_to`
-- 体积上限 100 词单条 / 4000 词总
+- 其余 9 类必含 `applies_to`（v0.4.10：动态从 kind registry 读取，用户可修改）
 
 **禁止**：
 - 在 gotchas/ 放"注意性能"类空洞条目
@@ -112,4 +108,4 @@ tags: [api, backend]
 
 ---
 
-*关联文档：[rule-system.md](./rule-system.md) · [workflows.md](./workflows.md) · [for-coding-design.md](./for-coding-design.md) · [GLOSSARY.md](../../01-philosophy/GLOSSARY.md)*
+*关联文档：[rule-system.md](./rule-system.md) · [for-coding-design.md](./for-coding-design.md) · [GLOSSARY.md](../../01-philosophy/GLOSSARY.md)*

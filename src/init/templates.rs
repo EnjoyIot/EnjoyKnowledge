@@ -23,8 +23,8 @@
 ///
 /// The default `for-coding` template ships with 5 knowledge categories:
 /// `architecture`, `gotchas`, `patterns`, `business`, `decisions`.
+use crate::config::{EK_DIR, KNOWLEDGE_TASKS_DIR};
 use crate::core::{Profile, TemplateProvider};
-use crate::EK_DIR;
 use std::path::Path;
 
 /// Apply a named template to `project_root`.
@@ -49,11 +49,11 @@ pub fn apply_template(
     }
 
     // 2. Copy knowledge-tasks/ if present
-    let tasks_src = template_dir.join("knowledge-tasks");
+    let tasks_src = template_dir.join(KNOWLEDGE_TASKS_DIR);
     if tasks_src.exists() {
-        copy_dir_recursive(&tasks_src, &project_root.join("knowledge-tasks"))?;
+        copy_dir_recursive(&tasks_src, &project_root.join(KNOWLEDGE_TASKS_DIR))?;
     } else {
-        std::fs::create_dir_all(project_root.join("knowledge-tasks"))?;
+        std::fs::create_dir_all(project_root.join(KNOWLEDGE_TASKS_DIR))?;
     }
 
     // 3. Generate AGENTS.md from template _AGENTS.md or default

@@ -1,15 +1,9 @@
+use crate::config::{EK_DIR, SKILLS_DIR, STAGE_DIR, META_DIR, KINDS_FILE, STAGE_DEFAULTS_FILE, DRAFTS_DIR, TASKS_DIR, ARCHIVE_DIR, KNOWLEDGE_TASKS_DIR, INDEX_FILE, AGENTS_FILE, EK_AGENTS_FILE, STAGE_AGENTS_FILE};
 use crate::core::Profile;
 use crate::kinds;
 /// Directory skeleton generation.
-use crate::EK_DIR;
 use std::fmt::Write;
 use std::path::Path;
-
-/// Canonical directory name for the stage (AI task staging area).
-pub const STAGE_DIR: &str = ".enjoyknowledge_stage";
-
-/// v0.4.8: Skills directory inside .enjoyknowledge/ for workflow skill files.
-pub const SKILLS_DIR: &str = "skills";
 
 /// Default stage-directory specification — embedded at compile-time.
 const STAGE_DEFAULTS_MD_DEFAULT: &str = include_str!("../fixtures/stage-defaults.md");
@@ -42,25 +36,25 @@ pub fn generate_skeleton(project_root: &Path, profile: &dyn Profile) -> anyhow::
     }
 
     // v0.4.3: Write _meta/kinds.md (kind registry seed)
-    let meta_dir = ek.join("_meta");
+    let meta_dir = ek.join(META_DIR);
     std::fs::create_dir_all(&meta_dir)?;
-    let kinds_md_path = meta_dir.join("kinds.md");
+    let kinds_md_path = meta_dir.join(KINDS_FILE);
     if !kinds_md_path.exists() {
         std::fs::write(&kinds_md_path, kinds::init_default_kinds())?;
     }
 
     // v0.4.5: Create kind directories from user kinds.md (runtime-read, not compile-time)
-    let kinds = kinds::all_from_file(&kinds_md_path).unwrap_or_else(|_| kinds::all().to_vec());
+    let kinds = kinds::all_from_file(&kinds_md_path).unwrap_or_else(|_| kinds::all());
     for k in &kinds {
         let dir = ek.join(kinds::dir_for(&k.name));
         std::fs::create_dir_all(&dir)?;
     }
 
     // knowledge-tasks/ at project root level
-    std::fs::create_dir_all(project_root.join("knowledge-tasks"))?;
+    std::fs::create_dir_all(project_root.join(KNOWLEDGE_TASKS_DIR))?;
 
     // Generate index.md (OKF table of contents)
-    let index_path = ek.join("index.md");
+    let index_path = ek.join(INDEX_FILE);
     if !index_path.exists() {
         std::fs::write(
             &index_path,
@@ -78,7 +72,7 @@ pub fn generate_agents_md(
     profile: &dyn Profile,
 ) -> anyhow::Result<()> {
     let content = generate_agents_md_content(ai_tool, profile);
-    std::fs::write(project_root.join("AGENTS.md"), content)?;
+    std::fs::write(project_root.join(AGENTS_FILE), content)?;
     Ok(())
 }
 
@@ -91,7 +85,7 @@ pub fn sync_agents_md_summary(
     project_root: &Path,
     source: &dyn crate::knowledge::KnowledgeSource,
 ) -> anyhow::Result<()> {
-    let agents_path = project_root.join("AGENTS.md");
+    let agents_path = project_root.join(AGENTS_FILE);
     if !agents_path.exists() {
         return Ok(());
     }
@@ -185,7 +179,7 @@ pub fn generate_stage_skeleton(project_root: &Path) -> anyhow::Result<()> {
 
     // v0.4.4: Read stage-defaults.md to determine directories.
     // Priority: user-edited copy > embedded default.
-    let defaults_md_path = stage.join("_meta").join("stage-defaults.md");
+    let defaults_md_path = stage.join(META_DIR).join(STAGE_DEFAULTS_FILE);
     let defaults_md = if defaults_md_path.exists() {
         std::fs::read_to_string(&defaults_md_path).unwrap_or_default()
     } else {
@@ -199,11 +193,11 @@ pub fn generate_stage_skeleton(project_root: &Path) -> anyhow::Result<()> {
     }
     // Always ensure .archive/tasks exists (backward compat)
     if !dirs.iter().any(|d| d == ".archive/tasks") {
-        std::fs::create_dir_all(stage.join(".archive").join("tasks"))?;
+        std::fs::create_dir_all(stage.join(ARCHIVE_DIR).join(TASKS_DIR))?;
     }
 
     // 8 template files under tasks/_template/
-    let template_dir = stage.join("tasks").join("_template");
+    let template_dir = stage.join(TASKS_DIR).join("_template");
     std::fs::create_dir_all(&template_dir)?;
 
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
@@ -267,7 +261,11 @@ fn parse_stage_defaults(md: &str) -> Vec<String> {
 
     if dirs.is_empty() {
         // Fallback to v0.4.1 defaults
-        dirs.extend(["tasks", "drafts", ".archive"].iter().map(std::string::ToString::to_string));
+        dirs.extend(
+            [TASKS_DIR, DRAFTS_DIR, ARCHIVE_DIR]
+                .iter()
+                .map(std::string::ToString::to_string),
+        );
     }
 
     dirs
@@ -276,10 +274,10 @@ fn parse_stage_defaults(md: &str) -> Vec<String> {
 /// Copy the default `stage-defaults.md` to `.enjoyknowledge_stage/_meta/`.
 /// Does NOT overwrite if the file already exists (user-owned).
 pub fn generate_stage_defaults_md(project_root: &Path) -> anyhow::Result<()> {
-    let meta_dir = project_root.join(STAGE_DIR).join("_meta");
+    let meta_dir = project_root.join(STAGE_DIR).join(META_DIR);
     std::fs::create_dir_all(&meta_dir)?;
 
-    let path = meta_dir.join("stage-defaults.md");
+    let path = meta_dir.join(STAGE_DEFAULTS_FILE);
     if !path.exists() {
         std::fs::write(&path, STAGE_DEFAULTS_MD_DEFAULT)?;
     }
@@ -292,7 +290,7 @@ pub fn generate_ek_agents_md(project_root: &Path) -> anyhow::Result<()> {
     let ek = project_root.join(EK_DIR);
     std::fs::create_dir_all(&ek)?;
 
-    let path = ek.join("AGENTS.md");
+    let path = ek.join(EK_AGENTS_FILE);
     if !path.exists() {
         std::fs::write(&path, EK_AGENTS_MD_CONTENT)?;
     }
@@ -306,7 +304,7 @@ pub fn generate_stage_agents_md(project_root: &Path) -> anyhow::Result<()> {
     let stage = project_root.join(STAGE_DIR);
     std::fs::create_dir_all(&stage)?;
 
-    let path = stage.join("AGENTS.md");
+    let path = stage.join(STAGE_AGENTS_FILE);
     if !path.exists() {
         std::fs::write(&path, STAGE_AGENTS_MD_CONTENT)?;
     }
@@ -376,278 +374,21 @@ const STAGE_AGENTS_MD_CONTENT: &str = include_str!("../fixtures/agents/stage.md"
 // v0.4: AGENTS.md content + 8 stage template content
 // ════════════════════════════════════════════════════════════════════════════
 
-const STAGE_TEMPLATE_SUMMARY: &str = r"---
-task: <task-id>
-phase: cross-phase
-status: draft
-created: __TIMESTAMP__
----
+const STAGE_TEMPLATE_SUMMARY: &str = include_str!("../fixtures/stage/summary.md");
 
-# Task Summary: <task-id>
+const STAGE_TEMPLATE_REQUIREMENTS: &str = include_str!("../fixtures/stage/requirements.md");
 
-> Two-section format: start (task assigned) + stage log (append-only).
+const STAGE_TEMPLATE_DESIGN: &str = include_str!("../fixtures/stage/design.md");
 
-## Start
+const STAGE_TEMPLATE_PLAN: &str = include_str!("../fixtures/stage/plan.md");
 
-- **Assigned**: __TIMESTAMP__
-- **Source**: <issue/PR/human request>
-- **Goal**: One sentence describing the task outcome
+const STAGE_TEMPLATE_CHANGES: &str = include_str!("../fixtures/stage/changes.md");
 
-## Stage Log
+const STAGE_TEMPLATE_TESTS: &str = include_str!("../fixtures/stage/tests.md");
 
-| Timestamp | Phase | Event |
-|-----------|-------|-------|
-| __TIMESTAMP__ | P1 | Task created |
-";
+const STAGE_TEMPLATE_DELIVERY: &str = include_str!("../fixtures/stage/delivery.md");
 
-const STAGE_TEMPLATE_REQUIREMENTS: &str = r"---
-task: <task-id>
-phase: P1
-status: draft
-created: __TIMESTAMP__
----
-
-# Requirements: <task-id>
-
-> EARS format: Event → Action → Response → State.
-
-## Functional Requirements
-
-### FR-1: <title>
-- **Event**: When <trigger>
-- **Action**: The system shall <action>
-- **Response**: The user sees <response>
-
-## Acceptance Criteria
-
-- [ ] AC-1: <criterion>
-- [ ] AC-2: <criterion>
-
-## Scope & Boundaries
-
-- **In scope**: <what is included>
-- **Out of scope**: <what is not included>
-
-## Clarifications
-
-| # | Question | Answer | Answered by |
-|---|----------|--------|-------------|
-| 1 |          |        |             |
-";
-
-const STAGE_TEMPLATE_DESIGN: &str = r"---
-task: <task-id>
-phase: P2
-status: draft
-created: __TIMESTAMP__
----
-
-# Design: <task-id>
-
-> Technical approach, trade-offs, and architecture decisions.
-
-## Approach
-
-<Paragraph describing the chosen approach>
-
-## Trade-offs
-
-| Option | Pros | Cons | Chosen? |
-|--------|------|------|---------|
-|        |      |      | ✓       |
-
-## Architecture
-
-```
-<diagram or description>
-```
-
-## Files to Change
-
-| File | Change | Reason |
-|------|--------|--------|
-|      |        |        |
-
-## Decisions
-
-| # | Decision | Rationale |
-|---|----------|-----------|
-| 1 |          |           |
-";
-
-const STAGE_TEMPLATE_PLAN: &str = r"---
-task: <task-id>
-phase: P2b
-status: draft
-created: __TIMESTAMP__
----
-
-# Plan: <task-id>
-
-> Subtask breakdown and execution order.
-
-## Subtasks
-
-| # | Subtask | Estimate | Depends on | Status |
-|---|---------|----------|------------|--------|
-| 1 |         |          | —          | ⬜     |
-| 2 |         |          | 1          | ⬜     |
-
-## Execution Order
-
-```
-1. <first subtask>
-2. <second subtask>
-```
-
-## Risk Register
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-|      |           |        |            |
-";
-
-const STAGE_TEMPLATE_CHANGES: &str = r"---
-task: <task-id>
-phase: P3
-status: draft
-created: __TIMESTAMP__
----
-
-# Changes: <task-id>
-
-> **APPEND-ONLY**. One line per file edit.
-> **Gitignored** — audit trail, not version-controlled.
-
-| # | Timestamp | File | Change |
-|---|-----------|------|--------|
-| 1 | __TIMESTAMP__ | — | Task started |
-";
-
-const STAGE_TEMPLATE_TESTS: &str = r"---
-task: <task-id>
-phase: P4
-status: draft
-created: __TIMESTAMP__
----
-
-# Tests: <task-id>
-
-> Coverage matrix + results + risks.
-
-## Coverage Matrix
-
-| Test | Type | Covers | Status |
-|------|------|--------|--------|
-|      | unit |        | ⬜     |
-
-## Test Results
-
-```
-<output from cargo test / test runner>
-```
-
-## Risks & Gaps
-
-- **Risk**: <what could still break>
-- **Gap**: <what is not tested and why>
-";
-
-const STAGE_TEMPLATE_DELIVERY: &str = r"---
-task: <task-id>
-phase: P5
-status: draft
-created: __TIMESTAMP__
----
-
-# Delivery: <task-id>
-
-> Final commit + PR + KB promote decisions.
-
-## Commits
-
-| # | Hash | Message |
-|---|------|---------|
-| 1 |      |         |
-
-## PR
-
-- **Title**:
-- **Description**:
-
-## KB Promote
-
-| Knowledge | Kind | Promote? | File |
-|-----------|------|----------|------|
-|           |      | ⬜       |      |
-
-## Post-Delivery
-
-- [ ] Tests passing
-- [ ] Docs updated
-- [ ] KB promoted
-- [ ] Task archived
-";
-
-const STAGE_TEMPLATE_REVIEW: &str = r"---
-task: <task-id>
-phase: cross-phase
-status: draft
-created: __TIMESTAMP__
----
-
-# Review Checklist: <task-id>
-
-> **AI pre-fills [ ] — humans tick [x].** AI must never use [x].
-
-## P1: Requirements
-
-- [ ] Requirements are complete and accurate
-- [ ] Acceptance criteria are testable
-- [ ] Scope boundaries are clear
-- [ ] All clarifications resolved
-
-**Gate 1**: ⬜ Approved — AI may proceed to P2 design
-
----
-
-## P2: Design
-
-- [ ] Approach is sound
-- [ ] Trade-offs are documented and acceptable
-- [ ] Architecture diagram is clear
-- [ ] Files to change are identified
-
-**Gate 2**: ⬜ Approved — AI may proceed to P3 coding
-
----
-
-## P4: Testing
-
-- [ ] Coverage matrix is complete
-- [ ] All tests pass
-- [ ] Edge cases covered
-- [ ] Risks documented
-
----
-
-## P5: Delivery
-
-- [ ] All commits have clear messages
-- [ ] PR is ready for review
-- [ ] KB promotions identified
-- [ ] Task can be archived
-
-**Gate 3**: ⬜ Approved — Deliver + Archive task
-
----
-
-## Final Sign-off
-
-- [ ] All 3 gates approved
-- [ ] Task complete
-- [ ] Archive ready
-";
+const STAGE_TEMPLATE_REVIEW: &str = include_str!("../fixtures/stage/review.md");
 
 #[cfg(test)]
 mod tests {
@@ -660,10 +401,10 @@ mod tests {
 
         generate_stage_skeleton(root).unwrap();
 
-        assert!(root.join(".enjoyknowledge_stage/tasks").exists());
-        assert!(root.join(".enjoyknowledge_stage/drafts").exists());
-        assert!(root.join(".enjoyknowledge_stage/.archive/tasks").exists());
-        assert!(root.join(".enjoyknowledge_stage/tasks/_template").exists());
+        assert!(root.join(STAGE_DIR).join(TASKS_DIR).exists());
+        assert!(root.join(STAGE_DIR).join(DRAFTS_DIR).exists());
+        assert!(root.join(STAGE_DIR).join(ARCHIVE_DIR).join(TASKS_DIR).exists());
+        assert!(root.join(STAGE_DIR).join(TASKS_DIR).join("_template").exists());
     }
 
     #[test]
@@ -673,7 +414,7 @@ mod tests {
 
         generate_stage_skeleton(root).unwrap();
 
-        let template_dir = root.join(".enjoyknowledge_stage/tasks/_template");
+        let template_dir = root.join(STAGE_DIR).join(TASKS_DIR).join("_template");
         for name in &[
             "summary.md",
             "requirements.md",
@@ -696,14 +437,14 @@ mod tests {
         // First run creates templates
         generate_stage_skeleton(root).unwrap();
         let first_size =
-            std::fs::read_to_string(root.join(".enjoyknowledge_stage/tasks/_template/summary.md"))
+            std::fs::read_to_string(root.join(STAGE_DIR).join(TASKS_DIR).join("_template/summary.md"))
                 .unwrap()
                 .len();
 
         // Second run should not overwrite existing templates
         generate_stage_skeleton(root).unwrap();
         let second_size =
-            std::fs::read_to_string(root.join(".enjoyknowledge_stage/tasks/_template/summary.md"))
+            std::fs::read_to_string(root.join(STAGE_DIR).join(TASKS_DIR).join("_template/summary.md"))
                 .unwrap()
                 .len();
 

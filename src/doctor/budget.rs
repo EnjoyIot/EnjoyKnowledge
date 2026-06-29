@@ -1,10 +1,11 @@
 /// File budget management: split files over 20 `##` entries by moving
 /// the oldest entries to an archive file.
+use crate::config::DEFAULT_BUDGET_LIMIT;
 use crate::knowledge::FilesystemSource;
 use crate::knowledge::KnowledgeSource;
 use std::path::Path;
 
-/// Archive the oldest `##` entries from a file when it exceeds 20 entries.
+/// Archive the oldest `##` entries from a file when it exceeds the budget limit.
 pub fn archive_old_entries(source: &FilesystemSource, rel: &str) -> anyhow::Result<()> {
     let content = source.read_file(rel)?;
     let lines: Vec<&str> = content.lines().collect();
@@ -37,7 +38,7 @@ pub fn archive_old_entries(source: &FilesystemSource, rel: &str) -> anyhow::Resu
         }
     }
 
-    if section_starts.len() <= 20 {
+    if section_starts.len() <= DEFAULT_BUDGET_LIMIT {
         return Ok(());
     }
 

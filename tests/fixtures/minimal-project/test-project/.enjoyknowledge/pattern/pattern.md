@@ -1,5 +1,6 @@
 ---
 description: Validated patterns, conventions, and best practices for this project
+applies_to: "*"
 timestamp: 2026-06-28
 ---
 
