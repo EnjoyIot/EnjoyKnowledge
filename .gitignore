@@ -44,3 +44,17 @@ venv/
 /target
 
 .claude-task-*.log
+
+# enjoyknowledge stage (v0.4+)
+.enjoyknowledge_stage/tasks/*/changes.md
+.session/
+
+# enjoyknowledge generated directories (v0.4+)
+.enjoyknowledge/
+.enjoyknowledge_stage/
+# Generated under minimal-project fixture when running ek init locally
+tests/fixtures/minimal-project/.enjoyknowledge/
+tests/fixtures/minimal-project/.enjoyknowledge_stage/
+# Same in test-project subdir
+tests/fixtures/minimal-project/test-project/.enjoyknowledge/
+tests/fixtures/minimal-project/test-project/.enjoyknowledge_stage/
