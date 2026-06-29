@@ -181,8 +181,8 @@ fn init_generates_ek_agents_md() {
     init_project(root);
 
     let content = std::fs::read_to_string(root.join(".enjoyknowledge/AGENTS.md")).unwrap();
-    assert!(content.contains("enjoyknowledge KB"));
-    assert!(content.contains("NEVER write to"));
+    assert!(content.contains("enjoyknowledge 知识库"));
+    assert!(content.contains("读写原则"));
 }
 
 #[test]
@@ -192,9 +192,9 @@ fn init_generates_stage_agents_md() {
     init_project(root);
 
     let content = std::fs::read_to_string(root.join(".enjoyknowledge_stage/AGENTS.md")).unwrap();
-    assert!(content.contains("enjoyknowledge Stage"));
-    assert!(content.contains("Workflow (5 Phases"));
-    assert!(content.contains("Hard Gate Protocol"));
+    assert!(content.contains("enjoyknowledge 任务执行"));
+    assert!(content.contains("任务执行流程"));
+    assert!(content.contains("drafts/"));
 }
 
 #[test]
@@ -431,4 +431,144 @@ fn stage_clean_without_force_does_not_delete() {
 
     // Without --force, tasks should NOT be deleted
     assert!(archive.exists());
+}
+
+// ---- v0.4.7: AGENTS.md 不覆盖 + 默认模板 + 任务执行流程 ----
+
+#[test]
+fn init_does_not_overwrite_user_ek_agents_md() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    // User edits ek AGENTS.md with a marker
+    let user_content = "# My KB Rules\n\nUSER-MARKER-12345\n\nCustom rules here.\n";
+    std::fs::write(root.join(".enjoyknowledge/AGENTS.md"), user_content).unwrap();
+
+    // Re-init should NOT overwrite
+    init_project(root);
+
+    let actual = std::fs::read_to_string(root.join(".enjoyknowledge/AGENTS.md")).unwrap();
+    assert_eq!(actual, user_content, "user marker should be preserved");
+}
+
+#[test]
+fn init_creates_default_ek_agents_md_with_static_dir_and_briefly_flow() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    // Remove any existing AGENTS.md first so init creates a fresh default
+    init_project(root);
+
+    let content = std::fs::read_to_string(root.join(".enjoyknowledge/AGENTS.md")).unwrap();
+    // Static directory description present
+    assert!(content.contains("architecture/"), "should describe architecture dir");
+    assert!(content.contains("gotcha/"), "should describe gotcha dir");
+    assert!(content.contains("读写原则"), "should have read/write principles");
+    assert!(content.contains("常见操作"), "should have common operations table");
+    // Briefly mentions flow (1-2 sentences: the skills/ reference and init no-overwrite note)
+    assert!(
+        content.contains("skills/") && content.contains("v0.4.8"),
+        "should briefly mention flow skills path"
+    );
+}
+
+#[test]
+fn init_creates_stage_agents_md_with_task_execution_workflow() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let content = std::fs::read_to_string(root.join(".enjoyknowledge_stage/AGENTS.md")).unwrap();
+    assert!(content.contains("enjoyknowledge 任务执行"), "should have stage title");
+    assert!(content.contains("任务执行流程"), "should have task execution workflow");
+    assert!(content.contains("drafts/"), "should mention drafts dir");
+    assert!(content.contains("tasks/"), "should mention tasks dir");
+    assert!(content.contains(".archive/"), "should mention archive dir");
+    assert!(content.contains("ek promote"), "should mention promote command");
+    assert!(content.contains("ek stage clean"), "should mention stage clean command");
+}
+
+// ---- v0.4.8: Skills workflow files ----
+
+#[test]
+fn init_creates_skills_directory_with_4_flows_and_index() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let skills_dir = root.join(".enjoyknowledge/skills");
+    assert!(skills_dir.exists(), "skills directory should exist");
+
+    for name in &["coding.md", "research.md", "review.md", "design.md", "README.md"] {
+        assert!(skills_dir.join(name).exists(), "missing skills file: {name}");
+    }
+}
+
+#[test]
+fn init_does_not_overwrite_user_skills_files() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    // User edits coding.md
+    let user_content = "# My Custom Coding Flow\n\nUSER-MARKER-12345\n\nCustom rules here.\n";
+    std::fs::write(root.join(".enjoyknowledge/skills/coding.md"), user_content).unwrap();
+
+    // Re-init should NOT overwrite
+    init_project(root);
+
+    let actual = std::fs::read_to_string(root.join(".enjoyknowledge/skills/coding.md")).unwrap();
+    assert_eq!(actual, user_content, "user marker should be preserved");
+}
+
+#[test]
+fn init_skills_coding_md_has_correct_frontmatter() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let content = std::fs::read_to_string(root.join(".enjoyknowledge/skills/coding.md")).unwrap();
+    assert!(content.contains("name: enjoyknowledge-flow-coding"));
+    assert!(content.contains("编码工作流"));
+    assert!(content.contains("Step-by-step"));
+    assert!(content.contains("File Reading Order"));
+    assert!(content.contains("File Writing Order"));
+    assert!(content.contains("Common Patterns"));
+    assert!(content.contains("Pitfalls"));
+}
+
+#[test]
+fn init_skills_research_md_has_correct_frontmatter() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let content = std::fs::read_to_string(root.join(".enjoyknowledge/skills/research.md")).unwrap();
+    assert!(content.contains("name: enjoyknowledge-flow-research"));
+    assert!(content.contains("调研工作流"));
+    assert!(content.contains("Step-by-step"));
+}
+
+#[test]
+fn init_skills_review_md_has_correct_frontmatter() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let content = std::fs::read_to_string(root.join(".enjoyknowledge/skills/review.md")).unwrap();
+    assert!(content.contains("name: enjoyknowledge-flow-review"));
+    assert!(content.contains("复盘工作流"));
+    assert!(content.contains("Step-by-step"));
+}
+
+#[test]
+fn init_skills_design_md_has_correct_frontmatter() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    init_project(root);
+
+    let content = std::fs::read_to_string(root.join(".enjoyknowledge/skills/design.md")).unwrap();
+    assert!(content.contains("name: enjoyknowledge-flow-design"));
+    assert!(content.contains("设计工作流"));
+    assert!(content.contains("Step-by-step"));
 }

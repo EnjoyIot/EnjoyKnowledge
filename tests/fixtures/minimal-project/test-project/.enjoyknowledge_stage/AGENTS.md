@@ -1,73 +1,36 @@
 ---
 name: enjoyknowledge-stage
-description: "Stage writing conventions for AI tools during coding tasks. Use when starting a new task, deciding what to write, or reviewing the project. Triggers on '做任务' / 'stage 写什么' / '改 stage AGENTS.md' / 'extend stage' / 'add stage dir' / 'task phase P1-P5'."
+description: enjoyknowledge 任务执行区 AGENTS.md（多 AI 工具通用）
 version: 1.0.0
-metadata:
-  hermes:
-    tags: [stage, task, coding, ai-context]
-    related_skills: [enjoyknowledge]
 ---
 
-# enjoyknowledge Stage — Task Writing Spec (v0.4.4+)
+# enjoyknowledge 任务执行
 
-## Overview
+## 能力
 
-This file tells AI tools **how to use `.enjoyknowledge_stage/`** during coding tasks.
-**User-editable**: edit this file directly to change stage conventions.
-`ek init` will **never overwrite** this file (it's user-owned).
+`.enjoyknowledge_stage/` 是**任务执行区**：
+- `drafts/` 草稿（**写在这里** = 任务开始）
+- `tasks/` 任务文件（**提升到这里** = 知识沉淀）
+- `.archive/` 归档（**任务完成**）
 
-## Inputs (what user provides)
+## 任务执行流程
 
-- Task ID (e.g., `2026-06-28-add-kind-registry`)
-- Task description (1-3 sentences)
+1. **用户给任务** → AI 读 `drafts/` 当前文件
+2. **AI 写文件** → `drafts/{task-name}.md`
+3. **任务完成** → `ek promote` 把 `drafts/{task-name}.md` 提升到对应 `kind/` 目录
+4. **沉淀** → 知识在 `.enjoyknowledge/{kind}/` 长期保存
 
-## Workflow (5 Phases x 3 Hard Gates)
+## 读写原则
 
-### P1 Requirements
-- Write to: `tasks/<task-id>/requirements.md`
-- EARS format (Event -> Action -> Response -> State)
-- Hard Gate 1: human approval
+- **AI 工具接到任务时**：先读本文件 + `.enjoyknowledge/AGENTS.md`
+- **AI 工具写文件时**：先 `drafts/` 后 `tasks/`（promote 后）
+- **AI 工具遇到流程问题**：参考 `.enjoyknowledge/skills/` 下的流程类文档（v0.4.8 候选）
+- **用户改本文件**：重跑 `ek init` **不会覆盖**（v0.4.4 模式）
 
-### P2 Design
-- Write to: `tasks/<task-id>/design.md`
-- Hard Gate 2: human approval
+## ek 命令
 
-### P2b Plan
-- Write to: `tasks/<task-id>/plan.md`
-
-### P3 Coding
-- Write to: `tasks/<task-id>/changes.md` (append-only)
-- One line per file edit (old -> new summary)
-
-### P4 Testing
-- Write to: `tasks/<task-id>/tests.md`
-- Before first test run + after each run
-
-### P5 Delivery
-- Write to: `tasks/<task-id>/delivery.md`
-- Hard Gate 3: human approval
-- After: `ek promote <draft> --to <kind>`
-
-## Custom Directories (user-editable)
-
-If user added custom directories in `_meta/stage-defaults.md`:
-- `notes/<file>.md` — user notes
-- `experiments/<file>.md` — experiment records
-- ...
-
-AI should use these directories according to user's stage AGENTS.md updates.
-
-## Promote Workflow
-
-1. AI writes draft to `.enjoyknowledge_stage/drafts/<id>.md`
-2. Human reviews + runs `ek promote <draft> --to <kind>`
-3. Draft gets `[PROMOTED]` marker
-
-## Hard Gate Protocol
-
-```
-P1 req -[H1]-> P2 design -[H2]-> P3 coding -> P4 test -> P5 delivery -[H3]-> promote
-```
-
----
-*User-owned: edit this file to customize stage conventions. `ek init` will not overwrite.*
+| 任务 | ek 命令 |
+|------|---------|
+| 列出草稿 | `ek ls drafts` |
+| 提升草稿 | `ek promote <draft>` |
+| 归档任务 | `ek stage clean` |

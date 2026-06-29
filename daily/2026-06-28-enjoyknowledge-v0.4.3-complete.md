@@ -10,14 +10,14 @@
 
 1. **哲学一致性**：v0.4 阶段加的 `gotcha → gotchas` 派生规则 = 写死 = **退化 v0.1 DESIGN-V3 L17 哲学**（"目录名即分类"）
 2. **bug 修复**：v0.4.2 出现 "capture 10 kind vs promote 11 kind" 不一致 bug（双 const 没抽离的必然结果）
-3. **0 风险**：Jay 确认项目还在开发阶段，无生产数据，所有改动 0 breaking
+3. **0 风险**：Enjoy 确认项目还在开发阶段，无生产数据，所有改动 0 breaking
 
 ### 6 轮讨论沉淀
 
-| 轮 | Jay 提议 | 决策 |
+| 轮 | Enjoy 提议 | 决策 |
 |----|---------|------|
 | 1 | workflow 命令还要吗 | ✅ W1 = onboard 升格顶层 + 砍 capture + 消亡 workflow 容器 |
-| 2 | 写死目录怎么抽 | ✅ kinds.md Markdown 抽离（Jay 第 4 方案 = 极简）|
+| 2 | 写死目录怎么抽 | ✅ kinds.md Markdown 抽离（Enjoy 第 4 方案 = 极简）|
 | 3 | kind = dir 默认 | ✅ 改 5 目录（去"s"）|
 | 4 | 跟以前约定一致 | ✅ 回到 v0.1 DESIGN-V3 L17 哲学 |
 | 5 | 无所谓数据迁移 | ✅ 0 风险 = 立刻做 |
@@ -120,13 +120,13 @@ R1 cargo test 首次 22 trycmd 1 failed（os error 32），立即判断是 Windo
 
 > "**R3 评估问题要看原始设计文档**"——R1 v0.4.3 第 4 轮才看 v0.1 DESIGN-V3
 
-R1 之前误解 Jay 提议"以前目录名就是约定" = plural 约定俗成。**R1 看 v0.1 DESIGN-V3 L17 后才懂** = "目录名即分类，不写死"——**v0.4 加"s 派生"是退化不是改进**。
+R1 之前误解 Enjoy 提议"以前目录名就是约定" = plural 约定俗成。**R1 看 v0.1 DESIGN-V3 L17 后才懂** = "目录名即分类，不写死"——**v0.4 加"s 派生"是退化不是改进**。
 
 ### R6 v3 反思强化
 
-> "**R1 不要脑补'已有项目'**"——R1 必须问 Jay 真实使用状态
+> "**R1 不要脑补'已有项目'**"——R1 必须问 Enjoy 真实使用状态
 
-R1 之前一直说"breaking change 担忧"——**Jay 说"开发阶段无所谓"后 R1 才发现 = 0 风险**。R1 之前所有 v0.4.x 阶段的"breaking 担忧"都是过度担心。
+R1 之前一直说"breaking change 担忧"——**Enjoy 说"开发阶段无所谓"后 R1 才发现 = 0 风险**。R1 之前所有 v0.4.x 阶段的"breaking 担忧"都是过度担心。
 
 ### 新教训
 
@@ -136,16 +136,16 @@ v0.4.3 = 0 风险 + 1.5 天 + 5 维度收益 = **现在不做是 R1 错**。
 
 > "**哲学一致性 > 代码简洁**"——回到 v0.1 哲学比单纯极简更重要
 
-R1 之前给 3 选 1（const / 配置文件 / proc-macro）——**Jay 第 4 方案 = 全用 Markdown**才是真极简。
+R1 之前给 3 选 1（const / 配置文件 / proc-macro）——**Enjoy 第 4 方案 = 全用 Markdown**才是真极简。
 
 ## 8. R1 R3 决策树 vs 最终决策
 
-| R1 之前 | Jay 决策 | R1 R6 教训 |
+| R1 之前 | Enjoy 决策 | R1 R6 教训 |
 |---------|---------|------------|
 | A. Rust const | ❌ | 仍写死代码 |
 | B. 配置文件 | ❌ | 加配置层 |
 | C. proc-macro | ❌ | 过度工程 |
-| **Jay D. Markdown** | ✅ | 单一来源 + 极简 |
+| **Enjoy D. Markdown** | ✅ | 单一来源 + 极简 |
 | + kind = dir | ✅ | 回到 v0.1 哲学 |
 | + 0 breaking | ✅ | 开发阶段 0 成本 |
 | + 完全重写 | ✅ | 高质量交付 |
@@ -200,4 +200,4 @@ Features:
 
 ## 13. 下一步
 
-- **v0.4.3 已完工** — 等 Jay 拍板后续（v0.5 路线 / enjoyiot-kaiyuan 长期 dogfooding / 其他）
+- **v0.4.3 已完工** — 等 Enjoy 拍板后续（v0.5 路线 / enjoyiot-kaiyuan 长期 dogfooding / 其他）

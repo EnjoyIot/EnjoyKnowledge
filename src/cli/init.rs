@@ -91,6 +91,7 @@ enjoyknowledge --root {link_path} ls
     init::skeleton::generate_stage_defaults_md(&project_root)?;
     init::skeleton::generate_ek_agents_md(&project_root)?;
     init::skeleton::generate_stage_agents_md(&project_root)?;
+    init::skeleton::generate_skills_skeleton(&project_root)?;
     init::skeleton::update_gitignore(&project_root)?;
 
     // Generate AGENTS.md
