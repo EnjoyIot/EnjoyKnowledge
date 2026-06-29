@@ -17,7 +17,7 @@ pub struct Kind {
 }
 
 /// Default `kinds.md` content — embedded at compile-time.
-const KINDS_MD_DEFAULT: &str = include_str!("../tests/fixtures/kinds-default.md");
+const KINDS_MD_DEFAULT: &str = include_str!("fixtures/kinds-default.md");
 
 /// Lazily-parsed kind registry.
 static KINDS: LazyLock<Vec<Kind>> = LazyLock::new(|| parse_kinds_md(KINDS_MD_DEFAULT));

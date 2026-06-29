@@ -12,7 +12,7 @@ pub const STAGE_DIR: &str = ".enjoyknowledge_stage";
 pub const SKILLS_DIR: &str = "skills";
 
 /// Default stage-directory specification — embedded at compile-time.
-const STAGE_DEFAULTS_MD_DEFAULT: &str = include_str!("../../tests/fixtures/stage-defaults.md");
+const STAGE_DEFAULTS_MD_DEFAULT: &str = include_str!("../fixtures/stage-defaults.md");
 
 /// Generate the `.enjoyknowledge/` skeleton and `knowledge-tasks/` under `project_root`.
 ///
@@ -358,19 +358,19 @@ pub fn update_gitignore(project_root: &Path) -> anyhow::Result<()> {
 // v0.4.8: Skills workflow files (4 flow + 1 index)
 // ════════════════════════════════════════════════════════════════════════════
 
-const SKILLS_CODING_MD_CONTENT: &str = include_str!("../../tests/fixtures/skills/coding.md");
+const SKILLS_CODING_MD_CONTENT: &str = include_str!("../fixtures/skills/coding.md");
 
-const SKILLS_RESEARCH_MD_CONTENT: &str = include_str!("../../tests/fixtures/skills/research.md");
+const SKILLS_RESEARCH_MD_CONTENT: &str = include_str!("../fixtures/skills/research.md");
 
-const SKILLS_REVIEW_MD_CONTENT: &str = include_str!("../../tests/fixtures/skills/review.md");
+const SKILLS_REVIEW_MD_CONTENT: &str = include_str!("../fixtures/skills/review.md");
 
-const SKILLS_DESIGN_MD_CONTENT: &str = include_str!("../../tests/fixtures/skills/design.md");
+const SKILLS_DESIGN_MD_CONTENT: &str = include_str!("../fixtures/skills/design.md");
 
-const SKILLS_README_MD_CONTENT: &str = include_str!("../../tests/fixtures/skills/README.md");
+const SKILLS_README_MD_CONTENT: &str = include_str!("../fixtures/skills/README.md");
 
-const EK_AGENTS_MD_CONTENT: &str = include_str!("../../tests/fixtures/agents/ek.md");
+const EK_AGENTS_MD_CONTENT: &str = include_str!("../fixtures/agents/ek.md");
 
-const STAGE_AGENTS_MD_CONTENT: &str = include_str!("../../tests/fixtures/agents/stage.md");
+const STAGE_AGENTS_MD_CONTENT: &str = include_str!("../fixtures/agents/stage.md");
 
 // ════════════════════════════════════════════════════════════════════════════
 // v0.4: AGENTS.md content + 8 stage template content
@@ -920,9 +920,9 @@ mod tests {
         // Verify all 7 fixture files exist and are readable
         // (include_str! loads at compile time, so these file reads mirror what the constants contain)
         let skills_dir =
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/skills");
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/fixtures/skills");
         let agents_dir =
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/agents");
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/fixtures/agents");
 
         let coding = std::fs::read_to_string(skills_dir.join("coding.md")).unwrap();
         assert!(coding.contains("enjoyknowledge-flow-coding"));
