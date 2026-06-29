@@ -48,6 +48,24 @@ pub fn generate_skeleton(project_root: &Path, profile: &dyn Profile) -> anyhow::
     for k in &kinds {
         let dir = ek.join(kinds::dir_for(&k.name));
         std::fs::create_dir_all(&dir)?;
+
+        // v0.4.10: Generate a generic seed file for user-added kinds
+        // that don't have a compile-time fixture (profile.seed_files() only covers built-in kinds).
+        let seed_path = dir.join(format!("{}.md", k.name));
+        if !seed_path.exists() {
+            let required_fields: Vec<String> = k.required.clone();
+            let mut fm = format!(
+                "---\ndescription: {}\ntimestamp: {today}\n",
+                k.summary,
+            );
+            for field in &required_fields {
+                let _ = writeln!(fm, "{field}: \"TODO - fill in\"");
+            }
+            fm.push_str("---\n\n");
+            let _ = write!(fm, "# {}\n\n", capitalize_first(&k.summary));
+            fm.push_str("> Fill in your content here.\n");
+            std::fs::write(&seed_path, fm)?;
+        }
     }
 
     // knowledge-tasks/ at project root level
@@ -222,6 +240,11 @@ pub fn generate_stage_skeleton(project_root: &Path) -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+fn capitalize_first(s: &str) -> String {
+    let mut chars = s.chars();
+    chars.next().map_or_else(String::new, |c| c.to_uppercase().collect::<String>() + chars.as_str())
 }
 
 /// Parse the Default Directories table from `stage-defaults.md`.

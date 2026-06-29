@@ -20,6 +20,7 @@ skills/
 template/
 test-kind/
   AGENTS.md → enjoyknowledge 知识库根 AGENTS.md（多 AI 工具通用）
+  architecture.md → System / module architecture
   overview.md → Project architecture overview -- system design, module map, data flow
   business.md → Business rules, domain logic, calculation formulas, and compliance requirements
   command.md → CLI commands, scripts, and one-liners worth remembering
@@ -27,6 +28,7 @@ test-kind/
   contract.md → API contracts, data schemas, interface guarantees
   convention.md → Team conventions, workflow norms, and process agreements
   000-template.md → Architecture Decision Records (ADR) -- key technical decisions and their rationale
+  decision.md → Decision with reversibility
   gotcha.md → Gotchas, tricky bugs, edge cases, and workarounds discovered during development
   index.md → Knowledge base index — auto-generated directory of all knowledge files
   pattern.md → Validated patterns, conventions, and best practices for this project
@@ -37,6 +39,7 @@ test-kind/
   research.md → 调研工作流 — AI 查现有知识（"查" / "找" / "看" / "调研" / "有什么"）
   review.md → 复盘工作流 — AI 完成任务后怎么沉淀（"复盘" / "总结" / "沉淀" / "完成任务"）
   template.md → Reusable file and component templates
+  test-kind.md → Test kind for ek kind commands
   kinds.md → Knowledge kinds registry — single source of truth for kind → dir mapping
 <!-- enjoyknowledge_LS_END -->
 

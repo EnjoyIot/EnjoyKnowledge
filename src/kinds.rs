@@ -13,9 +13,7 @@ use std::sync::RwLock;
 #[derive(Debug, Clone)]
 pub struct Kind {
     pub name: String,
-    #[allow(dead_code)]
     pub required: Vec<String>,
-    #[allow(dead_code)]
     pub summary: String,
 }
 
